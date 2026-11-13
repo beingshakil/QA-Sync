@@ -14,9 +14,10 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { ButtonLink, Eyebrow } from "@/components/ui";
-import { CtaBand, FaqList, FeatureGrid, HeroMock, LoopDiagram, Section, SectionHead, d } from "@/components/marketing/sections";
+import { CtaBand, FaqList, FeatureGrid, HeroMock, LoopDiagram, Section, SectionHead, SpiderWeb, d } from "@/components/marketing/sections";
 import { OverlayDemo, ThreeViews, UrlStart } from "@/components/marketing/interactive";
-import { INTEGRATIONS, PLANS } from "@/content/marketing";
+import { INTEGRATIONS } from "@/content/marketing";
+import { PricingCards } from "@/components/marketing/pricing-cards";
 import { IntegrationIcon } from "@/components/integration-icon";
 
 const FEATURES = [
@@ -42,7 +43,7 @@ export default function Home() {
       {/* ───────── Hero ───────── */}
       <div className="relative overflow-hidden">
         <div className="site-glow" aria-hidden />
-        <div className="dots absolute inset-0" aria-hidden />
+        <SpiderWeb />
         <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-16 text-center sm:px-6 md:pt-24">
           <h1 data-reveal style={d(40)} className="mx-auto mt-4 max-w-4xl text-[46px] font-semibold leading-[0.98] tracking-[-0.04em] text-ink sm:text-[64px] md:text-[84px]">
             Visual feedback that <span className="text-gradient-sweep">gets fixed.</span>
@@ -205,7 +206,7 @@ export default function Home() {
           {[
             ["Sandboxed review", "Proxied pages run in an isolated sandbox with no access to your session."],
             ["Masked before upload", "Emails, card numbers and anything marked data-private never leave the browser."],
-            ["Enterprise controls", "SSO, SCIM, audit log, EU/US data residency and bring-your-own storage."],
+            ["Scoped share links", "A share link opens one project only, and guests can edit or delete only what they wrote."],
           ].map(([t, b], k) => (
             <div key={t} data-reveal style={d(k * 120)}>
               <div className="font-medium">{t}</div>
@@ -218,34 +219,12 @@ export default function Home() {
       {/* ───────── Pricing preview ───────── */}
       <Section>
         <SectionHead eyebrow="Pricing" title="Start free." accent="Stay because it works." center />
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {PLANS.slice(0, 3).map((p, k) => (
-            <div
-              key={p.name}
-              data-reveal
-              style={d(k * 110)}
-              className={`rounded-2xl border p-6 ${p.featured ? "ring-grad glow-brand border-transparent bg-[#0b1024] text-white" : "lift border-line bg-surface shadow-1"}`}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold">{p.name}</h3>
-                {p.featured && <span className="rounded-full bg-grad-brand px-2 py-0.5 text-[11px] font-medium text-white">Most popular</span>}
-              </div>
-              <div className="mt-3 text-4xl font-semibold tracking-tight">
-                ${p.price.annual}
-                <span className={`text-sm font-normal ${p.featured ? "text-white/60" : "text-ink-3"}`}>/mo</span>
-              </div>
-              <p className={`mt-1 text-sm ${p.featured ? "text-white/70" : "text-ink-3"}`}>{p.blurb}</p>
-              <ul className="mt-5 space-y-2 text-sm">
-                {p.features.map((f) => (
-                  <li key={f}>✓ {f}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <div className="mt-12">
+          <PricingCards />
         </div>
         <div className="mt-8 text-center">
           <Link href="/pricing" className="text-sm font-medium text-accent-ink">
-            Compare all plans →
+            Compare plans →
           </Link>
         </div>
       </Section>

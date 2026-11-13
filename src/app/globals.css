@@ -444,7 +444,7 @@ body {
 }
 :root[data-theme="light"] .site-dark .site-glow { opacity: 0.45; }
 :root[data-theme="light"] .site-dark .site-glow::after { opacity: 0.5; }
-:root[data-theme="light"] .site-dark .dots { background-image: radial-gradient(rgb(15 23 48 / 0.12) 1px, transparent 1px); }
+:root[data-theme="light"] .site-dark .web { color: rgb(15 23 48 / 0.13); }
 
 /* Theme toggle icon: show the theme you'd switch TO */
 .ico-when-light { display: none; }
@@ -483,11 +483,13 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 @keyframes glow-breathe { from { opacity: 0.85; transform: translateX(-50%) scale(1); } to { opacity: 1; transform: translateX(-50%) scale(1.06); } }
 
 /* Faint dot field that fades out (replaces the line grid on the site) */
-.dots {
-  background-image: radial-gradient(rgb(255 255 255 / 0.09) 1px, transparent 1px);
-  background-size: 22px 22px;
-  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 75%);
+/* Spider-web hero backdrop (SpiderWeb in sections.tsx) */
+.web {
+  color: rgb(255 255 255 / 0.085);
+  mask-image: radial-gradient(ellipse 75% 85% at 50% 0%, #000 25%, transparent 78%);
 }
+.web-dew { opacity: 0.55; animation: web-dew 5.6s ease-in-out infinite; }
+@keyframes web-dew { 0%, 100% { opacity: 0.25; } 50% { opacity: 0.9; } }
 
 /* Colourful showcase panel behind product UI */
 .mesh-panel {
@@ -516,6 +518,7 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 
 @media (prefers-reduced-motion: reduce) {
   .site-glow::before { animation: none; }
+  .web-dew { animation: none; }
 }
 
 /* Review canvas: device frames sit in a thin brand-gradient ring with a soft coloured glow */

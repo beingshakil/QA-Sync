@@ -11,8 +11,8 @@ export default function PricingPage() {
       <PageHero
         eyebrow="Pricing"
         title="Every review tool, free."
-        accent="Pay for scale."
-        sub="Unlimited comments on every plan, including Free. Try Pro for 14 days with no card, then keep it or drop back to Free."
+        accent="Pro costs a coffee."
+        sub="Both plans include every review tool and page audits. When you need more projects, unlimited comments or client guests, Pro is $5 a month."
       />
       <Section className="pt-12 md:pt-14">
         <PricingCards />
@@ -20,13 +20,13 @@ export default function PricingPage() {
 
       <Section className="pt-0 md:pt-0">
         <SectionHead eyebrow="Compare plans" title="Everything," accent="side by side." />
-        <div data-reveal className="mt-10 overflow-x-auto rounded-2xl border border-line bg-surface">
-          <table className="w-full min-w-[720px] text-left text-sm">
+        <div data-reveal className="mx-auto mt-10 max-w-3xl overflow-x-auto rounded-2xl border border-line bg-surface">
+          <table className="w-full min-w-[480px] text-left text-sm">
             <thead>
               <tr className="border-b border-line">
                 <th className="px-5 py-4" />
                 {PLANS.map((p) => (
-                  <th key={p.name} className="px-5 py-4 font-semibold">
+                  <th key={p.name} className="w-28 px-5 py-4 font-semibold">
                     {p.name}
                   </th>
                 ))}
@@ -35,7 +35,7 @@ export default function PricingPage() {
             {PLAN_MATRIX.map((g) => (
               <tbody key={g.group}>
                 <tr>
-                  <td colSpan={5} className="bg-surface-2 px-5 py-2 font-mono text-[11px] uppercase tracking-widest text-ink-3">
+                  <td colSpan={PLANS.length + 1} className="bg-surface-2 px-5 py-2 font-mono text-[11px] uppercase tracking-widest text-ink-3">
                     {g.group}
                   </td>
                 </tr>
@@ -59,10 +59,10 @@ export default function PricingPage() {
         <SectionHead eyebrow="FAQ" title="Pricing," accent="explained." />
         <FaqList
           items={[
-            { q: "What happens when the Pro trial ends?", a: "You drop back to Free automatically, with no surprise charges. Your projects and issues stay. Projects beyond the Free limit become read-only until you upgrade." },
-            { q: "Do guests count as members?", a: "No. Clients and stakeholders who comment through a share link are free and unlimited on every plan." },
-            { q: "Can I pay per project instead of per seat?", a: "Plans are priced per workspace with a member allowance, so agencies aren't charged for every client project." },
-            { q: "Do you offer discounts?", a: "Yes: 20% off annual plans, and 50% off for non-profits and education." },
+            { q: "What happens when I reach a Free limit?", a: "Nothing is deleted. You can keep working on what you have; to add a third project or go past 200 comments, upgrade to Pro or archive old work." },
+            { q: "What is a guest?", a: "Someone outside your workspace, such as a client, who opens a share link and leaves comments without creating an account. Pro includes 3 guests." },
+            { q: "Can I cancel Pro?", a: "Any time. You drop back to Free and keep your projects and comments. Anything above the Free limits becomes read-only until you upgrade again." },
+            { q: "Is $5 the whole price?", a: "Yes. No per-seat fees, no add-ons and no annual lock-in: $5 a month for everything in Pro." },
           ]}
         />
       </Section>

@@ -281,7 +281,8 @@ export const INTEGRATIONS: { group: string; items: { name: string; desc: string;
 
 export interface Plan {
   name: string;
-  price: { monthly: number | null; annual: number | null };
+  /** Price in USD per month. */
+  price: number;
   blurb: string;
   cta: string;
   featured?: boolean;
@@ -291,65 +292,41 @@ export interface Plan {
 export const PLANS: Plan[] = [
   {
     name: "Free",
-    price: { monthly: 0, annual: 0 },
+    price: 0,
     blurb: "For freelancers and small sites.",
     cta: "Start free",
-    features: ["3 projects", "Unlimited comments", "Every review tool", "Unlimited guests", "Page audits"],
+    features: ["2 projects", "200 comments", "Every review tool", "Page audits"],
   },
   {
     name: "Pro",
-    price: { monthly: 29, annual: 24 },
-    blurb: "For small teams shipping every week.",
-    cta: "Start 14-day Pro trial",
+    price: 5,
+    blurb: "Drop a cup of coffee.",
+    cta: "Get Pro",
     featured: true,
-    features: ["Unlimited projects", "Up to 5 members", "Fix verification", "All integrations", "Custom statuses & views"],
-  },
-  {
-    name: "Business",
-    price: { monthly: 99, annual: 79 },
-    blurb: "For agencies and product orgs.",
-    cta: "Start 14-day trial",
-    features: ["Up to 25 members", "White-label client portal", "Approval rounds", "Quality analytics", "Scheduled monitoring"],
-  },
-  {
-    name: "Enterprise",
-    price: { monthly: null, annual: null },
-    blurb: "Security, scale and support.",
-    cta: "Talk to us",
-    features: ["SSO / SAML / SCIM", "Data residency (EU/US/APAC)", "Audit log", "Bring your own storage", "Uptime SLA & DPA"],
+    features: ["5 projects", "Unlimited comments", "Every review tool", "3 guests", "Page audits"],
   },
 ];
 
+/** Comparison table: one value per plan, in PLANS order. */
 export const PLAN_MATRIX: { group: string; rows: [string, ...(string | boolean)[]][] }[] = [
   {
-    group: "Review",
+    group: "Limits",
     rows: [
-      ["Live element pins", true, true, true, true],
-      ["Inspect, measure, contrast", true, true, true, true],
-      ["Freeze hover", true, true, true, true],
-      ["Device preview", true, true, true, true],
-      ["Page audits", "Manual", "Manual", "Scheduled", "Scheduled"],
-      ["Photo & PDF review", true, true, true, true],
+      ["Projects", "2", "5"],
+      ["Comments", "200", "Unlimited"],
+      ["Guests (comment through a share link, no account)", false, "3"],
     ],
   },
   {
-    group: "Workflow",
+    group: "Review tools",
     rows: [
-      ["Projects", "3", "Unlimited", "Unlimited", "Unlimited"],
-      ["Comments", "Unlimited", "Unlimited", "Unlimited", "Unlimited"],
-      ["Guests (no account)", true, true, true, true],
-      ["Fix verification", false, true, true, true],
-      ["Approval rounds", false, false, true, true],
-      ["Integrations", "Slack", "All", "All", "All + custom"],
-    ],
-  },
-  {
-    group: "Admin & security",
-    rows: [
-      ["Members", "1", "5", "25", "Unlimited"],
-      ["White-label portal", false, false, true, true],
-      ["SSO / SCIM", false, false, false, true],
-      ["Data residency", false, false, false, true],
+      ["Live element pins", true, true],
+      ["Inspect, measure, contrast", true, true],
+      ["Freeze hover", true, true],
+      ["Device sizes, split view and sync scroll", true, true],
+      ["Design overlay", true, true],
+      ["Page-wise QA tracking", true, true],
+      ["Page audits", true, true],
     ],
   },
 ];
@@ -360,7 +337,7 @@ export const FAQ: { q: string; a: string }[] = [
   { q: "What does “Verified” mean?", a: "When an issue is marked Fixed, QASync re-checks the element against what was originally reported. Verified means someone, or something, confirmed the fix landed, not just that someone said it did." },
   { q: "Will the widget slow down my site?", a: "No. The widget is under 25 KB and loads only when a reviewer triggers it, through a shortcut, a query parameter or a button." },
   { q: "Can AI agents fix issues?", a: "Yes. Connect Claude, ChatGPT, Codex or Cursor over MCP. Agents get the selector, specs and console context for each issue, and QASync verifies their fixes." },
-  { q: "Where is my data stored?", a: "In our managed cloud by default, with US and EU regions. Enterprise plans can bring their own storage bucket." },
+  { q: "Where is my data stored?", a: "In our managed cloud. A share link only opens the project it was made for, and guests can only edit what they wrote." },
 ];
 
 export const CHANGELOG: { date: string; title: string; items: string[] }[] = [

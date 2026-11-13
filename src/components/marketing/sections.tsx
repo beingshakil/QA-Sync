@@ -186,11 +186,47 @@ export function FeatureGrid({ items, cols = 3 }: { items: { title: string; body:
   );
 }
 
+/* ── Spider-web backdrop for heroes: spokes fan out from the top centre, rings sag between them ── */
+const WEB_CX = 800;
+const WEB_SPOKES = 18; // across the lower half-circle
+const WEB_RINGS = [64, 136, 216, 306, 404, 512, 630, 760, 900];
+const webPt = (r: number, a: number) => [+(WEB_CX + r * Math.cos(a)).toFixed(1), +(r * Math.sin(a)).toFixed(1)] as const;
+// Small deterministic wobble so the web looks hand-spun rather than ruled
+const webJit = (i: number, j: number) => 1 + 0.035 * Math.sin(i * 12.9898 + j * 78.233);
+const WEB_ANGLES = Array.from({ length: WEB_SPOKES + 1 }, (_, i) => (Math.PI * i) / WEB_SPOKES);
+const WEB_SPOKE_PATH = WEB_ANGLES.map((a) => {
+  const [x, y] = webPt(1100, a);
+  return `M${WEB_CX} 0L${x} ${y}`;
+}).join("");
+const WEB_RING_PATH = WEB_RINGS.map((r, j) =>
+  WEB_ANGLES.map((a, i) => {
+    const [x, y] = webPt(r * webJit(i, j), a);
+    if (i === 0) return `M${x} ${y}`;
+    const [cx, cy] = webPt(r * 0.9, a - Math.PI / WEB_SPOKES / 2); // sag toward the centre
+    return `Q${cx} ${cy} ${x} ${y}`;
+  }).join(""),
+).join("");
+// A few "dew" points where threads cross: [ring index, spoke index, brand|accent]
+const WEB_DEW: [number, number, 0 | 1][] = [[2, 4, 0], [3, 13, 1], [4, 7, 0], [5, 2, 1], [5, 16, 0], [6, 10, 1], [7, 5, 0], [7, 14, 1]];
+
+export function SpiderWeb({ className }: { className?: string }) {
+  return (
+    <svg className={cn("web pointer-events-none absolute inset-0 h-full w-full", className)} viewBox="0 0 1600 820" preserveAspectRatio="xMidYMin slice" aria-hidden>
+      <path d={WEB_SPOKE_PATH} fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      <path d={WEB_RING_PATH} fill="none" stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" />
+      {WEB_DEW.map(([j, i, c], k) => {
+        const [x, y] = webPt(WEB_RINGS[j] * webJit(i, j), WEB_ANGLES[i]);
+        return <circle key={k} className="web-dew" cx={x} cy={y} r="2.6" fill={c ? "var(--accent)" : "var(--brand)"} style={{ animationDelay: `${k * 0.7}s` }} />;
+      })}
+    </svg>
+  );
+}
+
 export function PageHero({ eyebrow, title, accent, sub, children }: { eyebrow: string; title: string; accent: string; sub: string; children?: ReactNode }) {
   return (
     <div className="relative overflow-hidden border-b border-line">
       <div className="site-glow" aria-hidden />
-      <div className="dots absolute inset-0" aria-hidden />
+      <SpiderWeb />
       <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 md:pt-28">
         <div data-reveal>
           <Eyebrow>{eyebrow}</Eyebrow>
