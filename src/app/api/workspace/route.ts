@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { cancelInvite, getWorkspace, inviteMember, removeMember, renameUser, renameWorkspace } from "@/server/repo";
+import { cancelInvite, checkLimit, getWorkspace, inviteMember, removeMember, renameUser, renameWorkspace } from "@/server/repo";
 import { fail, member, ok, readJson } from "@/server/http";
 import { WS_COOKIE } from "@/server/session";
 
@@ -43,6 +43,8 @@ export async function PATCH(req: Request) {
   if (b.invite) {
     const email = b.invite.trim().toLowerCase();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Enter a valid email address");
+    const limited = await checkLimit(ctx.workspaceId, "members");
+    if (limited) return fail(limited, 402);
     const r = await inviteMember(ctx.workspaceId, email, ctx.userId);
     if (!r.ok) return fail(r.reason, 409);
   }

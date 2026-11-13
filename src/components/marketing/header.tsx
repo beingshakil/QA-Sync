@@ -25,7 +25,9 @@ import {
   X,
   type LucideIcon,
 } from "lucide-react";
-import { Logo, buttonClass } from "@/components/ui";
+import { Avatar, Logo, buttonClass } from "@/components/ui";
+import { AccountMenu, useMe } from "./account-menu";
+import { signOutAction } from "@/app/actions";
 import { PRODUCTS, SOLUTIONS } from "@/content/marketing";
 import { cn } from "@/lib/utils";
 
@@ -87,6 +89,7 @@ export function Header() {
   const [mobile, setMobile] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const me = useMe();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -138,12 +141,18 @@ export function Header() {
           )}
         </nav>
         <div className="ml-auto hidden items-center gap-2 md:flex">
-          <Link
-            href="/login"
-            className="inline-flex h-9 items-center rounded-lg border border-line-strong px-4 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2"
-          >
-            Sign in
-          </Link>
+          {me === undefined ? (
+            <span className="h-9 w-[86px]" aria-hidden />
+          ) : me ? (
+            <AccountMenu me={me} />
+          ) : (
+            <Link
+              href="/login"
+              className="inline-flex h-9 items-center rounded-lg border border-line-strong px-4 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2"
+            >
+              Sign in
+            </Link>
+          )}
         </div>
         <button className="ml-auto rounded-md p-2 md:hidden" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}>
           {mobile ? <X size={20} /> : <Menu size={20} />}
@@ -169,9 +178,31 @@ export function Header() {
             <Link href="/integrations" onClick={() => setMobile(false)}>Integrations</Link>
             <Link href="/pricing" onClick={() => setMobile(false)}>Pricing</Link>
           </div>
-          <Link href="/login" onClick={() => setMobile(false)} className={buttonClass("secondary", "md", "mt-2 w-full")}>
-            Sign in
-          </Link>
+          {me ? (
+            <div className="mt-2 rounded-xl border border-line p-3">
+              <div className="flex items-center gap-3">
+                <Avatar name={me.name} image={me.image} size={34} />
+                <div className="min-w-0">
+                  <div className="truncate text-[14px] font-semibold">{me.name}</div>
+                  <div className="truncate text-[12.5px] text-ink-3">{me.email}</div>
+                </div>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <Link href="/app/projects" onClick={() => setMobile(false)} className={buttonClass("ink", "md", "flex-1")}>
+                  Open QASync
+                </Link>
+                <form action={signOutAction}>
+                  <button type="submit" className={buttonClass("secondary", "md")}>
+                    Sign out
+                  </button>
+                </form>
+              </div>
+            </div>
+          ) : (
+            <Link href="/login" onClick={() => setMobile(false)} className={buttonClass("secondary", "md", "mt-2 w-full")}>
+              Sign in
+            </Link>
+          )}
         </div>
       )}
     </header>

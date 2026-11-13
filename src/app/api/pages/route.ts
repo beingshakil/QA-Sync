@@ -1,4 +1,4 @@
-import { getShare, listPages, upsertPage } from "@/server/repo";
+import { getShare, listPages, requireFeature, upsertPage } from "@/server/repo";
 import { actorFrom, fail, member, ok, projectFor, readJson } from "@/server/http";
 import { normalizeUrl } from "@/lib/utils";
 
@@ -29,6 +29,11 @@ export async function POST(req: Request) {
   if ("error" in actor) return fail(actor.error, actor.status);
   const project = await projectFor(actor, actor.kind === "guest" ? actor.projectId : b?.projectId);
   if (!project) return fail("Project not found", 404);
+  // Visits are recorded on every plan; adding pages to the QA list by hand is Pro.
+  if (!b?.visited) {
+    const off = await requireFeature(project.workspaceId!, "pageQa");
+    if (off) return fail(off, 402);
+  }
   let url = b?.url?.trim();
   if (!url) return fail("A page URL is required");
   // Accept "/pricing", "pricing", or a full URL on the same site.

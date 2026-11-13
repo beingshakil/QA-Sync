@@ -1,4 +1,4 @@
-import { deletePage, getPage, listPages, setPageQa } from "@/server/repo";
+import { deletePage, getPage, listPages, requireFeature, setPageQa } from "@/server/repo";
 import { actorFrom, fail, member, ok, projectFor, readJson } from "@/server/http";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
   const actor = await actorFrom(b);
   if ("error" in actor) return fail(actor.error, actor.status);
   const page = await getPage(id);
-  if (!page || !(await projectFor(actor, page.projectId))) return fail("Not found", 404);
+  const project = page ? await projectFor(actor, page.projectId) : null;
+  if (!page || !project) return fail("Not found", 404);
+  const off = await requireFeature(project.workspaceId!, "pageQa");
+  if (off) return fail(off, 402);
   if (b?.qa !== "done" && b?.qa !== "pending") return fail("qa must be done or pending");
   await setPageQa(id, b.qa === "done", actor.name);
   return ok(await listPages(page.projectId));

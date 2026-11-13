@@ -61,6 +61,11 @@ export default function TermsPage() {
             . Paid plans renew until you cancel; cancelling stops future charges and your workspace moves to the free plan. We&apos;ll give notice before changing prices
             for existing subscriptions.
           </p>
+          <p>
+            <strong>Fair use.</strong> &ldquo;Unlimited&rdquo; on the Pro plan means no fixed cap for normal use by a team. To keep QASync fast for everyone, we may contact
+            you about, and if needed limit, usage that is far beyond normal and strains the service (for example automated bulk uploads or scripted traffic). We&apos;ll
+            always reach out before limiting a paying workspace.
+          </p>
         </LegalSection>
 
         <LegalSection n={6} title="The service">

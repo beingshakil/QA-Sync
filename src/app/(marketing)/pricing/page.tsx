@@ -7,15 +7,17 @@ import { JsonLd, breadcrumbs, faqPage, graph, softwareApplication } from "@/comp
 
 export const metadata: Metadata = pageMetadata({
   title: "Pricing: Free and Pro Plans",
-  description: "QASync is free for 2 projects and 200 comments. Pro is $5 a month for 5 projects, unlimited comments and 3 client guests. Every review tool on both.",
+  description: "Start free with 2 projects and 50 comments. Pro is $5 a month for every review tool with no limits: projects, comments, audits, teammates and client guests.",
   path: "/pricing",
 });
 
 const PRICING_FAQ = [
-  { q: "What happens when I reach a Free limit?", a: "Nothing is deleted. You can keep working on what you have; to add a third project or go past 200 comments, upgrade to Pro or archive old work." },
-  { q: "What is a guest?", a: "Someone outside your workspace, such as a client, who opens a share link and leaves comments without creating an account. Pro includes 3 guests." },
-  { q: "Can I cancel Pro?", a: "Any time. You drop back to Free and keep your projects and comments. Anything above the Free limits becomes read-only until you upgrade again." },
-  { q: "Is $5 the whole price?", a: "Yes. No per-seat fees, no add-ons and no annual lock-in: $5 a month for everything in Pro." },
+  { q: "What happens when I reach a Free limit?", a: "Nothing is deleted. We warn you in the app and by email when you're close, and once a limit is reached you can keep working with what you have. To add more, upgrade to Pro or delete old work." },
+  { q: "What's included in Free?", a: "Live element pins on 2 projects, 50 comments (pins and replies), 3 page audits and one teammate. Inspect, freeze hover, device sizes and split view, design overlay, page-wise QA tracking, guest comments and AI agents are on Pro." },
+  { q: "What is a guest?", a: "Someone outside your workspace, such as a client, who opens a share link without creating an account. On Free, guests can view a shared review; on Pro they can pin, reply and sign off, with no limit on how many." },
+  { q: "Can I cancel Pro?", a: "Any time. You drop back to Free and keep all your projects and comments. Above the Free limits you just can't add new ones until you upgrade again." },
+  { q: "Is Pro really unlimited?", a: "Yes, for normal use: there's no cap on projects, comments, audits, teammates or client guests. Pro works under fair use, so if a single workspace's usage grows large enough to slow the service for everyone else (for example, automated bulk uploads), we'll get in touch to work it out before anything changes. Each file can be up to 15 MB." },
+  { q: "Is $5 the whole price?", a: "Yes. No per-seat fees, no add-ons and no annual lock-in: $5 a month for everything QASync does, with no limits." },
 ];
 
 export default function PricingPage() {
@@ -24,9 +26,9 @@ export default function PricingPage() {
       <JsonLd data={graph(softwareApplication(), faqPage(PRICING_FAQ, "/pricing"), breadcrumbs([{ name: "Pricing", path: "/pricing" }]))} />
       <PageHero
         eyebrow="Pricing"
-        title="Every review tool, free."
+        title="Start free."
         accent="Pro costs a coffee."
-        sub="Both plans include every review tool and page audits. When you need more projects, unlimited comments or client guests, Pro is $5 a month."
+        sub="Free covers comment pins on 2 projects. Pro is $5 a month for every review tool, client guests and AI agents, with no limits."
       />
       <Section className="pt-12 md:pt-14">
         <PricingCards />

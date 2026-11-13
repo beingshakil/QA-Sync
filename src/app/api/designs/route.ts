@@ -1,4 +1,4 @@
-import { addDesign, getShare, getUpload, listDesigns } from "@/server/repo";
+import { addDesign, getShare, getUpload, listDesigns, requireFeature } from "@/server/repo";
 import { fail, member, ok, projectFor, readJson } from "@/server/http";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +28,8 @@ export async function POST(req: Request) {
   const b = await readJson<{ projectId?: string; pageUrl?: string; device?: string; uploadId?: string }>(req);
   const project = await projectFor(ctx, b?.projectId);
   if (!project) return fail("Project not found", 404);
+  const off = await requireFeature(ctx.workspaceId, "overlay");
+  if (off) return fail(off, 402);
   if (!b?.pageUrl) return fail("pageUrl is required");
   const up = b.uploadId ? await getUpload(b.uploadId) : null;
   if (!up || !up.mime.startsWith("image/")) return fail("Upload an image of the design (PNG, JPG or WebP)");

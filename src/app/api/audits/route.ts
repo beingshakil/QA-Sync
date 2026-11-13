@@ -1,4 +1,4 @@
-import { listAudits, saveAudit } from "@/server/repo";
+import { checkLimit, listAudits, saveAudit } from "@/server/repo";
 import { fail, member, ok, projectFor, readJson } from "@/server/http";
 import { runAudit } from "@/server/audit";
 import { resolveTarget, selfOriginOf } from "@/server/fetch-guard";
@@ -30,6 +30,8 @@ export async function POST(req: Request) {
   const b = await readJson<{ projectId?: string; url?: string }>(req);
   const project = await projectFor(ctx, b?.projectId);
   if (!project) return fail("Project not found", 404);
+  const limited = await checkLimit(ctx.workspaceId, "audits");
+  if (limited) return fail(limited, 402);
   const raw = b?.url?.trim() || project.baseUrl;
   try {
     const target = resolveTarget(raw, selfOriginOf(req));

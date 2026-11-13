@@ -1,4 +1,4 @@
-import { createIssue, getShare, getUpload, listIssues, resetPageQa, upsertPage, type IssueFilter } from "@/server/repo";
+import { checkLimit, createIssue, notifyUsage, requireFeature, getShare, getUpload, listIssues, resetPageQa, upsertPage, type IssueFilter } from "@/server/repo";
 import { actorFrom, fail, isMember, member, ok, projectFor, readJson } from "@/server/http";
 import { autoTitle, stripMentions, suggestPriority } from "@/server/ai";
 import { q } from "@/server/db";
@@ -61,6 +61,10 @@ export async function POST(req: Request) {
   const project = await projectFor(actor, b.projectId);
   if (!project) return fail(actor.kind === "guest" ? "Share link doesn't cover this project" : "Project not found", actor.kind === "guest" ? 403 : 404);
 
+  if (actor.kind === "guest" && (await requireFeature(project.workspaceId!, "guests"))) return fail("This review is view-only for now. Commenting is turned off for guests.", 402);
+  const limited = await checkLimit(project.workspaceId!, "comments");
+  if (limited) return fail(actor.kind === "guest" ? "This project can't take new comments right now. Let the team know." : limited, 402);
+
   const text = (b.body ?? "").trim().slice(0, 5000);
   // Only reference files that were really uploaded; rebuild metadata server-side.
   const attachments: Attachment[] = [];
@@ -90,6 +94,7 @@ export async function POST(req: Request) {
   // The page joins the QA checklist, and new work on a signed-off page puts it back in review.
   await upsertPage(issue.projectId, issue.pageUrl);
   await resetPageQa(issue.projectId, issue.pageUrl);
+  await notifyUsage(project.workspaceId!);
   return ok(issue, 201);
 }
 

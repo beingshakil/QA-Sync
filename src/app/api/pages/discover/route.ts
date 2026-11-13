@@ -1,4 +1,4 @@
-import { listPages, upsertPage } from "@/server/repo";
+import { listPages, requireFeature, upsertPage } from "@/server/repo";
 import { fail, member, ok, projectFor, readJson } from "@/server/http";
 import { discoverPages } from "@/server/discover";
 import { resolveTarget, selfOriginOf } from "@/server/fetch-guard";
@@ -13,6 +13,8 @@ export async function POST(req: Request) {
   const b = await readJson<{ projectId?: string }>(req);
   const project = await projectFor(ctx, b?.projectId);
   if (!project) return fail("Project not found", 404);
+  const off = await requireFeature(ctx.workspaceId, "pageQa");
+  if (off) return fail(off, 402);
   try {
     const self = selfOriginOf(req);
     const target = resolveTarget(project.baseUrl, self);

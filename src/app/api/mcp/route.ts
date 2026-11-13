@@ -1,5 +1,6 @@
 import { callTool, listTools, MCP_INSTRUCTIONS, MCP_SERVER_INFO, type McpContext } from "@/server/mcp";
 import { verifyApiToken } from "@/server/tokens";
+import { getWorkspacePlan } from "@/server/repo";
 
 /**
  * MCP endpoint (Streamable HTTP transport, stateless, JSON responses).
@@ -63,6 +64,10 @@ export async function POST(req: Request) {
     return json(rpcError(null, -32001, "Missing or invalid API token. Create one in QASync → Settings → AI agents (MCP), then send it as 'Authorization: Bearer <token>'."), 401, {
       "WWW-Authenticate": 'Bearer realm="QASync"',
     });
+  }
+
+  if ((await getWorkspacePlan(token.workspaceId)).plan !== "pro") {
+    return json(rpcError(null, -32002, "AI agents are a Pro feature. This token's QASync workspace is on the Free plan; upgrade it to Pro to connect agents."), 403);
   }
 
   let body: unknown;

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { GuestReview } from "@/components/app/guest-review";
-import { getProject, getShare, listIssues } from "@/server/repo";
+import { getProject, getShare, listIssues, planAccess } from "@/server/repo";
 
 export const dynamic = "force-dynamic";
 
@@ -23,5 +23,5 @@ export default async function SharePage({ params, searchParams }: Props) {
   if (!project) notFound();
   const issues = await listIssues({ projectId: project.id });
   const initialIssueId = issue && issues.some((i) => i.id === issue) ? issue : undefined;
-  return <GuestReview token={token} project={project} initialIssues={issues} initialPage={page || undefined} initialIssueId={initialIssueId} />;
+  return <GuestReview token={token} project={project} initialIssues={issues} initialPage={page || undefined} initialIssueId={initialIssueId} access={await planAccess(project.workspaceId!)} />;
 }

@@ -1,4 +1,4 @@
-import { createProject, listProjects, upsertPage } from "@/server/repo";
+import { checkLimit, createProject, listProjects, upsertPage } from "@/server/repo";
 import { fail, member, ok, readJson } from "@/server/http";
 import { hostOf, normalizeUrl, pageKey } from "@/lib/utils";
 
@@ -37,6 +37,8 @@ export async function POST(req: Request) {
     return ok({ ...existing, existing: true, openPage: samePage ? null : url });
   }
 
+  const limited = await checkLimit(ctx.workspaceId, "projects");
+  if (limited) return fail(limited, 402);
   const name = body.name?.trim() || hostOf(url);
   return ok({ ...(await createProject(ctx.workspaceId, { name, baseUrl: url, figmaUrl: body.figmaUrl?.trim() || null })), existing: false, openPage: null }, 201);
 }

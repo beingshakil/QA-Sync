@@ -312,6 +312,8 @@ export interface Plan {
   cta: string;
   featured?: boolean;
   features: string[];
+  /** Small print under the feature list. */
+  note?: string;
 }
 
 export const PLANS: Plan[] = [
@@ -320,7 +322,8 @@ export const PLANS: Plan[] = [
     price: 0,
     blurb: "For freelancers and small sites.",
     cta: "Start free",
-    features: ["2 projects", "200 comments", "Every review tool", "Page audits"],
+    features: ["2 projects", "50 comments", "Live element pins", "3 page audits", "You and 1 teammate"],
+    note: "Guests can view shared reviews. Inspect, freeze hover, device sizes, design overlay and page-wise QA are on Pro.",
   },
   {
     name: "Pro",
@@ -328,7 +331,8 @@ export const PLANS: Plan[] = [
     blurb: "Drop a cup of coffee.",
     cta: "Get Pro",
     featured: true,
-    features: ["5 projects", "Unlimited comments", "Every review tool", "3 guests", "Page audits"],
+    features: ["Unlimited projects, comments and audits", "Unlimited teammates and client guests", "Inspect, measure and freeze hover", "Device sizes, split view and design overlay", "Page-wise QA tracking and AI agents"],
+    note: "Unlimited under fair use: everything a normal team needs. If one workspace's usage starts slowing QASync down for others, we'll talk to you first.",
   },
 ];
 
@@ -337,21 +341,23 @@ export const PLAN_MATRIX: { group: string; rows: [string, ...(string | boolean)[
   {
     group: "Limits",
     rows: [
-      ["Projects", "2", "5"],
-      ["Comments", "200", "Unlimited"],
-      ["Guests (comment through a share link, no account)", false, "3"],
+      ["Projects", "2", "Unlimited"],
+      ["Comments (pins and replies)", "50", "Unlimited"],
+      ["Page audits", "3", "Unlimited"],
+      ["Team members", "2", "Unlimited"],
+      ["Guests (comment through a share link, no account)", "View only", "Unlimited"],
     ],
   },
   {
     group: "Review tools",
     rows: [
       ["Live element pins", true, true],
-      ["Inspect, measure, contrast", true, true],
-      ["Freeze hover", true, true],
-      ["Device sizes, split view and sync scroll", true, true],
-      ["Design overlay", true, true],
-      ["Page-wise QA tracking", true, true],
-      ["Page audits", true, true],
+      ["Inspect, measure, contrast", false, true],
+      ["Freeze hover", false, true],
+      ["Device sizes, split view and sync scroll", false, true],
+      ["Design overlay", false, true],
+      ["Page-wise QA tracking", false, true],
+      ["AI agents (MCP)", false, true],
     ],
   },
 ];

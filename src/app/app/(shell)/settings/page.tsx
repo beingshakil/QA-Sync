@@ -5,6 +5,8 @@ import { IntegrationIcon } from "@/components/integration-icon";
 import { listApiTokens } from "@/server/tokens";
 import { getCurrentWorkspace, requireCtx } from "@/server/session";
 import { McpSettings } from "@/components/app/mcp-settings";
+import { PlanCard } from "@/components/app/plan-card";
+import { getWorkspacePlan, workspaceUsage } from "@/server/repo";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,8 @@ export default async function SettingsPage() {
     <>
       <PageHeader title="Settings" sub="Your profile, workspace, team and integrations." />
       <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
+        <PlanCard plan={await getWorkspacePlan(ctx.workspaceId)} usage={await workspaceUsage(ctx.workspaceId)} />
+
         <WorkspaceSettings initial={ws} workspaces={ctx.workspaces} activeId={ctx.workspaceId} />
 
         <McpSettings initial={await listApiTokens(ctx.workspaceId)} />

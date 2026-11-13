@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, Coffee } from "lucide-react";
 import { buttonClass } from "@/components/ui";
 import { PLANS } from "@/content/marketing";
+import { CONTACT_EMAIL } from "@/components/marketing/legal";
 import { cn } from "@/lib/utils";
 
 export function PricingCards({ className = "mx-auto max-w-3xl" }: { className?: string }) {
@@ -29,9 +30,16 @@ export function PricingCards({ className = "mx-auto max-w-3xl" }: { className?: 
             {p.featured && <Coffee size={15} className="text-brand-ink" aria-hidden />}
             {p.blurb}
           </p>
-          <Link href="/app" className={cn(buttonClass(p.featured ? "ink" : "secondary", "md"), "mt-6 w-full")}>
-            {p.cta}
-          </Link>
+          {p.price > 0 && CONTACT_EMAIL ? (
+            // Pro is switched on by the team for now: the button opens an email to ask for it.
+            <a href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("QASync Pro")}`} className={cn(buttonClass(p.featured ? "ink" : "secondary", "md"), "mt-6 w-full")}>
+              {p.cta}
+            </a>
+          ) : (
+            <Link href="/app" className={cn(buttonClass(p.featured ? "ink" : "secondary", "md"), "mt-6 w-full")}>
+              {p.cta}
+            </Link>
+          )}
           <ul className="mt-6 space-y-3 text-sm">
             {p.features.map((f) => (
               <li key={f} className="flex items-center gap-2.5">
@@ -40,6 +48,7 @@ export function PricingCards({ className = "mx-auto max-w-3xl" }: { className?: 
               </li>
             ))}
           </ul>
+          {p.note && <p className="mt-auto pt-6 text-[12px] leading-relaxed text-ink-3">{p.note}</p>}
         </div>
       ))}
     </div>

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { createProject, listProjects, upsertPage } from "@/server/repo";
+import { checkLimit, createProject, listProjects, upsertPage } from "@/server/repo";
 import { requireCtx } from "@/server/session";
 import { hostOf, normalizeUrl, pageKey } from "@/lib/utils";
 
@@ -24,6 +24,7 @@ export default async function StartPage({ searchParams }: { searchParams: Promis
     if (!samePage) await upsertPage(existing.id, url);
     redirect(`/app/projects/${existing.id}/review${samePage ? "" : `?page=${encodeURIComponent(url)}`}`);
   }
+  if (await checkLimit(ctx.workspaceId, "projects")) redirect("/app/projects?limit=projects");
   const project = await createProject(ctx.workspaceId, { name: hostOf(url), baseUrl: url });
   redirect(`/app/projects/${project.id}/review`);
 }

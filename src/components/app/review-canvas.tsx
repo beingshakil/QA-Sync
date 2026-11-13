@@ -11,6 +11,7 @@ import {
   Gauge,
   ImagePlus,
   Layers,
+  Lock,
   Link2,
   Loader2,
   MessageSquarePlus,
@@ -25,6 +26,7 @@ import {
   Snowflake,
   Tablet,
   Trash2,
+  X,
 } from "lucide-react";
 import { api, type GuestCtx } from "@/lib/api";
 import { OPEN_STATUSES, issueColor, issueTextColor, pageState, type Design, type ElementInfo, type EnvInfo, type Issue, type Page, type Project } from "@/lib/types";
@@ -38,6 +40,7 @@ import { SharePopover } from "./share-popover";
 import { AuditModal } from "./audit-modal";
 import { cn, pageKey, pageLabel } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm";
+import { FEATURE_LABEL, usageState, type Feature, type PlanAccess } from "@/lib/plans";
 import { DEFAULT_SIZES, DEVICE_PRESETS, FALLBACK_W, resolveSize, type CustomSizes, type DevicePreset, type FrameKey } from "@/lib/devices";
 
 type Mode = "browse" | "comment" | "inspect";
@@ -118,6 +121,7 @@ export function ReviewCanvas({
   members,
   me,
   guest,
+  access,
 }: {
   project: Project;
   initialIssues: Issue[];
@@ -127,6 +131,8 @@ export function ReviewCanvas({
   /** The signed-in member's name (for reply permissions). Guests use their guest name. */
   me?: string;
   guest?: GuestCtx;
+  /** The workspace's plan. Free: comment pins only (members), view only (guests). Omitted = everything. */
+  access?: PlanAccess;
 }) {
   const frameEls = useRef<Partial<Record<FrameKey, HTMLIFrameElement | null>>>({});
   const stageRef = useRef<HTMLDivElement>(null);
@@ -139,7 +145,7 @@ export function ReviewCanvas({
   const [urlInput, setUrlInput] = useState(pageUrl);
   const [reloadKey, setReloadKey] = useState(0);
   const [ready, setReady] = useState<Set<FrameKey>>(new Set());
-  const [mode, setMode] = useState<Mode>("comment");
+  const [mode, setMode] = useState<Mode>(guest && access && !access.pro ? "browse" : "comment");
   const [frozen, setFrozen] = useState(false);
   const [device, setDevice] = useState<DeviceKey>("desktop");
   const [zoom, setZoom] = useState<Zoom>("fit");
@@ -177,6 +183,15 @@ export function ReviewCanvas({
   }, [guest, project.id]);
   const confirmDialog = useConfirm();
 
+  /* ───────── plan: Free gets comment pins; inspect, freeze, devices, design tools and page QA are Pro ───────── */
+  const pro = access?.pro ?? true;
+  const viewOnly = !!guest && !pro;
+  const commentLimit = access?.comments.limit ?? null;
+  const [commentsUsed, setCommentsUsed] = useState(access?.comments.used ?? 0);
+  const commentState = commentLimit === null ? "ok" : usageState(commentsUsed, commentLimit);
+  const outOfComments = commentState === "full";
+  const [upsell, setUpsell] = useState<Feature | "comments" | null>(null);
+
   const setFilters = useCallback((f: Partial<PanelFilters>) => setFiltersState((cur) => ({ ...cur, ...f })), []);
 
   /* ───────── view preferences survive a refresh (per project, per browser) ───────── */
@@ -212,6 +227,15 @@ export function ReviewCanvas({
       /* ignore */
     }
   }, [prefsKey, mode, device, zoom, panel, panelW, syncScroll, sizeIds, customSizes, filters]);
+
+  // Saved view preferences may name Pro tools; on Free, fall back to what the plan includes.
+  useEffect(() => {
+    if (pro) return;
+    if (mode === "inspect" || (viewOnly && mode === "comment")) setMode(viewOnly ? "browse" : "comment");
+    if (device !== "desktop") setDevice("desktop");
+    if (tool) setTool(null);
+    if (sizeIds.desktop !== DEFAULT_SIZES.desktop) setSizeIds(DEFAULT_SIZES);
+  }, [pro, viewOnly, mode, device, tool, sizeIds.desktop]);
 
   // Drag the panel's left edge. A full-screen shield keeps the iframes from swallowing the pointer.
   function startResize(e: React.PointerEvent) {
@@ -437,8 +461,8 @@ export function ReviewCanvas({
   useEffect(() => frames.forEach((f) => sendTo(f.key, overlayMsg(f.key))), [frames, overlayMsg, sendTo]);
 
   // Latest values for the (single) message listener.
-  const latest = useRef({ mode, pinsMsg, overlayMsg, selectedId, focusedId, primary, frames, registerVisit, device, syncScroll });
-  latest.current = { mode, pinsMsg, overlayMsg, selectedId, focusedId, primary, frames, registerVisit, device, syncScroll };
+  const latest = useRef({ mode, pinsMsg, overlayMsg, selectedId, focusedId, primary, frames, registerVisit, device, syncScroll, outOfComments });
+  latest.current = { mode, pinsMsg, overlayMsg, selectedId, focusedId, primary, frames, registerVisit, device, syncScroll, outOfComments };
 
   const placeFromFrame = useCallback((k: FrameKey, p: Pick): Placed => {
     const f = frameEls.current[k];
@@ -450,10 +474,16 @@ export function ReviewCanvas({
     return { ...p, frame: k, x: r.left - sr.left + p.cx * s, y: r.top - sr.top + p.cy * s };
   }, []);
 
-  const changeMode = useCallback((m: Mode) => {
-    setMode(m);
-    if (m !== "inspect") setInspect(null);
-  }, []);
+  const changeMode = useCallback(
+    (m: Mode) => {
+      if (m === "inspect" && !pro) return setUpsell("inspect");
+      if (m === "comment" && viewOnly) return setUpsell("guests");
+      setMode(m);
+      if (m !== "inspect") setInspect(null);
+    },
+    [pro, viewOnly],
+  );
+  const toggleFreeze = useCallback(() => (pro ? sendAll({ type: "freeze", on: !frozen }) : setUpsell("freeze")), [pro, sendAll, frozen]);
 
   const resetFrames = useCallback(() => {
     setReady(new Set());
@@ -534,7 +564,7 @@ export function ReviewCanvas({
       if (k === "c") changeMode("comment");
       else if (k === "i") changeMode("inspect");
       else if (k === "b") changeMode("browse");
-      else if (k === "f") sendAll({ type: "freeze", on: !frozen });
+      else if (k === "f") toggleFreeze();
       else if (k === "j") stepIssue(1);
       else if (k === "k") stepIssue(-1);
       else if (k === "escape") {
@@ -544,7 +574,7 @@ export function ReviewCanvas({
         else setInspect(null);
       }
     },
-    [changeMode, sendAll, frozen, stepIssue, draft, selectedId, focusedId, cancelDraft],
+    [changeMode, toggleFreeze, stepIssue, draft, selectedId, focusedId, cancelDraft],
   );
   const keyRef = useRef(handleKey);
   keyRef.current = handleKey;
@@ -574,6 +604,11 @@ export function ReviewCanvas({
         case "pick":
           setInspect(null);
           setSelectedId(null);
+          if (L.outOfComments) {
+            sendTo(k, { type: "clear" });
+            setUpsell("comments");
+            break;
+          }
           setDraft(placeFromFrame(k, m.data as Pick));
           break;
         case "inspect":
@@ -662,6 +697,7 @@ export function ReviewCanvas({
   /* ───────── actions ───────── */
   function chooseDevice(d: DeviceKey) {
     if (d === device) return;
+    if (!pro && d !== "desktop") return setUpsell("devices");
     if (d === "split" && tool === "compare") setTool(null);
     resetFrames();
     setDevice(d);
@@ -674,6 +710,7 @@ export function ReviewCanvas({
   }
 
   function chooseTool(t: Exclude<Tool, null>) {
+    if (!pro) return setUpsell("overlay");
     setDesignErr(null);
     if (tool === t) return setTool(null);
     if (!designFor(primary)) {
@@ -739,6 +776,7 @@ export function ReviewCanvas({
       guest,
     );
     setIssues((xs) => [created, ...xs]);
+    setCommentsUsed((n) => n + 1);
     setDraft(null);
     setFocusedId(created.id);
     setPanel(true);
@@ -855,10 +893,10 @@ export function ReviewCanvas({
         {/* devices + zoom */}
         <div className="ml-auto hidden items-center gap-1 rounded-xl border border-line bg-paper p-1 md:flex">
           <DevBtn active={device === "desktop"} onClick={() => chooseDevice("desktop")} title="Desktop"><Monitor size={16} /></DevBtn>
-          <DevBtn active={device === "tablet"} onClick={() => chooseDevice("tablet")} title="Tablet · 768"><Tablet size={16} /></DevBtn>
-          <DevBtn active={device === "mobile"} onClick={() => chooseDevice("mobile")} title="Mobile · 390"><Smartphone size={16} /></DevBtn>
-          <DevBtn active={device === "split"} onClick={() => chooseDevice("split")} title="Split view: desktop + mobile"><MonitorSmartphone size={16} /></DevBtn>
-          <SizeMenu
+          <DevBtn active={device === "tablet"} locked={!pro} onClick={() => chooseDevice("tablet")} title="Tablet · 768"><Tablet size={16} /></DevBtn>
+          <DevBtn active={device === "mobile"} locked={!pro} onClick={() => chooseDevice("mobile")} title="Mobile · 390"><Smartphone size={16} /></DevBtn>
+          <DevBtn active={device === "split"} locked={!pro} onClick={() => chooseDevice("split")} title="Split view: desktop + mobile"><MonitorSmartphone size={16} /></DevBtn>
+          {pro && <SizeMenu
             open={sizeMenu}
             setOpen={setSizeMenu}
             keys={device === "split" ? ["desktop", "mobile"] : [device as FrameKey]}
@@ -870,7 +908,7 @@ export function ReviewCanvas({
               setCustomSizes((cur) => ({ ...cur, [k]: { w, h } }));
               setSizeIds((cur) => ({ ...cur, [k]: "custom" }));
             }}
-          />
+          />}
           <select
             value={zoom}
             onChange={(e) => setZoom(e.target.value as Zoom)}
@@ -905,22 +943,23 @@ export function ReviewCanvas({
 
         {/* design tools */}
         <div className="hidden items-center gap-1 rounded-xl border border-line bg-paper p-1 lg:flex">
-          <DevBtn active={tool === "compare"} onClick={() => chooseTool("compare")} title="Compare: design beside the live page"><Columns2 size={16} /></DevBtn>
-          <DevBtn active={tool === "overlay"} onClick={() => chooseTool("overlay")} title="Overlay the design on the page"><Layers size={16} /></DevBtn>
+          <DevBtn active={tool === "compare"} locked={!pro} onClick={() => chooseTool("compare")} title="Compare: design beside the live page"><Columns2 size={16} /></DevBtn>
+          <DevBtn active={tool === "overlay"} locked={!pro} onClick={() => chooseTool("overlay")} title="Overlay the design on the page"><Layers size={16} /></DevBtn>
         </div>
 
         {/* modes */}
         <div className="flex items-center rounded-xl border border-line bg-paper p-1">
           <ModeBtn active={mode === "browse"} onClick={() => changeMode("browse")} icon={<MousePointer2 size={15} />} label="Browse" k="B" />
-          <ModeBtn active={mode === "comment"} onClick={() => changeMode("comment")} icon={<MessageSquarePlus size={15} />} label="Comment" k="C" />
-          <ModeBtn active={mode === "inspect"} onClick={() => changeMode("inspect")} icon={<ScanSearch size={15} />} label="Inspect" k="I" />
+          <ModeBtn active={mode === "comment"} locked={viewOnly} onClick={() => changeMode("comment")} icon={<MessageSquarePlus size={15} />} label="Comment" k="C" />
+          <ModeBtn active={mode === "inspect"} locked={!pro} onClick={() => changeMode("inspect")} icon={<ScanSearch size={15} />} label="Inspect" k="I" />
         </div>
         <button
-          onClick={() => sendAll({ type: "freeze", on: !frozen })}
-          title="Freeze hover states (F)"
-          className={cn("rounded-lg border p-2", frozen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
+          onClick={toggleFreeze}
+          title={pro ? "Freeze hover states (F)" : "Freeze hover states · Pro"}
+          className={cn("relative rounded-lg border p-2", frozen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
         >
           <Snowflake size={15} />
+          {!pro && <LockDot />}
         </button>
         {!guest && (
           <button
@@ -976,7 +1015,7 @@ export function ReviewCanvas({
       </div>
 
       {/* ───────── page tabs: which URLs are being QA'd, and their state ───────── */}
-      <PageTabs
+      {pro && <PageTabs
         pages={livePages}
         currentKey={pageKey(pageUrl)}
         onSelect={(p) => p.key !== pageKey(pageUrl) && navigate(p.url)}
@@ -997,7 +1036,31 @@ export function ReviewCanvas({
             alert((e as Error).message);
           }
         }}
-      />
+      />}
+
+      {!guest && commentLimit !== null && commentState !== "ok" && (
+        <div
+          role="status"
+          className={cn(
+            "flex min-h-9 shrink-0 flex-wrap items-center justify-center gap-x-2 border-b px-3 py-1.5 text-center text-[12.5px]",
+            outOfComments ? "border-danger/25 bg-danger-soft text-ink" : "border-[var(--st-progress)]/25 bg-[color-mix(in_srgb,var(--st-progress)_10%,transparent)] text-ink-2",
+          )}
+        >
+          <span>
+            {outOfComments
+              ? `You've used all ${commentLimit} comments on the Free plan. New comments and replies are paused.`
+              : `Heads up: ${Math.max(0, commentLimit - commentsUsed)} of ${commentLimit} free comments left.`}
+          </span>
+          <a href="/pricing" target="_blank" rel="noreferrer" className="font-semibold text-brand-ink hover:underline">
+            Upgrade to Pro
+          </a>
+        </div>
+      )}
+      {viewOnly && (
+        <div role="status" className="flex h-9 shrink-0 items-center justify-center border-b border-line bg-surface-2 px-3 text-[12.5px] text-ink-2">
+          View only: you can browse the page and read comments, but commenting is turned off for this review.
+        </div>
+      )}
 
       {resizing && <div className="fixed inset-0 z-[60] cursor-col-resize select-none" />}
 
@@ -1116,6 +1179,8 @@ export function ReviewCanvas({
               {hint}
             </div>
           )}
+
+          {upsell && <Upsell what={upsell} guest={!!guest} limit={commentLimit} onClose={() => setUpsell(null)} />}
 
           {/* overlay controls */}
           {tool === "overlay" && (
@@ -1271,30 +1336,94 @@ export function ReviewCanvas({
   );
 }
 
-function DevBtn({ active, onClick, title, children }: { active: boolean; onClick: () => void; title: string; children: React.ReactNode }) {
+function DevBtn({ active, locked, onClick, title, children }: { active: boolean; locked?: boolean; onClick: () => void; title: string; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
-      title={title}
+      title={locked ? `${title} · Pro` : title}
       aria-pressed={active}
-      className={cn("flex h-8 w-9 items-center justify-center rounded-lg transition", active ? "bg-blue text-white shadow-1" : "text-ink-3 hover:bg-surface-2 hover:text-ink")}
+      className={cn(
+        "relative flex h-8 w-9 items-center justify-center rounded-lg transition",
+        active ? "bg-blue text-white shadow-1" : locked ? "text-ink-3/60 hover:bg-surface-2 hover:text-ink-2" : "text-ink-3 hover:bg-surface-2 hover:text-ink",
+      )}
     >
       {children}
+      {locked && <LockDot />}
     </button>
   );
 }
 
-function ModeBtn({ active, onClick, icon, label, k }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; k: string }) {
+function ModeBtn({ active, locked, onClick, icon, label, k }: { active: boolean; locked?: boolean; onClick: () => void; icon: React.ReactNode; label: string; k: string }) {
   return (
     <button
       onClick={onClick}
-      title={`${label} (${k})`}
+      title={locked ? `${label} · not on this plan` : `${label} (${k})`}
       aria-label={label}
       aria-pressed={active}
-      className={cn("flex h-8 w-9 items-center justify-center rounded-lg transition", active ? "bg-ink text-paper shadow-1" : "text-ink-3 hover:bg-surface-2 hover:text-ink")}
+      className={cn(
+        "relative flex h-8 w-9 items-center justify-center rounded-lg transition",
+        active ? "bg-ink text-paper shadow-1" : locked ? "text-ink-3/60 hover:bg-surface-2 hover:text-ink-2" : "text-ink-3 hover:bg-surface-2 hover:text-ink",
+      )}
     >
       {icon}
+      {locked && <LockDot />}
     </button>
+  );
+}
+
+/** Small lock on a toolbar button whose tool isn't in the workspace's plan. */
+function LockDot() {
+  return (
+    <span className="pointer-events-none absolute -right-1 -top-1 flex h-[15px] w-[15px] items-center justify-center rounded-full border border-line bg-surface text-ink-2 shadow-1">
+      <Lock size={8} strokeWidth={2.6} />
+    </span>
+  );
+}
+
+/** Shown when someone reaches for a Pro tool, or runs out of free comments. */
+function Upsell({ what, guest, limit, onClose }: { what: Feature | "comments"; guest: boolean; limit: number | null; onClose: () => void }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", esc);
+    return () => window.removeEventListener("keydown", esc);
+  }, [onClose]);
+  const title = guest
+    ? what === "guests" || what === "comments"
+      ? "This review is view-only"
+      : "Not available on this review"
+    : what === "comments"
+      ? `You've used all ${limit} free comments`
+      : `${FEATURE_LABEL[what]} is a Pro tool`;
+  const body = guest
+    ? "You can browse the page and read every comment. Commenting is turned off for guests on this review."
+    : what === "comments"
+      ? "New comments and replies are paused on the Free plan. Everything you've written is safe. Pro is $5 a month with unlimited comments."
+      : "Free includes comment pins. Pro is $5 a month and unlocks every review tool, with unlimited projects, comments and audits.";
+  return (
+    <div className="animate-pop absolute bottom-10 left-1/2 z-30 w-[min(400px,calc(100%-32px))] -translate-x-1/2 rounded-2xl border border-line bg-surface p-4 shadow-2" role="dialog" aria-label={title}>
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-soft text-brand-ink">
+          <Lock size={16} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="text-[14px] font-semibold text-ink">{title}</div>
+          <p className="mt-1 text-[12.5px] leading-relaxed text-ink-3">{body}</p>
+          {!guest && (
+            <div className="mt-3 flex items-center gap-2">
+              <a href="/pricing" target="_blank" rel="noreferrer" className="inline-flex h-8 items-center rounded-lg bg-ink px-3 text-[12.5px] font-medium text-paper hover:opacity-90">
+                Upgrade to Pro
+              </a>
+              <button onClick={onClose} className="h-8 rounded-lg px-3 text-[12.5px] text-ink-3 hover:bg-surface-2 hover:text-ink">
+                Not now
+              </button>
+            </div>
+          )}
+        </div>
+        <button onClick={onClose} className="rounded p-1 text-ink-3 hover:text-ink" aria-label="Close">
+          <X size={15} />
+        </button>
+      </div>
+    </div>
   );
 }
 

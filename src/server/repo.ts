@@ -3,6 +3,7 @@ import { nanoid } from "nanoid";
 import { LEGACY_WORKSPACE_ID, q, q1, run, type Row } from "./db";
 import { pageKey } from "@/lib/utils";
 import { OPEN_STATUSES, pageState } from "@/lib/types";
+import { FEATURE_LABEL, PLAN_LIMITS, effectivePlan, hasFeature, usageState, type Feature, type Metered, type PlanAccess, type PlanId, type Usage, type WorkspacePlan } from "@/lib/plans";
 import type { Activity, Attachment, Audit, Comment, Design, Issue, Member, Page, Priority, Project, ShareLink, Status, Workspace } from "@/lib/types";
 
 const now = () => new Date().toISOString();
@@ -642,4 +643,95 @@ export async function updateComment(id: string, body: string): Promise<Comment |
 
 export async function deleteComment(id: string) {
   await run("DELETE FROM comments WHERE id = ?", id);
+}
+
+/* ───────── plans & limits ───────── */
+export async function getWorkspacePlan(workspaceId: string): Promise<WorkspacePlan> {
+  const r = await q1("SELECT plan, plan_expires_at FROM workspaces WHERE id = ?", workspaceId);
+  return effectivePlan(r?.plan as string, r?.plan_expires_at as string | null);
+}
+
+/** Everything a plan limits, counted for one workspace. Comments = pins + replies; members include pending invites. */
+export async function workspaceUsage(workspaceId: string): Promise<Usage> {
+  const r = await q1<Record<Metered, number>>(
+    `SELECT
+       (SELECT COUNT(*)::int FROM projects WHERE workspace_id = ?) AS projects,
+       (SELECT COUNT(*)::int FROM issues i JOIN projects p ON p.id = i.project_id WHERE p.workspace_id = ?)
+       + (SELECT COUNT(*)::int FROM comments c JOIN issues i ON i.id = c.issue_id JOIN projects p ON p.id = i.project_id WHERE p.workspace_id = ?) AS comments,
+       (SELECT COUNT(*)::int FROM audits a JOIN projects p ON p.id = a.project_id WHERE p.workspace_id = ?) AS audits,
+       (SELECT COUNT(*)::int FROM memberships WHERE workspace_id = ?) + (SELECT COUNT(*)::int FROM invites WHERE workspace_id = ?) AS members`,
+    workspaceId,
+    workspaceId,
+    workspaceId,
+    workspaceId,
+    workspaceId,
+    workspaceId,
+  );
+  return { projects: Number(r?.projects ?? 0), comments: Number(r?.comments ?? 0), audits: Number(r?.audits ?? 0), members: Number(r?.members ?? 0) };
+}
+
+const LIMIT_MESSAGE: Record<Metered, (n: number) => string> = {
+  projects: (n) => `The Free plan includes ${n} projects. Upgrade to Pro for unlimited projects, or delete one you no longer need.`,
+  comments: (n) => `You've used all ${n} comments on the Free plan. Upgrade to Pro to keep commenting.`,
+  audits: (n) => `The Free plan includes ${n} page audits. Upgrade to Pro for unlimited audits, or delete an old report.`,
+  members: (n) => `The Free plan includes ${n} team members, counting you and pending invites. Upgrade to Pro to invite more people.`,
+};
+
+/** Null when there's room for one more, otherwise the message to show. */
+export async function checkLimit(workspaceId: string, what: Metered): Promise<string | null> {
+  const [{ plan }, usage] = await Promise.all([getWorkspacePlan(workspaceId), workspaceUsage(workspaceId)]);
+  const limit = PLAN_LIMITS[plan][what];
+  return usage[what] < limit ? null : LIMIT_MESSAGE[what](limit);
+}
+
+/** Null when the workspace has this tool, otherwise the message to show. */
+export async function requireFeature(workspaceId: string, f: Feature): Promise<string | null> {
+  const { plan } = await getWorkspacePlan(workspaceId);
+  return hasFeature(plan, f) ? null : `${FEATURE_LABEL[f]} is a Pro feature. Upgrade to Pro to use it.`;
+}
+
+/**
+ * Emails a Free workspace's owner once when comments get close to the limit, and once when they run out.
+ * Each notice is claimed atomically (plan_notices), so concurrent requests never send it twice.
+ */
+export async function notifyUsage(workspaceId: string): Promise<void> {
+  const [{ plan }, usage] = await Promise.all([getWorkspacePlan(workspaceId), workspaceUsage(workspaceId)]);
+  if (plan !== "free") return;
+  const limit = PLAN_LIMITS.free.comments;
+  const state = usageState(usage.comments, limit);
+  if (state === "ok") return;
+  const key = `|comments-${state}|`;
+  const claimed = await q1(
+    `UPDATE workspaces SET plan_notices = plan_notices || ?::text
+     WHERE id = ? AND strpos(plan_notices, ?::text) = 0
+     RETURNING name, (SELECT u.email FROM users u WHERE u.id = workspaces.owner_id) AS email,
+                     (SELECT u.name FROM users u WHERE u.id = workspaces.owner_id) AS owner`,
+    key,
+    workspaceId,
+    key,
+  );
+  if (!claimed?.email) return;
+  const { sendMail, usageEmail } = await import("./mail");
+  const mail = usageEmail({ name: claimed.owner as string, workspace: claimed.name as string, used: usage.comments, limit, full: state === "full" });
+  await sendMail({ to: claimed.email as string, ...mail }).catch(() => {});
+}
+
+/** Sets the plan on every workspace a user owns; returns those workspaces. Usage notices start over. */
+export async function setPlanForOwner(userId: string, plan: PlanId, expiresAt: string | null, grantedBy: string): Promise<{ id: string; name: string }[]> {
+  const rows = await q(
+    `UPDATE workspaces SET plan = ?, plan_expires_at = ?, plan_updated_at = ?, plan_granted_by = ?, plan_notices = ''
+     WHERE owner_id = ? RETURNING id, name`,
+    plan,
+    plan === "pro" ? expiresAt : null,
+    now(),
+    grantedBy,
+    userId,
+  );
+  return rows.map((r) => ({ id: r.id as string, name: r.name as string }));
+}
+
+export async function planAccess(workspaceId: string): Promise<PlanAccess> {
+  const [{ plan }, usage] = await Promise.all([getWorkspacePlan(workspaceId), workspaceUsage(workspaceId)]);
+  const limit = PLAN_LIMITS[plan].comments;
+  return { pro: plan === "pro", comments: { used: usage.comments, limit: Number.isFinite(limit) ? limit : null } };
 }

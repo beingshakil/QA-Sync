@@ -1,5 +1,6 @@
 import "server-only";
 import { q, q1 } from "./db";
+import { effectivePlan, type WorkspacePlan } from "@/lib/plans";
 
 /**
  * Site admins: the Google emails in QASYNC_ADMIN_EMAILS (comma-separated). Kept out of the code
@@ -25,6 +26,8 @@ export interface AdminUser {
   workspaces: string;
   projects: number;
   issues: number;
+  /** Plan of the workspace(s) they own; null when they own none (invited members only). */
+  plan: WorkspacePlan | null;
 }
 
 export async function adminStats() {
@@ -37,9 +40,11 @@ export async function adminStats() {
       (SELECT COUNT(*)::int FROM projects) AS projects,
       (SELECT COUNT(*)::int FROM issues) AS issues,
       (SELECT COUNT(*)::int FROM audits) AS audits,
-      (SELECT COUNT(*)::int FROM invites) AS invites`,
+      (SELECT COUNT(*)::int FROM invites) AS invites,
+      (SELECT COUNT(*)::int FROM workspaces WHERE plan = 'pro' AND (plan_expires_at IS NULL OR plan_expires_at > ?)) AS pro`,
     daysAgo(7),
     daysAgo(7),
+    new Date().toISOString(),
   );
   return r ?? {};
 }
@@ -47,6 +52,9 @@ export async function adminStats() {
 export async function adminUsers(): Promise<AdminUser[]> {
   const rows = await q(`
     SELECT u.id, u.name, u.email, u.image, u.created_at, u.last_login_at, u.login_count,
+      (SELECT w.plan FROM workspaces w WHERE w.owner_id = u.id ORDER BY w.created_at LIMIT 1) AS plan,
+      (SELECT w.plan_expires_at FROM workspaces w WHERE w.owner_id = u.id ORDER BY w.created_at LIMIT 1) AS plan_expires_at,
+      (SELECT COUNT(*)::int FROM workspaces w WHERE w.owner_id = u.id) AS owned,
       COALESCE((SELECT string_agg(w.name || ' (' || m.role || ')', ', ' ORDER BY m.created_at)
                 FROM memberships m JOIN workspaces w ON w.id = m.workspace_id WHERE m.user_id = u.id), '') AS workspaces,
       (SELECT COUNT(*)::int FROM projects p WHERE p.workspace_id IN (SELECT workspace_id FROM memberships WHERE user_id = u.id AND role = 'owner')) AS projects,
@@ -65,6 +73,7 @@ export async function adminUsers(): Promise<AdminUser[]> {
     workspaces: r.workspaces as string,
     projects: Number(r.projects ?? 0),
     issues: Number(r.issues ?? 0),
+    plan: Number(r.owned ?? 0) > 0 ? effectivePlan(r.plan as string, r.plan_expires_at as string | null) : null,
   }));
 }
 

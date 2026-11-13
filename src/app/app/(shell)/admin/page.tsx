@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/app/page-header";
 import { Avatar } from "@/components/ui";
+import { AdminPlan } from "@/components/app/admin-plan";
+import { mailConfigured } from "@/server/mail";
 import { adminStats, adminUsers, isAdmin } from "@/server/admin";
 import { requireCtx } from "@/server/session";
 
@@ -18,18 +20,25 @@ export default async function AdminPage() {
   const [stats, users] = await Promise.all([adminStats(), adminUsers()]);
   const tiles: [string, number | undefined, string?][] = [
     ["Users", stats.users],
+    ["On Pro", stats.pro],
     ["New this week", stats.new7],
     ["Signed in this week", stats.active7],
     ["Workspaces", stats.workspaces],
     ["Projects", stats.projects],
     ["Issues", stats.issues],
     ["Audits", stats.audits],
-    ["Pending invites", stats.invites],
   ];
 
   return (
     <>
       <PageHeader title="Admin" sub="Everyone who has signed in with Google. Visible only to the site admins." />
+      {!mailConfigured() && (
+        <div className="mx-auto max-w-7xl px-4 pt-6 sm:px-6">
+          <p className="rounded-xl border border-[var(--st-progress)]/40 bg-[color-mix(in_srgb,var(--st-progress)_10%,transparent)] px-4 py-3 text-[13px] text-ink-2">
+            Email isn&apos;t set up yet, so upgrade emails won&apos;t be sent. Add <code className="font-mono text-[12px]">SMTP_USER</code> and <code className="font-mono text-[12px]">SMTP_PASS</code> in Vercel to turn them on.
+          </p>
+        </div>
+      )}
       <div className="mx-auto max-w-7xl space-y-8 px-4 py-8 sm:px-6">
         <div className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-4">
           {tiles.map(([label, value]) => (
@@ -49,13 +58,14 @@ export default async function AdminPage() {
             <p className="px-5 py-10 text-center text-[14px] text-ink-3">Nobody has signed up yet.</p>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[920px] text-left text-[13.5px]">
+              <table className="w-full min-w-[1040px] text-left text-[13.5px]">
                 <thead>
                   <tr className="border-b border-line text-[12px] text-ink-3">
                     <th className="px-5 py-2.5 font-medium">User</th>
                     <th className="px-3 py-2.5 font-medium">Joined</th>
                     <th className="px-3 py-2.5 font-medium">Last sign-in</th>
                     <th className="px-3 py-2.5 text-right font-medium">Sign-ins</th>
+                    <th className="px-3 py-2.5 font-medium">Plan</th>
                     <th className="px-3 py-2.5 font-medium">Workspaces</th>
                     <th className="px-3 py-2.5 text-right font-medium">Projects</th>
                     <th className="px-5 py-2.5 text-right font-medium">Issues</th>
@@ -78,7 +88,10 @@ export default async function AdminPage() {
                       <td className="whitespace-nowrap px-3 py-3 text-ink-2">{fmt(u.createdAt)}</td>
                       <td className="whitespace-nowrap px-3 py-3 text-ink-2">{fmt(u.lastLoginAt)}</td>
                       <td className="px-3 py-3 text-right tabular-nums text-ink-2">{u.loginCount}</td>
-                      <td className="max-w-[260px] px-3 py-3 text-ink-2">
+                      <td className="px-3 py-3 align-top">
+                        <AdminPlan userId={u.id} name={u.name} email={u.email} plan={u.plan} />
+                      </td>
+                      <td className="max-w-[240px] px-3 py-3 text-ink-2">
                         <span className="line-clamp-2">{u.workspaces || "—"}</span>
                       </td>
                       <td className="px-3 py-3 text-right tabular-nums text-ink-2">{u.projects}</td>

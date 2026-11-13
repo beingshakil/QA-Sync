@@ -251,7 +251,7 @@ export default function Home() {
       {/* ───────── Pricing ───────── */}
       <Block className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <SectionHead size="sm" eyebrow="Pricing" title="Start free." accent="Upgrade for the price of a coffee." sub="Both plans include every review tool and page audits." />
+          <SectionHead size="sm" eyebrow="Pricing" title="Start free." accent="Upgrade for the price of a coffee." sub="Free covers comment pins on 2 projects. Pro unlocks every tool, with no limits." />
           <Link data-reveal href="/pricing" className="mt-6 inline-flex items-center gap-1.5 text-[14px] font-medium text-brand-ink hover:underline">
             Compare plans <ArrowRight size={14} />
           </Link>

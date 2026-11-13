@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReviewCanvas } from "@/components/app/review-canvas";
 import { CanvasRail } from "@/components/app/canvas-rail";
-import { listIssues, listProjects } from "@/server/repo";
+import { listIssues, listProjects, planAccess } from "@/server/repo";
 import { projectFor } from "@/server/http";
 import { getCurrentWorkspace, requireCtx } from "@/server/session";
 
@@ -31,6 +31,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
           initialPage={page}
           members={ws.members}
           me={ws.userName}
+          access={await planAccess(ctx.workspaceId)}
         />
       </div>
     </div>
