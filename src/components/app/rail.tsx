@@ -12,8 +12,8 @@ import type { Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/app", label: "Inbox", icon: Inbox, exact: true },
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
+  { href: "/app", label: "Inbox", icon: Inbox, exact: true },
   { href: "/app/issues", label: "Issues", icon: ListChecks },
   { href: "/app/audits", label: "Audits", icon: Gauge },
   { href: "/app/settings", label: "Settings", icon: Settings },

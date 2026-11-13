@@ -8,8 +8,8 @@ import { ThemeToggle } from "./rail";
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/app", label: "Inbox", icon: Inbox },
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
+  { href: "/app", label: "Inbox", icon: Inbox },
   { href: "/app/issues", label: "Issues", icon: ListChecks },
   { href: "/app/audits", label: "Audits", icon: Gauge },
   { href: "/app/settings", label: "Settings", icon: Settings },
@@ -18,7 +18,7 @@ const NAV = [
 const KEY = "qasync-canvas-rail";
 
 /**
- * Slim navigation rail for the review canvas: jump to Inbox, Projects, Issues… or another project
+ * Slim navigation rail for the review canvas: jump to Projects, Inbox, Issues… or another project
  * without leaving the canvas. Collapsed to icons by default; expands to show labels (remembered).
  */
 export function CanvasRail({ projects, currentId }: { projects: { id: string; name: string; color: string; openCount?: number }[]; currentId: string }) {

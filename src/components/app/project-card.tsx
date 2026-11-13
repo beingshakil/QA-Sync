@@ -114,7 +114,7 @@ export function ProjectCard({ project }: { project: ProjectCardData }) {
       {/* Actions */}
       <div className="mt-3 flex items-center gap-2 px-1 pb-1">
         <Link href={reviewHref} className={cn(buttonClass("primary", "md"), "h-10 flex-1 rounded-lg")}>
-          <ExternalLink size={16} /> Open Report
+          <ExternalLink size={16} className="shrink-0" /> Open Report
         </Link>
         <IconAction title={copied ? "Link copied" : "Copy share link"} onClick={copyLink} disabled={copying}>
           {copying ? <Loader2 size={16} className="animate-spin" /> : copied ? <Check size={16} className="text-[var(--st-verified)]" /> : <Link2 size={16} />}
