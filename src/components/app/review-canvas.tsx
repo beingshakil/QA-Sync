@@ -261,7 +261,8 @@ export function ReviewCanvas({
     const t = setTimeout(() => setHint(null), 2200);
     return () => clearTimeout(t);
   }, [mode]);
-  const proxySrc = `/api/proxy?url=${encodeURIComponent(pageUrl)}&r=${reloadKey}`;
+  // Guests have no session cookie: their share token lets the proxy load this project's site.
+  const proxySrc = `/api/proxy?url=${encodeURIComponent(pageUrl)}&r=${reloadKey}${guest ? `&s=${encodeURIComponent(guest.shareToken)}` : ""}`;
   const primary: FrameKey = device === "split" ? "desktop" : device;
   const sizes = useMemo(
     () => ({

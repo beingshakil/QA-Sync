@@ -8,8 +8,8 @@ export const dynamic = "force-dynamic";
 type Props = { params: Promise<{ token: string }>; searchParams: Promise<{ page?: string; issue?: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const share = getShare((await params).token);
-  const project = share ? getProject(share.projectId) : null;
+  const share = await getShare((await params).token);
+  const project = share ? await getProject(share.projectId) : null;
   return { title: project ? `Review: ${project.name}` : "Review", robots: { index: false } };
 }
 
@@ -17,11 +17,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function SharePage({ params, searchParams }: Props) {
   const { token } = await params;
   const { page, issue } = await searchParams;
-  const share = getShare(token);
+  const share = await getShare(token);
   if (!share) notFound();
-  const project = getProject(share.projectId);
+  const project = await getProject(share.projectId);
   if (!project) notFound();
-  const issues = listIssues({ projectId: project.id });
+  const issues = await listIssues({ projectId: project.id });
   const initialIssueId = issue && issues.some((i) => i.id === issue) ? issue : undefined;
   return <GuestReview token={token} project={project} initialIssues={issues} initialPage={page || undefined} initialIssueId={initialIssueId} />;
 }

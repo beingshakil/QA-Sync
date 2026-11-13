@@ -3,13 +3,15 @@ import { PageHeader } from "@/components/app/page-header";
 import { ScoreRing } from "@/components/app/project-widgets";
 import { DeleteAuditButton } from "@/components/app/delete-audit-button";
 import { listAudits, listProjects } from "@/server/repo";
+import { requireCtx } from "@/server/session";
 import { timeAgo } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
-export default function AuditsPage() {
-  const projects = listProjects();
-  const audits = listAudits();
+export default async function AuditsPage() {
+  const ctx = await requireCtx();
+  const projects = await listProjects(ctx.workspaceId);
+  const audits = await listAudits({ workspaceId: ctx.workspaceId });
   const latest = new Map<string, (typeof audits)[number]>();
   for (const a of audits) if (!latest.has(a.projectId)) latest.set(a.projectId, a);
 

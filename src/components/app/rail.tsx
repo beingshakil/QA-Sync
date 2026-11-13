@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, MoreHorizontal, Pencil, Plus, Settings, Trash2 } from "lucide-react";
+import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, LogOut, MoreHorizontal, Pencil, Plus, Settings, Trash2 } from "lucide-react";
+import { signOutAction } from "@/app/actions";
 import { api } from "@/lib/api";
 import { useConfirm } from "@/components/confirm";
 
@@ -18,7 +19,15 @@ const NAV = [
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
-export function Rail({ projects, workspace }: { projects: { id: string; name: string; color: string; openCount?: number }[]; workspace: Workspace }) {
+export function Rail({
+  projects,
+  workspace,
+  workspaces = [],
+}: {
+  projects: { id: string; name: string; color: string; openCount?: number }[];
+  workspace: Workspace;
+  workspaces?: { id: string; name: string }[];
+}) {
   const path = usePathname();
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface md:flex">
@@ -55,8 +64,12 @@ export function Rail({ projects, workspace }: { projects: { id: string; name: st
         {projects.length === 0 && <p className="px-2.5 py-2 text-[12.5px] text-ink-3">No projects yet.</p>}
       </div>
       <div className="flex items-center gap-2 border-t border-line p-3">
-        <Link href="/app/settings" className="flex min-w-0 flex-1 items-center gap-2" title="Edit your name and workspace">
-          <Avatar name={workspace.userName} size={28} />
+        <Link
+          href="/app/settings"
+          className="flex min-w-0 flex-1 items-center gap-2"
+          title={workspaces.length > 1 ? "Your profile, team, and switching workspaces" : "Your profile and team"}
+        >
+          <Avatar name={workspace.userName} image={workspace.userImage} size={28} />
           <div className="min-w-0 flex-1 text-[13px]">
             <div className="truncate font-medium">{workspace.userName}</div>
             <div className="truncate text-[11px] text-ink-3">{workspace.name}</div>
@@ -65,6 +78,11 @@ export function Rail({ projects, workspace }: { projects: { id: string; name: st
         <Link href="/" title="Marketing site" className="rounded-md p-1.5 text-ink-3 hover:text-ink">
           <Globe size={15} />
         </Link>
+        <form action={signOutAction}>
+          <button type="submit" title="Sign out" aria-label="Sign out" className="rounded-md p-1.5 text-ink-3 hover:text-ink">
+            <LogOut size={15} />
+          </button>
+        </form>
       </div>
     </aside>
   );

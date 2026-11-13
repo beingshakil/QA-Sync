@@ -1,16 +1,17 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { getUpload } from "@/server/repo";
+import { readFile } from "@/server/storage";
 
 export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ id: string }> };
 
 export async function GET(_: Request, { params }: Ctx) {
-  const u = getUpload((await params).id);
+  // Upload ids are 16 random characters: the URL itself is the capability, as for share links.
+  const u = await getUpload((await params).id);
   if (!u) return new Response("Not found", { status: 404 });
   try {
-    const buf = await fs.readFile(path.join(process.cwd(), ".data", "uploads", path.basename(u.file)));
-    return new Response(new Uint8Array(buf), {
+    const body = await readFile(u.file);
+    if (!body) return new Response("Not found", { status: 404 });
+    return new Response(body as BodyInit, {
       headers: {
         "content-type": u.mime,
         "content-disposition": `inline; filename="${u.name.replace(/"/g, "")}"`,

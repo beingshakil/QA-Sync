@@ -154,8 +154,13 @@ export function PriorityIcon({ priority, label }: { priority: Priority; label?: 
 }
 
 const avatarColors = ["#2b5ebe", "#7b2fb0", "#4074c7", "#9558c0", "#1f4c9c", "#5e1d95"];
-export function Avatar({ name, size = 24 }: { name: string; size?: number }) {
+export function Avatar({ name, size = 24, image }: { name: string; size?: number; image?: string | null }) {
   const idx = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % avatarColors.length;
+  if (image)
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img src={image} alt="" title={name} referrerPolicy="no-referrer" className="shrink-0 rounded-full object-cover" style={{ width: size, height: size }} />
+    );
   return (
     <span
       title={name}

@@ -4,11 +4,13 @@ import { NewProjectForm } from "@/components/app/project-widgets";
 import { ProjectCard } from "@/components/app/project-card";
 import { UrlStart } from "@/components/marketing/interactive";
 import { listProjects } from "@/server/repo";
+import { requireCtx } from "@/server/session";
 
 export const dynamic = "force-dynamic";
 
-export default function ProjectsPage() {
-  const projects = listProjects();
+export default async function ProjectsPage() {
+  const ctx = await requireCtx();
+  const projects = await listProjects(ctx.workspaceId);
   return (
     <>
       <PageHeader

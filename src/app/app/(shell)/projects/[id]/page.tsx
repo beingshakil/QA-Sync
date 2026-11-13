@@ -5,7 +5,9 @@ import { AuditPanel, ProjectSettings, ShareBox } from "@/components/app/project-
 import { IssuesView } from "@/components/app/issues-view";
 import { ButtonLink } from "@/components/ui";
 import { PagesOverview } from "@/components/app/pages-overview";
-import { getProject, getWorkspace, listAudits, listIssues, listPages } from "@/server/repo";
+import { listAudits, listIssues, listPages } from "@/server/repo";
+import { projectFor } from "@/server/http";
+import { getCurrentWorkspace, requireCtx } from "@/server/session";
 import { cn, hostOf } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +17,11 @@ type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: st
 export default async function ProjectPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { tab = "pages" } = await searchParams;
-  const project = getProject(id);
+  const ctx = await requireCtx();
+  const project = await projectFor(ctx, id);
   if (!project) notFound();
-  const pages = listPages(id);
+  const ws = await getCurrentWorkspace();
+  const pages = await listPages(id);
   const passed = pages.filter((p) => p.state === "passed").length;
 
   const tabs = [
@@ -59,7 +63,7 @@ export default async function ProjectPage({ params, searchParams }: Props) {
         {tab === "pages" && <PagesOverview projectId={id} initial={pages} />}
         {tab === "issues" && (
           <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
-            <IssuesView initial={listIssues({ projectId: id })} projectId={id} members={getWorkspace().members} me={getWorkspace().userName} />
+            <IssuesView initial={await listIssues({ projectId: id })} projectId={id} members={ws.members} me={ws.userName} />
             <div className="space-y-4">
               <ShareBox projectId={id} />
               <div className="rounded-2xl border border-line bg-surface p-5 text-[13px] text-ink-2 shadow-1">
@@ -73,7 +77,7 @@ export default async function ProjectPage({ params, searchParams }: Props) {
             </div>
           </div>
         )}
-        {tab === "audits" && <AuditPanel project={project} initial={listAudits(id)} />}
+        {tab === "audits" && <AuditPanel project={project} initial={await listAudits({ projectId: id })} />}
         {tab === "settings" && <ProjectSettings project={project} />}
       </div>
     </>

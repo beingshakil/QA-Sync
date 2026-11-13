@@ -61,7 +61,7 @@ export function SectionHead({
         {accent && (
           <>
             {" "}
-            <span className="text-ink-3">{accent}</span>
+            <span className="text-gradient-scroll">{accent}</span>
           </>
         )}
       </h2>
@@ -142,7 +142,7 @@ export function PageHero({ eyebrow, title, accent, sub, children }: { eyebrow: s
           <Kicker>{eyebrow}</Kicker>
         </div>
         <h1 data-reveal style={d(80)} className="mt-5 max-w-3xl text-balance text-[42px] font-semibold leading-[1.02] tracking-[-0.04em] text-ink md:text-[62px]">
-          {title} <span className="text-ink-3">{accent}</span>
+          {title} <span className="text-gradient-scroll">{accent}</span>
         </h1>
         <p data-reveal style={d(160)} className="mt-6 max-w-[36rem] text-pretty text-lg leading-relaxed text-ink-2">
           {sub}
@@ -165,7 +165,7 @@ export function CtaBand({ title = "Point at the problem.", accent = "Watch it ge
         <div className="relative grid items-end gap-8 lg:grid-cols-[1fr_auto]">
           <div>
             <h2 className="max-w-xl text-balance text-[32px] font-semibold leading-[1.06] tracking-[-0.032em] text-ink md:text-[46px]">
-              {title} <span className="text-ink-3">{accent}</span>
+              {title} <span className="text-gradient-scroll">{accent}</span>
             </h2>
             <p className="mt-4 text-[16px] text-ink-2">Paste a URL to start. Free plan, no credit card, nothing to install.</p>
           </div>

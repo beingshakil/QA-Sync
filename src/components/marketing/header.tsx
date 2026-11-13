@@ -139,7 +139,7 @@ export function Header() {
         </nav>
         <div className="ml-auto hidden items-center gap-2 md:flex">
           <Link
-            href="/app"
+            href="/login"
             className="inline-flex h-9 items-center rounded-lg border border-line-strong px-4 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2"
           >
             Sign in
@@ -169,7 +169,7 @@ export function Header() {
             <Link href="/integrations" onClick={() => setMobile(false)}>Integrations</Link>
             <Link href="/pricing" onClick={() => setMobile(false)}>Pricing</Link>
           </div>
-          <Link href="/app" onClick={() => setMobile(false)} className={buttonClass("secondary", "md", "mt-2 w-full")}>
+          <Link href="/login" onClick={() => setMobile(false)} className={buttonClass("secondary", "md", "mt-2 w-full")}>
             Sign in
           </Link>
         </div>

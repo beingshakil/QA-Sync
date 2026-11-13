@@ -17,6 +17,7 @@ export type ProjectType = "website" | "files";
 
 export interface Project {
   id: string;
+  workspaceId?: string;
   name: string;
   type: ProjectType;
   baseUrl: string;
@@ -97,10 +98,27 @@ export interface Design {
   createdAt: string;
 }
 
-export interface Workspace {
+export interface Member {
+  userId: string;
   name: string;
+  email: string;
+  image: string | null;
+  role: "owner" | "admin" | "member";
+}
+
+/** The current user's view of their active workspace. */
+export interface Workspace {
+  id: string;
+  name: string;
+  /** The signed-in user's display name, email, picture and role here. */
   userName: string;
+  userEmail: string;
+  userImage: string | null;
+  role: Member["role"];
+  /** Display names, for assignees and @mentions. */
   members: string[];
+  memberList: Member[];
+  invites: { email: string; createdAt: string }[];
 }
 
 export interface Comment {

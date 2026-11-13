@@ -574,3 +574,19 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .range-premium::-moz-range-track { height: 3px; border-radius: 999px; background: var(--line-strong); }
 .range-premium::-moz-range-progress { height: 3px; border-radius: 999px; background: var(--ink); }
 .range-premium::-moz-range-thumb { width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 1px solid rgb(16 32 46 / 0.15); box-shadow: 0 2px 6px rgb(16 32 46 / 0.25); }
+
+/* Section-title accents: brand gradient that sweeps through once as the heading scrolls into view
+   (same look as the hero's "gets fixed."). Without JS or with reduced motion it just shows the gradient. */
+.text-gradient-scroll {
+  background-image: linear-gradient(100deg, var(--grad-from, var(--brand)) 0%, var(--grad-to, var(--accent)) 30%, #ffffff 45%, var(--grad-from, var(--brand)) 60%, var(--grad-to, var(--accent)) 100%);
+  background-size: 220% 100%;
+  background-position: 0% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.js [data-reveal] .text-gradient-scroll { background-position: 100% 0; }
+.js [data-reveal].is-visible .text-gradient-scroll { animation: grad-sweep 2.2s var(--ease-out) 0.25s both; }
+@media (prefers-reduced-motion: reduce) {
+  .js [data-reveal] .text-gradient-scroll, .js [data-reveal].is-visible .text-gradient-scroll { animation: none; background-position: 0% 0; }
+}

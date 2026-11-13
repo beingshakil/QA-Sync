@@ -24,6 +24,11 @@ export function UrlStart({ size = "lg", className, variant = "solid" }: { size?:
     setBusy(true);
     setErr(null);
     const res = await fetch("/api/projects", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ url }) });
+    if (res.status === 401) {
+      // Signed out: sign in first, then open this site in the canvas.
+      router.push(`/login?next=${encodeURIComponent(`/app/start?url=${encodeURIComponent(url)}`)}`);
+      return;
+    }
     const data = await res.json();
     if (!res.ok) {
       setErr(data.error ?? "Something went wrong");

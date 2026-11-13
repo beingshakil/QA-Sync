@@ -1,8 +1,7 @@
-import fs from "node:fs/promises";
-import path from "node:path";
 import { nanoid } from "nanoid";
 import { saveUpload } from "@/server/repo";
 import { actorFrom, fail, ok } from "@/server/http";
+import { storeFile } from "@/server/storage";
 
 export const dynamic = "force-dynamic";
 
@@ -28,8 +27,8 @@ export async function POST(req: Request) {
   } catch {
     return fail("Expected multipart form data");
   }
-  const actor = actorFrom({ shareToken: (form.get("shareToken") as string) || undefined });
-  if ("error" in actor) return fail(actor.error, 403);
+  const actor = await actorFrom({ shareToken: (form.get("shareToken") as string) || undefined });
+  if ("error" in actor) return fail(actor.error, actor.status);
 
   const file = form.get("file");
   if (!(file instanceof File)) return fail("No file attached");
@@ -39,10 +38,7 @@ export async function POST(req: Request) {
   if (file.size > MAX_BYTES) return fail("Files can be up to 15 MB");
 
   const id = nanoid(16);
-  const dir = path.join(process.cwd(), ".data", "uploads");
-  await fs.mkdir(dir, { recursive: true });
-  const fileName = `${id}.${ext}`;
-  await fs.writeFile(path.join(dir, fileName), Buffer.from(await file.arrayBuffer()));
+  const key = await storeFile(`${id}.${ext}`, mime, Buffer.from(await file.arrayBuffer()));
   const name = (file.name || `upload.${ext}`).replace(/[^\w.\- ]+/g, "_").slice(0, 120);
-  return ok(saveUpload({ id, file: fileName, mime, name, size: file.size }), 201);
+  return ok(await saveUpload({ id, file: key, mime, name, size: file.size }), 201);
 }

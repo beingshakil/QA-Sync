@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ReviewCanvas } from "@/components/app/review-canvas";
 import { CanvasRail } from "@/components/app/canvas-rail";
-import { getProject, getWorkspace, listIssues, listProjects } from "@/server/repo";
+import { listIssues, listProjects } from "@/server/repo";
+import { projectFor } from "@/server/http";
+import { getCurrentWorkspace, requireCtx } from "@/server/session";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Review" };
@@ -12,10 +14,11 @@ type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ issue?: 
 export default async function ReviewPage({ params, searchParams }: Props) {
   const { id } = await params;
   const { issue, page } = await searchParams;
-  const project = getProject(id);
+  const ctx = await requireCtx();
+  const project = await projectFor(ctx, id);
   if (!project) notFound();
-  const ws = getWorkspace();
-  const projects = listProjects().map((p) => ({ id: p.id, name: p.name, color: p.color, openCount: p.openCount }));
+  const ws = await getCurrentWorkspace();
+  const projects = (await listProjects(ctx.workspaceId)).map((p) => ({ id: p.id, name: p.name, color: p.color, openCount: p.openCount }));
   return (
     <div className="flex h-dvh overflow-hidden">
       <CanvasRail projects={projects} currentId={project.id} />
@@ -23,7 +26,7 @@ export default async function ReviewPage({ params, searchParams }: Props) {
         <ReviewCanvas
           key={project.id}
           project={project}
-          initialIssues={listIssues({ projectId: id })}
+          initialIssues={await listIssues({ projectId: id })}
           initialIssueId={issue}
           initialPage={page}
           members={ws.members}

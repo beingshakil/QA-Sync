@@ -1,5 +1,6 @@
 import "server-only";
-import { addComment, getIssue, getProject, getWorkspace, listActivity, listComments, listIssues, listProjects, resetPageQa, updateIssue } from "./repo";
+import { addComment, getIssue, getProject, isMemberName, listActivity, listComments, listIssues, listProjects, resetPageQa, updateIssue } from "./repo";
+import { q } from "./db";
 import { OPEN_STATUSES, PRIORITIES, STATUS_LABEL, PRIORITY_LABEL, type Issue, type Priority, type Status } from "@/lib/types";
 
 /**
@@ -19,6 +20,8 @@ Never claim an issue is verified; a person checks the fix in QASync and marks it
 export interface McpContext {
   /** Absolute origin of this QASync instance, for links. */
   origin: string;
+  /** The workspace the API token belongs to; every tool is limited to it. */
+  workspaceId: string;
   /** Who is acting: the API token's name, e.g. "Claude Code". */
   actor: string;
 }
@@ -29,7 +32,7 @@ interface ToolDef {
   description: string;
   inputSchema: Record<string, unknown>;
   annotations: Record<string, unknown>;
-  run: (args: Record<string, unknown>, ctx: McpContext) => unknown;
+  run: (args: Record<string, unknown>, ctx: McpContext) => Promise<unknown>;
 }
 
 class ToolError extends Error {}
@@ -46,10 +49,10 @@ function str(args: Record<string, unknown>, key: string, required = false): stri
   return v.trim();
 }
 
-function requireIssue(args: Record<string, unknown>): Issue {
+async function requireIssue(args: Record<string, unknown>, ctx: McpContext): Promise<Issue> {
   const id = str(args, "issue_id", true)!;
-  const issue = getIssue(id);
-  if (!issue) throw new ToolError(`No issue with id "${id}". Use list_issues to find issue ids.`);
+  const issue = await getIssue(id);
+  if (!issue || issue.workspaceId !== ctx.workspaceId) throw new ToolError(`No issue with id "${id}". Use list_issues to find issue ids.`);
   return issue;
 }
 
@@ -80,8 +83,8 @@ const TOOLS: ToolDef[] = [
     description: "List every QASync project (a website under review) with its URL and how many issues are open.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     annotations: { readOnlyHint: true, openWorldHint: false },
-    run: (_args, ctx) =>
-      listProjects().map((p) => ({
+    run: async (_args, ctx) =>
+      (await listProjects(ctx.workspaceId)).map((p) => ({
         project_id: p.id,
         name: p.name,
         url: p.baseUrl,
@@ -110,13 +113,13 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
-    run: (args, ctx) => {
+    run: async (args, ctx) => {
       const projectId = str(args, "project_id");
-      if (projectId && !getProject(projectId)) throw new ToolError(`No project with id "${projectId}". Use list_projects.`);
+      if (projectId && (await getProject(projectId))?.workspaceId !== ctx.workspaceId) throw new ToolError(`No project with id "${projectId}". Use list_projects.`);
       const status = str(args, "status") ?? "open";
       if (!["open", "fixed", "verified", "wont_fix", "all"].includes(status)) throw new ToolError(`Unknown status "${status}"`);
       const limit = Math.min(200, Math.max(1, Number(args.limit ?? 50) || 50));
-      let issues = listIssues({ projectId, pageUrl: str(args, "page_url"), status: status === "open" || status === "all" ? undefined : (status as Status) });
+      let issues = await listIssues({ workspaceId: ctx.workspaceId, projectId, pageUrl: str(args, "page_url"), status: status === "open" || status === "all" ? undefined : (status as Status) });
       if (status === "open") issues = issues.filter((i) => OPEN_STATUSES.includes(i.status));
       return { total: issues.length, issues: issues.slice(0, limit).map((i) => summary(i, ctx)) };
     },
@@ -133,8 +136,8 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
     annotations: { readOnlyHint: true, openWorldHint: false },
-    run: (args, ctx) => {
-      const i = requireIssue(args);
+    run: async (args, ctx) => {
+      const i = await requireIssue(args, ctx);
       return {
         ...summary(i, ctx),
         status_label: STATUS_LABEL[i.status],
@@ -145,8 +148,8 @@ const TOOLS: ToolDef[] = [
         element: i.element,
         environment: i.env,
         attachments: i.attachments.map((a) => ({ name: a.name, type: a.mime, url: a.url.startsWith("/") ? ctx.origin + a.url : a.url })),
-        thread: listComments(i.id).map((c) => ({ author: c.author, text: c.body, at: c.createdAt })),
-        history: listActivity(i.id).map((a) => ({ change: a.type, from: a.fromVal, to: a.toVal, by: a.actor, at: a.createdAt })),
+        thread: (await listComments(i.id)).map((c) => ({ author: c.author, text: c.body, at: c.createdAt })),
+        history: (await listActivity(i.id)).map((a) => ({ change: a.type, from: a.fromVal, to: a.toVal, by: a.actor, at: a.createdAt })),
       };
     },
   },
@@ -164,10 +167,10 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
-    run: (args, ctx) => {
-      const i = requireIssue(args);
+    run: async (args, ctx) => {
+      const i = await requireIssue(args, ctx);
       const text = str(args, "text", true)!.slice(0, 5000);
-      const c = addComment({ issueId: i.id, author: ctx.actor, authorType: "member", body: text });
+      const c = await addComment({ issueId: i.id, author: ctx.actor, authorType: "member", body: text });
       return { ok: true, reply_id: c.id, issue_id: i.id, link: reviewLink(ctx, i) };
     },
   },
@@ -188,8 +191,8 @@ const TOOLS: ToolDef[] = [
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    run: (args, ctx) => {
-      const i = requireIssue(args);
+    run: async (args, ctx) => {
+      const i = await requireIssue(args, ctx);
       const patch: Parameters<typeof updateIssue>[1] = {};
       const status = str(args, "status");
       if (status) {
@@ -205,12 +208,15 @@ const TOOLS: ToolDef[] = [
       if ("assignee" in args) {
         const a = args.assignee;
         if (a === null || a === "") patch.assignee = null;
-        else if (typeof a === "string" && getWorkspace().members.includes(a.trim())) patch.assignee = a.trim();
-        else throw new ToolError(`"${String(a)}" is not a workspace member. Members: ${getWorkspace().members.join(", ")}`);
+        else if (typeof a === "string" && (await isMemberName(ctx.workspaceId, a.trim()))) patch.assignee = a.trim();
+        else {
+          const names = (await q<{ name: string }>("SELECT u.name FROM memberships m JOIN users u ON u.id = m.user_id WHERE m.workspace_id = ?", ctx.workspaceId)).map((r) => r.name);
+          throw new ToolError(`"${String(a)}" is not a workspace member. Members: ${names.join(", ")}`);
+        }
       }
       if (!Object.keys(patch).length) throw new ToolError("Nothing to change: pass status, priority or assignee.");
-      const next = updateIssue(i.id, patch, ctx.actor)!;
-      if (patch.status && OPEN_STATUSES.includes(patch.status)) resetPageQa(next.projectId, next.pageUrl);
+      const next = (await updateIssue(i.id, patch, ctx.actor))!;
+      if (patch.status && OPEN_STATUSES.includes(patch.status)) await resetPageQa(next.projectId, next.pageUrl);
       return summary(next, ctx);
     },
   },
@@ -221,11 +227,11 @@ export function listTools() {
 }
 
 /** Runs a tool. Errors become `isError` results so the model can read them and recover. */
-export function callTool(name: string, args: Record<string, unknown>, ctx: McpContext) {
+export async function callTool(name: string, args: Record<string, unknown>, ctx: McpContext) {
   const tool = TOOLS.find((t) => t.name === name);
   if (!tool) return null;
   try {
-    const out = tool.run(args ?? {}, ctx);
+    const out = await tool.run(args ?? {}, ctx);
     return { content: [{ type: "text", text: JSON.stringify(out, null, 2) }] };
   } catch (e) {
     const msg = e instanceof ToolError ? e.message : `Internal error: ${(e as Error).message}`;

@@ -38,7 +38,7 @@ const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix"
 function Block({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
   return (
     <section id={id} className="mx-auto max-w-6xl px-4 sm:px-6">
-      <div className={cn("border-t border-line py-24 md:py-32", className)}>{children}</div>
+      <div className={cn("border-t border-line py-16 md:py-24", className)}>{children}</div>
     </section>
   );
 }

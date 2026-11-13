@@ -2,20 +2,22 @@ import { PageHeader } from "@/components/app/page-header";
 import { WorkspaceSettings } from "@/components/app/workspace-settings";
 import { INTEGRATIONS } from "@/content/marketing";
 import { IntegrationIcon } from "@/components/integration-icon";
-import { getWorkspace } from "@/server/repo";
 import { listApiTokens } from "@/server/tokens";
+import { getCurrentWorkspace, requireCtx } from "@/server/session";
 import { McpSettings } from "@/components/app/mcp-settings";
 
 export const dynamic = "force-dynamic";
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const ctx = await requireCtx();
+  const ws = await getCurrentWorkspace();
   return (
     <>
       <PageHeader title="Settings" sub="Your profile, workspace, team and integrations." />
       <div className="mx-auto max-w-4xl space-y-8 px-6 py-8">
-        <WorkspaceSettings initial={getWorkspace()} />
+        <WorkspaceSettings initial={ws} workspaces={ctx.workspaces} activeId={ctx.workspaceId} />
 
-        <McpSettings initial={listApiTokens()} />
+        <McpSettings initial={await listApiTokens(ctx.workspaceId)} />
 
         <section className="rounded-2xl border border-line bg-surface shadow-1">
           <div className="border-b border-line px-6 py-4">

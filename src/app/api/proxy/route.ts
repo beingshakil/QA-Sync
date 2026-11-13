@@ -1,5 +1,7 @@
 import * as cheerio from "cheerio";
 import { FETCH_HEADERS, resolveTarget, selfOriginOf } from "@/server/fetch-guard";
+import { getProject, getShare } from "@/server/repo";
+import { getCtx } from "@/server/session";
 
 export const dynamic = "force-dynamic";
 
@@ -10,12 +12,6 @@ export const dynamic = "force-dynamic";
  * (no allow-same-origin), so proxied scripts can't reach the app's cookies or storage.
  */
 export async function GET(req: Request) {
-  // Hosted deployments have no sign-in yet, so the proxy would let anyone frame any site
-  // under this domain. Keep it off there until accounts exist; local use is unaffected.
-  if (process.env.VERCEL && process.env.QASYNC_ALLOW_PUBLIC_PROXY !== "1") {
-    return errorPage("Site previews need you to be signed in.", 403);
-  }
-
   const params = new URL(req.url).searchParams;
   const raw = params.get("url");
   const self = selfOriginOf(req);
@@ -26,6 +22,16 @@ export async function GET(req: Request) {
     target = resolveTarget(raw, self);
   } catch (e) {
     return errorPage((e as Error).message);
+  }
+
+  // Never an open proxy: signed-in members may load any site; guests (?s=<share token>) only
+  // the site of the project their link covers.
+  if (process.env.QASYNC_ALLOW_PUBLIC_PROXY !== "1" && !(await getCtx())) {
+    const share = params.get("s") ? await getShare(params.get("s")!) : null;
+    const project = share ? await getProject(share.projectId) : null;
+    const host = (h: string) => h.toLowerCase().replace(/^www\./, "");
+    const projectHost = project ? (project.baseUrl.startsWith("/") ? new URL(self).hostname : new URL(project.baseUrl).hostname) : null;
+    if (!projectHost || host(projectHost) !== host(target.hostname)) return errorPage("Sign in to load site previews.", 403);
   }
 
   const isSelf = target.host === new URL(self).host;

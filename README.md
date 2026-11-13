@@ -106,6 +106,14 @@ QASync runs an MCP server at `/api/mcp` (Streamable HTTP). AI tools such as Clau
 
 Tools on the same computer can use the `localhost` URL. Cloud apps (claude.ai, ChatGPT) need QASync on a public address. Revoking a token in Settings cuts off access immediately.
 
+## Accounts, data and files
+
+- **Sign-in:** Google only (Auth.js). Set `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET` and `AUTH_SECRET`. Each Google redirect URI must be listed in the Google client: `https://<domain>/api/auth/callback/google` (and `http://localhost:3000/...` for local use).
+- **Workspaces:** signing in creates your own workspace; people you invite by email join yours when they sign in. Every project, issue, audit and API token belongs to one workspace, and every route checks membership. Clients on a share link (`/r/…`) need no account.
+- **Database:** Postgres. On Vercel it uses `DATABASE_URL` (Neon). Locally it uses PGlite in `.data/pglite`, so local work never touches production; data from the old `.data/qasync.db` is imported once and claimed by the first local sign-in. `QASYNC_DB=remote` points a local server at `DATABASE_URL` instead.
+- **Files:** with `BLOB_READ_WRITE_TOKEN` uploads go to private Vercel Blob; otherwise to `.data/uploads`.
+- **Local test login:** start with `QASYNC_DEV_LOGIN=1` to get an email-only test sign-in on `/login`. It never exists on Vercel.
+
 ## SEO
 
 Set the public address before deploying, so canonical URLs, the sitemap, robots.txt, share images and structured data point at your domain:

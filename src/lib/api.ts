@@ -69,5 +69,6 @@ export const api = {
   apiTokens: () => call<ApiToken[]>("/api/tokens"),
   createApiToken: (name: string) => call<{ token: string; record: ApiToken }>("/api/tokens", { method: "POST", body: JSON.stringify({ name }) }),
   revokeApiToken: (id: string) => call<{ ok: true }>(`/api/tokens/${id}`, { method: "DELETE" }),
-  updateWorkspace: (patch: Partial<Workspace>) => call<Workspace>("/api/workspace", { method: "PATCH", body: JSON.stringify(patch) }),
+  updateWorkspace: (patch: { name?: string; userName?: string; invite?: string; cancelInvite?: string; removeMember?: string; switchTo?: string }) =>
+    call<Workspace>("/api/workspace", { method: "PATCH", body: JSON.stringify(patch) }),
 };
