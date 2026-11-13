@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ProductTile } from "./demo-art";
 
 /* ── Paste-a-URL hero input: creates a project and drops you into the canvas ── */
 /** variant "gradient" is the hero's brand button; "solid" is the quieter one used elsewhere. */
@@ -112,7 +113,7 @@ export function ThreeViews() {
         </div>
       </div>
 
-      <div className="grid-bg rounded-2xl border border-line bg-surface-2/40 p-5 sm:p-8">
+      <div className="rounded-2xl border border-line bg-surface-2/60 p-5 sm:p-8">
       <div className="rounded-xl border border-line bg-surface p-5 shadow-2">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-[12px_12px_12px_2px] bg-brand text-xs font-semibold text-white">3</span>
@@ -213,7 +214,7 @@ export function OverlayDemo() {
     };
   }, []);
   return (
-    <div ref={boxRef} data-reveal className="grid-bg rounded-2xl border border-line bg-surface-2/40 p-4 sm:p-6">
+    <div ref={boxRef} data-reveal className="rounded-2xl border border-line bg-surface-2/60 p-4 sm:p-6">
       <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[#f3f6f9]">
         {/* build */}
         <MiniHero offset={0} label="BUILD" />
@@ -223,15 +224,31 @@ export function OverlayDemo() {
           <MiniHero offset={1} label="DESIGN" />
         </div>
         <div className="absolute inset-y-0" style={{ left: `${v}%` }}>
-          <div className="h-full w-px bg-brand" />
-          <div className="absolute top-1/2 -ml-3.5 -mt-3.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand text-[11px] text-white shadow-2">⇆</div>
+          <div className="h-full w-px bg-white shadow-[0_0_0_1px_rgb(16_32_46/0.18)]" />
+          <div className="absolute top-1/2 -ml-[15px] -mt-[15px] flex h-[30px] w-[30px] items-center justify-center rounded-full border border-black/10 bg-white text-[#10202e] shadow-[0_4px_14px_rgb(16_32_46/0.25)]">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+              <path d="M5 3.5 1.5 7 5 10.5M9 3.5 12.5 7 9 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
         </div>
       </div>
-      <input type="range" min={0} max={100} value={v} onPointerDown={() => (touched.current = true)} onChange={(e) => { touched.current = true; setV(+e.target.value); }} className="mt-4 w-full accent-[var(--brand)]" aria-label="Overlay position" />
-      <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-3">
-        <span>build</span>
-        <span>drag to compare</span>
-        <span>design</span>
+      <div className="mt-5 flex items-center gap-4">
+        <span className="w-12 text-[12px] font-medium text-ink-2">Build</span>
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={v}
+          onPointerDown={() => (touched.current = true)}
+          onChange={(e) => {
+            touched.current = true;
+            setV(+e.target.value);
+          }}
+          className="range-premium min-w-0 flex-1"
+          style={{ "--v": `${v}%` } as React.CSSProperties}
+          aria-label="Overlay position"
+        />
+        <span className="w-12 text-right text-[12px] font-medium text-ink-2">Design</span>
       </div>
     </div>
   );
@@ -255,10 +272,7 @@ function MiniHero({ offset, label }: { offset: 0 | 1; label: string }) {
           Start a subscription
         </div>
       </div>
-      <div
-        className="absolute bottom-[10%] right-[6%] top-[14%] w-[34%] rounded-2xl"
-        style={{ background: "radial-gradient(circle at 30% 30%,#8fd3d3,#1f6278 60%,#0f2b3c)", transform: design ? "none" : "translateY(6px)" }}
-      />
+      <ProductTile compact className="absolute bottom-[10%] right-[6%] top-[14%] w-[34%]" style={{ transform: design ? "none" : "translateY(6px)" }} />
     </div>
   );
 }

@@ -554,12 +554,23 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
-/* Faint measuring grid behind product visuals (fades out toward the edges) */
-.grid-bg {
-  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 28px 28px;
-  background-position: -1px -1px;
-}
 /* A quieter version of the hero light */
 .site-glow-soft::before { opacity: 0.55; }
 .site-glow-soft::after { opacity: 0.6; }
+
+/* Slim range control: hairline track filled in ink up to the thumb (--v), white round thumb */
+.range-premium { -webkit-appearance: none; appearance: none; height: 22px; background: transparent; cursor: pointer; }
+.range-premium:focus-visible { outline-offset: 4px; border-radius: 999px; }
+.range-premium::-webkit-slider-runnable-track {
+  height: 3px; border-radius: 999px;
+  background: linear-gradient(90deg, var(--ink) 0 var(--v, 50%), var(--line-strong) var(--v, 50%) 100%);
+}
+.range-premium::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin-top: -7.5px; border-radius: 999px;
+  background: #fff; border: 1px solid rgb(16 32 46 / 0.15);
+  box-shadow: 0 2px 6px rgb(16 32 46 / 0.25); transition: transform 0.15s ease;
+}
+.range-premium:active::-webkit-slider-thumb { transform: scale(1.12); }
+.range-premium::-moz-range-track { height: 3px; border-radius: 999px; background: var(--line-strong); }
+.range-premium::-moz-range-progress { height: 3px; border-radius: 999px; background: var(--ink); }
+.range-premium::-moz-range-thumb { width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 1px solid rgb(16 32 46 / 0.15); box-shadow: 0 2px 6px rgb(16 32 46 / 0.25); }

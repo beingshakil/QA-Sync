@@ -18,6 +18,7 @@ import {
 import { LogoMark } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { d } from "./sections";
+import { ProductTile } from "./demo-art";
 
 /* Palette for the demo site (a coffee roaster) so it reads as "someone else's website". */
 const NW = { bg: "#f3f6f9", ink: "#10202e", muted: "#52616e", brand: "#1A9AA6" };
@@ -100,7 +101,7 @@ export function ProductShot() {
               <h3 className="text-[30px] font-bold leading-[1.04] sm:text-[40px]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", letterSpacing: "-0.01em" }}>
                 Coffee roasted <i style={{ color: NW.brand }}>this week</i>, at your door by Friday.
               </h3>
-              <Pin color={PIN.critical} className="-right-2 top-1 sm:-right-9">
+              <Pin color={PIN.critical} className="z-10 right-0 -top-5">
                 1
               </Pin>
               <p className="mt-4 max-w-[30ch] text-[13.5px] leading-relaxed" style={{ color: NW.muted }}>
@@ -125,11 +126,9 @@ export function ProductShot() {
               </div>
             </div>
 
-            <div
-              className="absolute bottom-8 right-8 top-24 hidden w-[28%] rounded-2xl sm:block"
-              style={{ background: "radial-gradient(circle at 30% 28%,#8fd3d3,#1f6278 62%,#0f2b3c)" }}
-            >
-              <Pin color={PIN.verified} className="-left-3 bottom-6">
+            <div className="absolute bottom-8 right-8 top-24 hidden w-[28%] sm:block">
+              <ProductTile className="h-full" />
+              <Pin color={PIN.verified} className="-left-3 bottom-16">
                 ✓
               </Pin>
             </div>
@@ -148,10 +147,17 @@ export function ProductShot() {
                 <span>Page progress</span>
                 <span>2 of 4 resolved</span>
               </div>
-              <div className="mt-1.5 flex h-1.5 gap-0.5 overflow-hidden rounded-full">
+              <div className="mt-2 flex h-1 overflow-hidden rounded-full bg-surface-2">
                 <span className="w-1/4 bg-pass" />
-                <span className="w-1/4 bg-[var(--st-fixed)]" />
-                <span className="flex-1 bg-surface-2" />
+                <span className="w-1/4 bg-[var(--st-fixed)] opacity-80" />
+              </div>
+              <div className="mt-1.5 flex gap-3 text-[10.5px] text-ink-3">
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-pass" /> Verified
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[var(--st-fixed)]" /> Fixed
+                </span>
               </div>
             </div>
             <ul className="space-y-2 p-3 text-[12.5px]">
@@ -265,7 +271,7 @@ export function HowItWorks() {
 export function BentoCard({ title, body, visual, className, delay = 0 }: { title: string; body: string; visual: ReactNode; className?: string; delay?: number }) {
   return (
     <div data-reveal style={d(delay)} className={cn("flex flex-col overflow-hidden rounded-2xl border border-line bg-surface", className)}>
-      <div className="grid-bg relative flex min-h-[188px] flex-1 items-center justify-center border-b border-line bg-surface-2/40 p-6">{visual}</div>
+      <div className="relative flex min-h-[188px] flex-1 items-center justify-center border-b border-line bg-surface-2/60 p-6">{visual}</div>
       <div className="p-6">
         <h3 className="text-[16.5px] font-semibold tracking-[-0.01em] text-ink">{title}</h3>
         <p className="mt-1.5 text-pretty text-[14.5px] leading-[1.6] text-ink-2">{body}</p>
@@ -405,7 +411,7 @@ export function AuditPreview() {
   const r = 26;
   const c = 2 * Math.PI * r;
   return (
-    <div data-reveal className="grid-bg rounded-2xl border border-line bg-surface-2/40 p-4 sm:p-6">
+    <div data-reveal className="rounded-2xl border border-line bg-surface-2/60 p-4 sm:p-6">
       <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-2">
         <div className="flex items-center gap-4 border-b border-line px-5 py-4">
           <div className="relative h-[64px] w-[64px] shrink-0">
