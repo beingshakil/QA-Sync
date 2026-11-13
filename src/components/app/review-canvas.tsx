@@ -666,6 +666,12 @@ export function ReviewCanvas({
     setDevice(d);
   }
 
+  /** Pick a new design image for this page and device; the current tool stays open. */
+  function replaceDesign(t: Exclude<Tool, null>) {
+    pendingTool.current = t;
+    designFileRef.current?.click();
+  }
+
   function chooseTool(t: Exclude<Tool, null>) {
     setDesignErr(null);
     if (tool === t) return setTool(null);
@@ -900,11 +906,6 @@ export function ReviewCanvas({
         <div className="hidden items-center gap-1 rounded-xl border border-line bg-paper p-1 lg:flex">
           <DevBtn active={tool === "compare"} onClick={() => chooseTool("compare")} title="Compare: design beside the live page"><Columns2 size={16} /></DevBtn>
           <DevBtn active={tool === "overlay"} onClick={() => chooseTool("overlay")} title="Overlay the design on the page"><Layers size={16} /></DevBtn>
-          {!guest && (
-            <DevBtn active={false} onClick={() => { pendingTool.current = tool ?? "overlay"; designFileRef.current?.click(); }} title={primaryDesign ? "Replace design image" : "Upload design image"}>
-              {designBusy ? <Loader2 size={16} className="animate-spin" /> : <ImagePlus size={16} />}
-            </DevBtn>
-          )}
         </div>
 
         {/* modes */}
@@ -1035,9 +1036,14 @@ export function ReviewCanvas({
                 <span className="text-ink-2">{LABEL[primary]}</span>
                 <span className="ml-auto text-ink-3">scrolls with the page</span>
                 {!guest && primaryDesign && (
-                  <button onClick={removeDesign} title="Remove design" className="rounded p-1 text-ink-3 hover:text-danger">
-                    <Trash2 size={13} />
-                  </button>
+                  <>
+                    <button onClick={() => replaceDesign("compare")} title="Replace design image" aria-label="Replace design image" className="rounded p-1 text-ink-3 hover:text-ink">
+                      {designBusy ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
+                    </button>
+                    <button onClick={removeDesign} title="Remove design" className="rounded p-1 text-ink-3 hover:text-danger">
+                      <Trash2 size={13} />
+                    </button>
+                  </>
                 )}
               </div>
               <div ref={designScrollRef} className="min-h-0 flex-1 overflow-y-auto">
@@ -1124,9 +1130,14 @@ export function ReviewCanvas({
                     Difference
                   </label>
                   {!guest && (
-                    <button onClick={removeDesign} className="rounded p-1 text-ink-3 hover:text-danger" title="Remove design">
-                      <Trash2 size={13} />
-                    </button>
+                    <>
+                      <button onClick={() => replaceDesign("overlay")} className="rounded p-1 text-ink-3 hover:text-ink" title="Replace design image" aria-label="Replace design image">
+                        {designBusy ? <Loader2 size={13} className="animate-spin" /> : <ImagePlus size={13} />}
+                      </button>
+                      <button onClick={removeDesign} className="rounded p-1 text-ink-3 hover:text-danger" title="Remove design">
+                        <Trash2 size={13} />
+                      </button>
+                    </>
                   )}
                   <button onClick={() => setTool(null)} className="text-ink-3 hover:text-ink">Close</button>
                 </>
