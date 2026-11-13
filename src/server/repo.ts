@@ -289,6 +289,10 @@ export function listAudits(projectId?: string): Audit[] {
   return rows.map(toAudit);
 }
 
+export function deleteAudit(id: string): boolean {
+  return Number(db().prepare("DELETE FROM audits WHERE id = ?").run(id).changes) > 0;
+}
+
 export function getAudit(id: string): Audit | null {
   const r = db().prepare("SELECT * FROM audits WHERE id = ?").get(id) as Row | undefined;
   return r ? toAudit(r) : null;

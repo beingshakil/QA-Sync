@@ -6,7 +6,7 @@ import { BRAND } from "@/lib/brand";
 export function Footer() {
   const cols: { title: string; links: { href: string; label: string }[] }[] = [
     { title: "Product", links: PRODUCTS.map((p) => ({ href: `/product/${p.slug}`, label: p.name })) },
-    { title: "Solutions", links: SOLUTIONS.map((s) => ({ href: `/solutions/${s.slug}`, label: `For ${s.name.toLowerCase()}` })) },
+    { title: "Solutions", links: SOLUTIONS.map((s) => ({ href: `/solutions/${s.slug}`, label: `For ${s.name.replace(/^\w/, (c) => c.toLowerCase())}` })) },
     {
       title: "Company",
       links: [
@@ -47,9 +47,11 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-6 text-xs text-ink-3 sm:px-6">
-        <span>© 2026 {BRAND.name}. Phase 1 preview.</span>
-        <span className="font-mono">v0.1.0 · built with precision</span>
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-6 text-xs text-ink-3">
+          <span>© 2026 {BRAND.name}. Phase 1 preview.</span>
+          <span className="font-mono">v0.1.0</span>
+        </div>
       </div>
     </footer>
   );

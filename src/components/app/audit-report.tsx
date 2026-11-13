@@ -34,6 +34,7 @@ import { api } from "@/lib/api";
 import type { Audit, AuditFinding, Project, SeoLink, SeoReport } from "@/lib/types";
 import { headingCounts, headingSkip, isBroken, linkState, OG_REQUIRED, seoChecks, type SeoCheck, type SeoCheckId, type SeoTab } from "@/lib/seo-checks";
 import { Button } from "@/components/ui";
+import { DeleteAuditButton } from "./delete-audit-button";
 import { cn } from "@/lib/utils";
 
 const ICONS: Record<SeoCheckId, typeof Type> = {
@@ -160,6 +161,7 @@ function Header({ audit, project, embedded }: { audit: Audit; project: Project; 
       </div>
       <div className="flex items-start gap-2">
         {audit.seo && <RerunButton audit={audit} embedded={embedded} />}
+        {!embedded && <DeleteAuditButton id={audit.id} url={audit.url} redirectTo="/app/audits" withLabel />}
         {embedded && (
           <>
             <Link

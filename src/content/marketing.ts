@@ -95,7 +95,7 @@ export const PRODUCTS: ProductPage[] = [
     accent: "QASync proves it.",
     sub: "Connect Claude Code, Cursor or any MCP client with a token from Settings. Agents read open issues with full context, fix them in your code, reply with what changed, and mark them Fixed for you to verify.",
     features: [
-      { title: "Fix verification", body: "When an issue is marked fixed, QASync re-renders the element and compares it with the original. If the fix didn't land, the issue reopens with evidence attached.", tag: "Beta" },
+      { title: "Fix verification", body: "When an issue is marked fixed, QASync re-renders the element and compares it with the original. If the fix didn't land, the issue reopens with evidence attached.", tag: "Soon" },
       { title: "MCP server", body: "list_projects, list_issues, get_issue, reply_to_issue and update_issue, over Streamable HTTP with per-tool API tokens.", tag: "New" },
       { title: "Auto title & triage", body: "Type freely and QASync writes a clear title and suggests a priority. Duplicate reports are merged." },
       { title: "Two-way translation", body: "Clients write in their own language and developers read in theirs, within the same thread.", tag: "Soon" },
@@ -333,11 +333,11 @@ export const PLAN_MATRIX: { group: string; rows: [string, ...(string | boolean)[
 
 export const FAQ: { q: string; a: string }[] = [
   { q: "Do the people I share with need an account?", a: "No. A share link opens in any browser. Guests enter their name once, then pin, reply and sign off without signing up or installing anything." },
-  { q: "How does reviewing work without installing anything?", a: "Paste a URL and QASync loads the page through a secure proxy with the reviewer tools added. For staging sites behind a login or on localhost, use the browser extension, which runs in your own session." },
-  { q: "What does “Verified” mean?", a: "When an issue is marked Fixed, QASync re-checks the element against what was originally reported. Verified means someone, or something, confirmed the fix landed, not just that someone said it did." },
-  { q: "Will the widget slow down my site?", a: "No. The widget is under 25 KB and loads only when a reviewer triggers it, through a shortcut, a query parameter or a button." },
+  { q: "How does it work without installing anything?", a: "Paste a URL and QASync loads the page through a secure proxy with the review tools added on top. Nothing is added to your site. Pages behind a login, or on localhost, can't be loaded this way yet." },
+  { q: "What's the difference between Fixed and Verified?", a: "Fixed means someone shipped a change. Verified means a person checked the live page and confirmed it. AI agents can mark issues Fixed, but only people can mark them Verified." },
+  { q: "Does it work with my website?", a: "Most public sites work, whether they're built with Webflow, WordPress, Shopify, Framer or custom code. Sites that block automated access may not load in the canvas." },
   { q: "Can AI agents fix issues?", a: "Yes. Create a token in Settings and connect Claude Code, Cursor or any MCP client. Agents get the selector, element styles and console errors for each issue, reply with what they changed and mark it Fixed; you verify it in the canvas." },
-  { q: "Where is my data stored?", a: "In our managed cloud. A share link only opens the project it was made for, and guests can only edit what they wrote." },
+  { q: "Who can see my projects?", a: "Your workspace, plus anyone you send a share link to. A share link only opens the project it was made for, and guests can only edit what they wrote." },
 ];
 
 export const CHANGELOG: { date: string; title: string; items: string[] }[] = [

@@ -346,18 +346,21 @@ body {
 
 /* ── Hero story: pin → comment → fixed → verified (9s loop) ── */
 .story { --t: 9s; }
-.story-cursor { position: absolute; z-index: 5; left: 78%; top: 82%; animation: story-cursor var(--t) var(--ease-out) infinite; }
+.story-cursor { position: absolute; z-index: 5; left: 46%; top: 96%; animation: story-cursor var(--t) var(--ease-out) infinite; }
+/* Targets (share of the shot body): CTA ≈ 10% / 76%, "Mark fixed" ≈ 94% / 76% */
 @keyframes story-cursor {
-  0% { left: 78%; top: 82%; opacity: 0; }
+  0% { left: 46%; top: 96%; opacity: 0; }
   6% { opacity: 1; }
-  20% { left: 22%; top: 64%; transform: scale(1); }
+  20% { left: 10.5%; top: 73%; transform: scale(1); }
   23% { transform: scale(0.85); }
-  26% { left: 22%; top: 64%; transform: scale(1); }
-  48% { left: 83%; top: 83%; }
+  26% { left: 10.5%; top: 73%; transform: scale(1); }
+  48% { left: 94.5%; top: 77.5%; }
   52% { transform: scale(0.85); }
-  55% { left: 83%; top: 83%; transform: scale(1); opacity: 1; }
-  70%, 100% { left: 92%; top: 96%; opacity: 0; }
+  55% { left: 94.5%; top: 77.5%; transform: scale(1); opacity: 1; }
+  70%, 100% { left: 98%; top: 97%; opacity: 0; }
 }
+.story-dot { background: #f97316; animation: story-dot var(--t) linear infinite; }
+@keyframes story-dot { 0%, 57% { background: #f97316; } 60%, 100% { background: #16a34a; } }
 .story-outline { opacity: 0; animation: story-outline var(--t) ease infinite; }
 @keyframes story-outline { 0%, 17% { opacity: 0; } 20%, 30% { opacity: 1; } 36%, 100% { opacity: 0; } }
 .story-pin { opacity: 0; animation: story-pin var(--t) var(--ease-spring) infinite; background: #f97316; }
@@ -398,7 +401,7 @@ body {
   .story *, .story-cursor { animation: none !important; }
   .story-cursor, .story-outline, .story-s-open, .story-s-fixed, .story-pin-num { opacity: 0 !important; }
   .story-pin, .story-thread, .story-reply, .story-toast, .story-s-verified, .story-pin-check { opacity: 1 !important; transform: none !important; }
-  .story-pin { background: #16a34a !important; }
+  .story-pin, .story-dot { background: #16a34a !important; }
 }
 
 /* ═════════════════════════ Marketing site: premium dark (default) / light ═════════════════════════
@@ -550,3 +553,13 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 /* Horizontal tab bars: scroll without a visible scrollbar */
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Faint measuring grid behind product visuals (fades out toward the edges) */
+.grid-bg {
+  background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+/* A quieter version of the hero light */
+.site-glow-soft::before { opacity: 0.55; }
+.site-glow-soft::after { opacity: 0.6; }

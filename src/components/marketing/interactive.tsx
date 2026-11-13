@@ -6,7 +6,8 @@ import { ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /* ── Paste-a-URL hero input: creates a project and drops you into the canvas ── */
-export function UrlStart({ size = "lg", className }: { size?: "md" | "lg"; className?: string }) {
+/** variant "gradient" is the hero's brand button; "solid" is the quieter one used elsewhere. */
+export function UrlStart({ size = "lg", className, variant = "solid" }: { size?: "md" | "lg"; className?: string; variant?: "solid" | "gradient" }) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -34,7 +35,8 @@ export function UrlStart({ size = "lg", className }: { size?: "md" | "lg"; class
     <form onSubmit={go} className={cn("w-full max-w-xl", className)}>
       <div
         className={cn(
-          "flex items-center gap-2 rounded-2xl border border-line-strong bg-surface p-1.5 shadow-2 focus-within:border-ink-3",
+          "flex items-center gap-2 border border-line-strong bg-surface p-1.5 transition focus-within:border-ink-3",
+          variant === "gradient" ? "rounded-2xl shadow-2" : "rounded-xl shadow-1",
           size === "lg" ? "pl-4" : "pl-3",
         )}
       >
@@ -50,7 +52,8 @@ export function UrlStart({ size = "lg", className }: { size?: "md" | "lg"; class
           type="submit"
           disabled={busy}
           className={cn(
-            "btn-sheen inline-flex items-center gap-2 rounded-xl bg-grad-brand font-medium text-white shadow-1 transition hover:brightness-105 disabled:opacity-70",
+            "inline-flex shrink-0 items-center gap-2 font-medium transition disabled:opacity-70",
+            variant === "gradient" ? "btn-sheen rounded-xl bg-grad-brand text-white shadow-1 hover:brightness-105" : "rounded-lg bg-ink text-paper hover:opacity-90",
             size === "lg" ? "h-11 px-5 text-[15px]" : "h-9 px-4 text-sm",
           )}
         >
@@ -109,8 +112,8 @@ export function ThreeViews() {
         </div>
       </div>
 
-      <div className="mesh-panel p-5 sm:p-8">
-      <div data-spotlight className="rounded-2xl border border-white/10 bg-surface/95 p-5 shadow-2 backdrop-blur">
+      <div className="grid-bg rounded-2xl border border-line bg-surface-2/40 p-5 sm:p-8">
+      <div className="rounded-xl border border-line bg-surface p-5 shadow-2">
         <div className="flex items-center gap-2">
           <span className="flex h-6 w-6 items-center justify-center rounded-[12px_12px_12px_2px] bg-brand text-xs font-semibold text-white">3</span>
           <span className="font-medium">Primary CTA colour doesn&apos;t match the design</span>
@@ -210,7 +213,7 @@ export function OverlayDemo() {
     };
   }, []);
   return (
-    <div ref={boxRef} data-reveal className="mesh-panel p-4 sm:p-6">
+    <div ref={boxRef} data-reveal className="grid-bg rounded-2xl border border-line bg-surface-2/40 p-4 sm:p-6">
       <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[#fbf6ef]">
         {/* build */}
         <MiniHero offset={0} label="BUILD" />
@@ -221,10 +224,10 @@ export function OverlayDemo() {
         </div>
         <div className="absolute inset-y-0" style={{ left: `${v}%` }}>
           <div className="h-full w-px bg-brand" />
-          <div className="absolute top-1/2 -ml-3 -mt-3 flex h-6 w-6 items-center justify-center rounded-full bg-brand text-[10px] text-white shadow-2">⇆</div>
+          <div className="absolute top-1/2 -ml-3.5 -mt-3.5 flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-brand text-[11px] text-white shadow-2">⇆</div>
         </div>
       </div>
-      <input type="range" min={0} max={100} value={v} onPointerDown={() => (touched.current = true)} onChange={(e) => { touched.current = true; setV(+e.target.value); }} className="mt-4 w-full accent-white" aria-label="Overlay position" />
+      <input type="range" min={0} max={100} value={v} onPointerDown={() => (touched.current = true)} onChange={(e) => { touched.current = true; setV(+e.target.value); }} className="mt-4 w-full accent-[var(--brand)]" aria-label="Overlay position" />
       <div className="mt-1 flex justify-between font-mono text-[11px] text-ink-3">
         <span>build</span>
         <span>drag to compare</span>

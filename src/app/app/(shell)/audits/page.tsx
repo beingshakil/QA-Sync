@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/app/page-header";
 import { ScoreRing } from "@/components/app/project-widgets";
+import { DeleteAuditButton } from "@/components/app/delete-audit-button";
 import { listAudits, listProjects } from "@/server/repo";
 import { timeAgo } from "@/lib/utils";
 
@@ -52,6 +53,9 @@ export default function AuditsPage() {
                       <Link href={`/app/audits/${a.id}`} className="text-[13px] font-medium text-brand hover:underline">
                         Report →
                       </Link>
+                    </td>
+                    <td className="w-12 py-3 pr-3 text-right">
+                      <DeleteAuditButton id={a.id} url={a.url} />
                     </td>
                   </tr>
                 ))}

@@ -55,6 +55,7 @@ export const api = {
     call<Design[]>(`/api/designs${qs(guest ? { shareToken: guest.shareToken, pageUrl } : { projectId, pageUrl })}`),
   addDesign: (body: { projectId: string; pageUrl: string; device: string; uploadId: string }) =>
     call<Design>("/api/designs", { method: "POST", body: JSON.stringify(body) }),
+  deleteAudit: (id: string) => call<{ ok: true }>(`/api/audits/${id}`, { method: "DELETE" }),
   deleteDesign: (id: string) => call<{ ok: true }>(`/api/designs/${id}`, { method: "DELETE" }),
   pages: (projectId: string, guest?: GuestCtx) => call<Page[]>(`/api/pages${qs(guest ? { shareToken: guest.shareToken } : { projectId })}`),
   addPage: (projectId: string, url: string, opts: { title?: string; visited?: boolean } = {}, guest?: GuestCtx) =>
