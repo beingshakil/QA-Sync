@@ -49,7 +49,12 @@ export interface WorkspacePlan {
   stored: PlanId;
   expiresAt: string | null;
   expired: boolean;
+  /** Owned by a site admin (QASYNC_ADMIN_EMAILS): always Pro, with no end date. */
+  admin?: boolean;
 }
+
+/** A site admin's workspaces have every feature, permanently. */
+export const ADMIN_PLAN: WorkspacePlan = { plan: "pro", stored: "pro", expiresAt: null, expired: false, admin: true };
 
 export function effectivePlan(stored: string | null | undefined, expiresAt: string | null | undefined, now = Date.now()): WorkspacePlan {
   const s: PlanId = stored === "pro" ? "pro" : "free";

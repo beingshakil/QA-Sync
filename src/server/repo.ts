@@ -3,7 +3,8 @@ import { nanoid } from "nanoid";
 import { LEGACY_WORKSPACE_ID, q, q1, run, type Row } from "./db";
 import { pageKey } from "@/lib/utils";
 import { OPEN_STATUSES, pageState } from "@/lib/types";
-import { FEATURE_LABEL, PLAN_LIMITS, effectivePlan, hasFeature, usageState, type Feature, type Metered, type PlanAccess, type PlanId, type Usage, type WorkspacePlan } from "@/lib/plans";
+import { isMainAdmin } from "./admin";
+import { ADMIN_PLAN, FEATURE_LABEL, PLAN_LIMITS, effectivePlan, hasFeature, usageState, type Feature, type Metered, type PlanAccess, type PlanId, type Usage, type WorkspacePlan } from "@/lib/plans";
 import type { Activity, Attachment, Audit, Comment, Design, Issue, Member, Page, Priority, Project, ShareLink, Status, Workspace } from "@/lib/types";
 
 const now = () => new Date().toISOString();
@@ -647,7 +648,13 @@ export async function deleteComment(id: string) {
 
 /* ───────── plans & limits ───────── */
 export async function getWorkspacePlan(workspaceId: string): Promise<WorkspacePlan> {
-  const r = await q1("SELECT plan, plan_expires_at FROM workspaces WHERE id = ?", workspaceId);
+  const r = await q1(
+    `SELECT w.plan, w.plan_expires_at, u.email AS owner_email,
+            EXISTS (SELECT 1 FROM site_admins sa WHERE sa.email = lower(u.email)) AS owner_admin
+     FROM workspaces w LEFT JOIN users u ON u.id = w.owner_id WHERE w.id = ?`,
+    workspaceId,
+  );
+  if (isMainAdmin(r?.owner_email as string | null) || r?.owner_admin) return ADMIN_PLAN;
   return effectivePlan(r?.plan as string, r?.plan_expires_at as string | null);
 }
 

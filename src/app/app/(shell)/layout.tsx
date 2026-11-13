@@ -13,7 +13,7 @@ export default async function ShellLayout({ children }: { children: React.ReactN
   const notice = await commentNotice(ctx.workspaceId);
   return (
     <div className="flex min-h-dvh">
-      <Rail projects={projects} workspace={await getCurrentWorkspace()} workspaces={ctx.workspaces} isAdmin={isAdmin(ctx.email)} />
+      <Rail projects={projects} workspace={await getCurrentWorkspace()} workspaces={ctx.workspaces} isAdmin={await isAdmin(ctx.email)} />
       <div className="min-w-0 flex-1">
         <MobileTopbar />
         {notice && <UsageBanner notice={notice} />}

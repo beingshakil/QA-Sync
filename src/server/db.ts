@@ -175,6 +175,11 @@ ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_expires_at TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_updated_at TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_granted_by TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_notices TEXT NOT NULL DEFAULT '';
+CREATE TABLE IF NOT EXISTS site_admins (
+  email TEXT PRIMARY KEY,
+  added_by TEXT,
+  created_at TEXT NOT NULL
+);
 `;
 
 /** `?` → `$1, $2…` (our SQL never has a literal `?`; user text always goes in as a parameter). */
