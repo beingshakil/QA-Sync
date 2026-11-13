@@ -1,6 +1,6 @@
 import "server-only";
 import * as cheerio from "cheerio";
-import type { AuditFinding, SeoImage, SeoLink, SeoReport, SeoSchemaItem } from "@/lib/types";
+import type { AuditFinding, LinkArea, SeoImage, SeoLink, SeoReport, SeoSchemaItem } from "@/lib/types";
 import { FETCH_HEADERS } from "./fetch-guard";
 import { linkState } from "@/lib/seo-checks";
 
@@ -119,10 +119,16 @@ export async function runAudit(url: string): Promise<{ score: number; findings: 
       findings.push({ rule: "link-malformed", severity: "warning", message: "Malformed link", detail: h });
       return;
     }
-    if (linkMap.has(abs)) return;
+    const area = linkArea($, el);
+    const seen = linkMap.get(abs);
+    if (seen) {
+      // A link that also appears in the page content counts as content.
+      if (AREA_RANK[area] < AREA_RANK[seen.area ?? "content"]) seen.area = area;
+      return;
+    }
     const rel = ($a.attr("rel") ?? "").toLowerCase();
     const anchor = squash($a.text()) || $a.attr("aria-label")?.trim() || $a.find("img[alt]").attr("alt")?.trim() || $a.attr("title")?.trim() || "";
-    linkMap.set(abs, { url: abs, raw: h, anchor: anchor.slice(0, 120), dofollow: !/\b(nofollow|sponsored|ugc)\b/.test(rel) });
+    linkMap.set(abs, { url: abs, raw: h, anchor: anchor.slice(0, 120), dofollow: !/\b(nofollow|sponsored|ugc)\b/.test(rel), area });
   });
   const allLinks = [...linkMap.values()];
   const toCheck = allLinks.slice(0, 60);
@@ -233,6 +239,29 @@ export async function runAudit(url: string): Promise<{ score: number; findings: 
 }
 
 const squash = (t: string) => t.replace(/\s+/g, " ").trim();
+
+const AREA_RANK: Record<LinkArea, number> = { content: 0, nav: 1, footer: 2 };
+const NAV_CLASS = /^(w-nav|nav-?bar.*|navbar.*|site-?header|site-?nav|main-?nav(igation)?|primary-?nav|top-?bar)$/i;
+const FOOTER_CLASS = /^(footer.*|site-?footer|main-?footer|page-?footer)$/i;
+
+/**
+ * Is this link in the site navbar, the footer, or the page content? Checks the link and its
+ * ancestors, nearest first. Semantic tags and ARIA roles first, then common class names.
+ * Bare <nav> tags inside <main>/<article>, and Webflow dropdown <nav>s (used for FAQ answers), are content.
+ */
+function linkArea($: cheerio.CheerioAPI, el: Parameters<cheerio.CheerioAPI>[0]): LinkArea {
+  for (const node of [el, ...$(el).parents().toArray()]) {
+    const $n = $(node);
+    const tag = (node as { tagName?: string }).tagName?.toLowerCase() ?? "";
+    if (tag === "main" || tag === "article") return "content";
+    const role = ($n.attr("role") ?? "").toLowerCase();
+    const classes = ($n.attr("class") ?? "").split(/\s+/).filter(Boolean);
+    if (tag === "footer" || role === "contentinfo" || classes.some((c) => FOOTER_CLASS.test(c))) return "footer";
+    if (tag === "header" || role === "banner" || role === "navigation" || classes.some((c) => NAV_CLASS.test(c))) return "nav";
+    if (tag === "nav" && !classes.includes("w-dropdown-list")) return "nav";
+  }
+  return "content";
+}
 const hostKey = (u: string) => new URL(u).hostname.toLowerCase().replace(/^www\./, "");
 function safeDecode(s: string) {
   try {

@@ -158,7 +158,11 @@ export interface SeoLink {
   dofollow: boolean;
   /** HTTP status when the link was checked (0 = unreachable), undefined when not checked */
   status?: number;
+  /** Where the link sits: site navbar, footer, or page content. Missing on audits before this existed. */
+  area?: LinkArea;
 }
+
+export type LinkArea = "content" | "nav" | "footer";
 
 export interface SeoImage {
   src: string;

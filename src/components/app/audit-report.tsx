@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   AlertCircle,
   AlertTriangle,
@@ -53,7 +53,13 @@ const ICONS: Record<SeoCheckId, typeof Type> = {
 
 type Tab = SeoTab | "other";
 
-export function AuditReport({ audit, project, initialTab }: { audit: Audit; project: Project; initialTab?: string }) {
+/** Popup mode (review canvas): no back link, re-run swaps the report in place, and a close button. */
+export interface EmbeddedReport {
+  onRerun: (a: Audit) => void;
+  onClose: () => void;
+}
+
+export function AuditReport({ audit, project, initialTab, embedded }: { audit: Audit; project: Project; initialTab?: string; embedded?: EmbeddedReport }) {
   const seo = audit.seo;
   const checks = useMemo(() => (seo ? seoChecks(seo) : []), [seo]);
   const failing = checks.filter((c) => !c.pass);
@@ -74,14 +80,15 @@ export function AuditReport({ audit, project, initialTab }: { audit: Audit; proj
 
   function go(t: Tab) {
     setTab(t);
+    if (embedded) return;
     const u = new URL(window.location.href);
     u.searchParams.set("tab", t);
     window.history.replaceState(null, "", u);
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-      <Header audit={audit} project={project} />
+    <div className={cn("mx-auto max-w-6xl px-4 sm:px-6", embedded ? "pb-8 pt-5" : "py-6 sm:py-8")}>
+      <Header audit={audit} project={project} embedded={embedded} />
 
       {seo ? (
         <Summary checks={checks} onPick={(c) => go(c.tab ?? "overview")} />
@@ -89,12 +96,12 @@ export function AuditReport({ audit, project, initialTab }: { audit: Audit; proj
         <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-surface p-5 shadow-1">
           <Info size={18} className="shrink-0 text-brand" />
           <p className="min-w-0 flex-1 text-[14px] text-ink-2">This audit ran before the SEO report existed. Re-run it to see titles, headings, links, images, schema and Open Graph.</p>
-          <RerunButton audit={audit} />
+          <RerunButton audit={audit} embedded={embedded} />
         </div>
       )}
 
       {/* Tabs */}
-      <div className="sticky top-0 z-10 mt-6 border-b border-line bg-paper/90 backdrop-blur">
+      <div className={cn("sticky top-0 z-10 mt-6 border-b border-line backdrop-blur", embedded ? "bg-paper/95" : "bg-paper/90")}>
         <nav className="no-scrollbar -mb-px flex gap-1 overflow-x-auto" role="tablist" aria-label="Report sections">
           {tabs.map((t) => (
             <button
@@ -130,14 +137,18 @@ export function AuditReport({ audit, project, initialTab }: { audit: Audit; proj
 
 /* ───────── Header & summary ───────── */
 
-function Header({ audit, project }: { audit: Audit; project: Project }) {
+function Header({ audit, project, embedded }: { audit: Audit; project: Project; embedded?: EmbeddedReport }) {
   const when = new Date(audit.createdAt).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: false });
   return (
     <div className="flex flex-wrap items-start gap-4">
       <div className="min-w-0 flex-1">
-        <Link href="/app/audits" className="inline-flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink">
-          <ArrowLeft size={14} /> Audits
-        </Link>
+        {embedded ? (
+          <div className="font-mono text-[11px] uppercase tracking-widest text-ink-3">SEO audit report</div>
+        ) : (
+          <Link href="/app/audits" className="inline-flex items-center gap-1.5 text-[13px] text-ink-3 hover:text-ink">
+            <ArrowLeft size={14} /> Audits
+          </Link>
+        )}
         <h1 className="mt-2 line-clamp-2 text-[22px] font-semibold leading-tight tracking-tight sm:text-[26px]">{audit.seo?.title || project.name}</h1>
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-ink-3">
           <a href={audit.seo?.finalUrl ?? audit.url} target="_blank" rel="noreferrer" className="inline-flex min-w-0 items-center gap-1.5 font-mono text-[12.5px] text-ink-2 hover:text-brand">
@@ -147,12 +158,34 @@ function Header({ audit, project }: { audit: Audit; project: Project }) {
           <span suppressHydrationWarning>Audited {when}</span>
         </div>
       </div>
-      {audit.seo && <RerunButton audit={audit} />}
+      <div className="flex items-start gap-2">
+        {audit.seo && <RerunButton audit={audit} embedded={embedded} />}
+        {embedded && (
+          <>
+            <Link
+              href={`/app/audits/${audit.id}`}
+              title="Open as a full page"
+              aria-label="Open as a full page"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface text-ink-2 shadow-1 hover:border-line-strong hover:text-ink"
+            >
+              <ExternalLink size={16} />
+            </Link>
+            <button
+              onClick={embedded.onClose}
+              title="Close (Esc)"
+              aria-label="Close audit report"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-line bg-surface text-ink-2 shadow-1 hover:border-line-strong hover:text-ink"
+            >
+              <X size={17} />
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
-function RerunButton({ audit }: { audit: Audit }) {
+function RerunButton({ audit, embedded }: { audit: Audit; embedded?: EmbeddedReport }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -161,7 +194,10 @@ function RerunButton({ audit }: { audit: Audit }) {
     setErr(null);
     try {
       const a = await api.runAudit(audit.projectId, audit.url);
-      router.push(`/app/audits/${a.id}`);
+      if (embedded) {
+        embedded.onRerun(a);
+        setBusy(false);
+      } else router.push(`/app/audits/${a.id}`);
     } catch (e) {
       setErr((e as Error).message);
       setBusy(false);
@@ -372,29 +408,75 @@ function HeadingsTab({ seo }: { seo: SeoReport }) {
 
 /* ───────── Links ───────── */
 
+const CONTENT_ONLY_KEY = "qasync-links-content-only";
+
 function LinksTab({ seo }: { seo: SeoReport }) {
-  const [kind, setKind] = useState<"internal" | "external">(seo.links.internal.length || !seo.links.external.length ? "internal" : "external");
   const [q, setQ] = useState("");
   const [onlyBroken, setOnlyBroken] = useState(false);
-  const all = seo.links[kind];
+  // Older audits didn't record where links sit, so the toggle needs a re-run there.
+  const hasAreas = [...seo.links.internal, ...seo.links.external].some((l) => l.area);
+  const [contentOnly, setContentOnly] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(CONTENT_ONLY_KEY) === "1") setContentOnly(true);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+  const exclude = hasAreas && contentOnly;
+  function toggleContentOnly(v: boolean) {
+    setContentOnly(v);
+    try {
+      localStorage.setItem(CONTENT_ONLY_KEY, v ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  }
+  const keep = (l: SeoLink) => !exclude || !l.area || l.area === "content";
+  const internal = seo.links.internal.filter(keep);
+  const external = seo.links.external.filter(keep);
+  const both = [...seo.links.internal, ...seo.links.external];
+  const navCount = both.filter((l) => l.area === "nav").length;
+  const footerCount = both.filter((l) => l.area === "footer").length;
+
+  const [kind, setKind] = useState<"internal" | "external">(seo.links.internal.length || !seo.links.external.length ? "internal" : "external");
+  const all = kind === "internal" ? internal : external;
   const rows = all.filter((l) => (!onlyBroken || isBroken(l.status)) && (!q || `${l.url} ${l.anchor}`.toLowerCase().includes(q.toLowerCase())));
-  const broken = [...seo.links.internal, ...seo.links.external].filter((l) => isBroken(l.status)).length;
+  const shown = [...internal, ...external];
+  const broken = shown.filter((l) => isBroken(l.status)).length;
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <Stat label="Internal" value={seo.links.internal.length} />
-        <Stat label="External" value={seo.links.external.length} />
-        <Stat label="Nofollow" value={[...seo.links.internal, ...seo.links.external].filter((l) => !l.dofollow).length} />
+        <Stat label="Internal" value={internal.length} />
+        <Stat label="External" value={external.length} />
+        <Stat label="Nofollow" value={shown.filter((l) => !l.dofollow).length} />
         <Stat label="Broken" value={broken} tone={broken ? "fail" : "pass"} />
       </div>
+      <label
+        className={cn(
+          "flex items-center gap-3.5 rounded-2xl border bg-surface px-4 py-3.5 shadow-1 transition sm:px-5",
+          exclude ? "border-brand/40" : "border-line",
+          hasAreas ? "cursor-pointer" : "cursor-not-allowed opacity-70",
+        )}
+      >
+        <Switch checked={exclude} disabled={!hasAreas} onChange={toggleContentOnly} label="Exclude navbar and footer links" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-[14px] font-medium">Exclude navbar &amp; footer links</span>
+          <span className="block text-[12.5px] text-ink-3">
+            {hasAreas
+              ? `Show only links in the page content. Hides ${navCount} navbar and ${footerCount} footer link${footerCount === 1 ? "" : "s"}.`
+              : "Re-run this audit to use this: older audits didn't record where each link sits."}
+          </span>
+        </span>
+      </label>
       <Panel
         title={
           <Segmented
             value={kind}
             onChange={(v) => setKind(v as typeof kind)}
             options={[
-              { id: "internal", label: `Internal (${seo.links.internal.length})` },
-              { id: "external", label: `External (${seo.links.external.length})` },
+              { id: "internal", label: `Internal (${internal.length})` },
+              { id: "external", label: `External (${external.length})` },
             ]}
           />
         }
@@ -410,7 +492,7 @@ function LinksTab({ seo }: { seo: SeoReport }) {
           </label>
         </div>
         {rows.length === 0 ? (
-          <Empty icon={Link2}>{all.length ? "No links match." : `No ${kind} links on this page.`}</Empty>
+          <Empty icon={Link2}>{all.length ? "No links match." : exclude ? `No ${kind} links in the page content.` : `No ${kind} links on this page.`}</Empty>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-[13px]">
@@ -446,9 +528,14 @@ function LinkRow({ l, n }: { l: SeoLink; n: number }) {
     <tr className={cn(bad && "bg-danger-soft/60")}>
       <td className="px-4 py-2.5 font-mono text-[12px] text-ink-3">{n}</td>
       <td className="max-w-0 px-2 py-2.5">
-        <a href={l.url} target="_blank" rel="noreferrer" className="block truncate text-brand hover:underline" title={l.url}>
-          {l.url.replace(/^https?:\/\//, "")}
-        </a>
+        <div className="flex min-w-0 items-center gap-2">
+          <a href={l.url} target="_blank" rel="noreferrer" className="min-w-0 truncate text-brand hover:underline" title={l.url}>
+            {l.url.replace(/^https?:\/\//, "")}
+          </a>
+          {l.area && l.area !== "content" && (
+            <span className="shrink-0 rounded border border-line px-1.5 py-px text-[10.5px] font-medium uppercase tracking-wide text-ink-3">{l.area === "nav" ? "Navbar" : "Footer"}</span>
+          )}
+        </div>
       </td>
       <td className="px-2 py-2.5">
         {l.dofollow ? (
@@ -799,6 +886,22 @@ function Segmented({ value, onChange, options }: { value: string; onChange: (v: 
         </button>
       ))}
     </div>
+  );
+}
+
+function Switch({ checked, disabled, onChange, label }: { checked: boolean; disabled?: boolean; onChange: (v: boolean) => void; label: string }) {
+  return (
+    <span className="relative inline-flex shrink-0">
+      <input type="checkbox" className="peer sr-only" checked={checked} disabled={disabled} onChange={(e) => onChange(e.target.checked)} aria-label={label} />
+      <span
+        aria-hidden
+        className={cn(
+          "h-6 w-11 rounded-full transition peer-focus-visible:ring-2 peer-focus-visible:ring-brand/50 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-surface",
+          checked ? "bg-brand" : "bg-line-strong",
+        )}
+      />
+      <span aria-hidden className={cn("absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-1 transition-transform", checked && "translate-x-5")} />
+    </span>
   );
 }
 

@@ -8,6 +8,7 @@ import {
   ChevronDown,
   ArrowLeft,
   Columns2,
+  Gauge,
   ImagePlus,
   Layers,
   Link2,
@@ -34,6 +35,7 @@ import { CanvasPanel, DONE, type DeviceFilter, type PanelFilters } from "./canva
 import { PageTabs } from "./page-tabs";
 import { PagesOverview } from "./pages-overview";
 import { SharePopover } from "./share-popover";
+import { AuditModal } from "./audit-modal";
 import { cn, pageKey, pageLabel } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm";
 import { DEFAULT_SIZES, DEVICE_PRESETS, FALLBACK_W, resolveSize, type CustomSizes, type DevicePreset, type FrameKey } from "@/lib/devices";
@@ -153,6 +155,7 @@ export function ReviewCanvas({
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Placed | null>(null);
   const [inspect, setInspect] = useState<Placed | null>(null);
+  const [auditOpen, setAuditOpen] = useState(false);
   const [filters, setFiltersState] = useState<PanelFilters>({ q: "", sort: "newest", device: "all", showResolved: false, scope: "page" });
   const [panel, setPanel] = useState(true);
   /** Comment panel width (px), adjustable by dragging its left edge. */
@@ -917,6 +920,16 @@ export function ReviewCanvas({
         >
           <Snowflake size={15} />
         </button>
+        {!guest && (
+          <button
+            onClick={() => setAuditOpen(true)}
+            title="SEO audit report for this page"
+            aria-label="SEO audit report for this page"
+            className={cn("rounded-lg border p-2", auditOpen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
+          >
+            <Gauge size={15} />
+          </button>
+        )}
 
         {!guest && (
           <>
@@ -1241,6 +1254,7 @@ export function ReviewCanvas({
           </aside>
         )}
       </div>
+      {auditOpen && !guest && <AuditModal project={project} pageUrl={pageUrl} onClose={() => setAuditOpen(false)} />}
     </div>
   );
 }
@@ -1260,9 +1274,14 @@ function DevBtn({ active, onClick, title, children }: { active: boolean; onClick
 
 function ModeBtn({ active, onClick, icon, label, k }: { active: boolean; onClick: () => void; icon: React.ReactNode; label: string; k: string }) {
   return (
-    <button onClick={onClick} title={`${label} (${k})`} className={cn("flex h-8 items-center gap-1.5 rounded-lg px-2 text-[13px]", active ? "bg-ink text-paper" : "text-ink-3 hover:text-ink")}>
+    <button
+      onClick={onClick}
+      title={`${label} (${k})`}
+      aria-label={label}
+      aria-pressed={active}
+      className={cn("flex h-8 w-9 items-center justify-center rounded-lg transition", active ? "bg-ink text-paper shadow-1" : "text-ink-3 hover:bg-surface-2 hover:text-ink")}
+    >
       {icon}
-      <span className="hidden 2xl:inline">{label}</span>
     </button>
   );
 }

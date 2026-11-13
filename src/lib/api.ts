@@ -41,6 +41,7 @@ export const api = {
   deleteProject: (id: string) => call<{ ok: true }>(`/api/projects/${id}`, { method: "DELETE" }),
   share: (projectId: string) => call<{ token: string; path: string }>("/api/share", { method: "POST", body: JSON.stringify({ projectId }) }),
   runAudit: (projectId: string, url?: string) => call<Audit>("/api/audits", { method: "POST", body: JSON.stringify({ projectId, url }) }),
+  latestAudit: (projectId: string, page: string) => call<Audit | null>(`/api/audits${qs({ projectId, page })}`),
   upload: async (file: Blob, name: string, guest?: GuestCtx): Promise<Attachment> => {
     const fd = new FormData();
     fd.append("file", file, name);
