@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Crosshair, FolderKanban, Gauge, Globe, Inbox, ListChecks, Moon, MoreHorizontal, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
+import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, Moon, MoreHorizontal, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useConfirm } from "@/components/confirm";
 
@@ -13,7 +13,6 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
-  { href: "/app", label: "Inbox", icon: Inbox, exact: true },
   { href: "/app/issues", label: "Issues", icon: ListChecks },
   { href: "/app/audits", label: "Audits", icon: Gauge },
   { href: "/app/settings", label: "Settings", icon: Settings },
@@ -30,7 +29,7 @@ export function Rail({ projects, workspace }: { projects: { id: string; name: st
       </div>
       <nav className="space-y-0.5 px-2 py-2">
         {NAV.map((n) => {
-          const active = n.exact ? path === n.href : path.startsWith(n.href);
+          const active = path.startsWith(n.href);
           return (
             <Link
               key={n.href}
@@ -99,7 +98,7 @@ export function ThemeToggle() {
 export function MobileTopbar() {
   return (
     <div className="flex h-12 items-center gap-3 border-b border-line bg-surface px-4 md:hidden">
-      <Link href="/app" className="flex items-center gap-2 font-semibold">
+      <Link href="/app/projects" className="flex items-center gap-2 font-semibold">
         <LogoMark /> <Wordmark className="text-[17px]" />
       </Link>
       <nav className="ml-auto flex gap-3 text-[13px] text-ink-2">
