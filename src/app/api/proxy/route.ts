@@ -10,6 +10,12 @@ export const dynamic = "force-dynamic";
  * (no allow-same-origin), so proxied scripts can't reach the app's cookies or storage.
  */
 export async function GET(req: Request) {
+  // Hosted deployments have no sign-in yet, so the proxy would let anyone frame any site
+  // under this domain. Keep it off there until accounts exist; local use is unaffected.
+  if (process.env.VERCEL && process.env.QASYNC_ALLOW_PUBLIC_PROXY !== "1") {
+    return errorPage("Site previews need you to be signed in.", 403);
+  }
+
   const params = new URL(req.url).searchParams;
   const raw = params.get("url");
   const self = selfOriginOf(req);
@@ -97,9 +103,9 @@ function escapeAttr(s: string) {
   return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
-function errorPage(msg: string) {
+function errorPage(msg: string, status = 200) {
   const html = `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0;background:#f7f7f4;color:#0e1116">
   <div style="max-width:440px;text-align:center"><div style="font-size:40px">⚠︎</div><h2 style="margin:8px 0">This page can't be loaded</h2>
   <p style="color:#6b717c">${msg.replace(/</g, "&lt;")}</p></div></body>`;
-  return new Response(html, { status: 200, headers: { "content-type": "text/html; charset=utf-8" } });
+  return new Response(html, { status, headers: { "content-type": "text/html; charset=utf-8" } });
 }
