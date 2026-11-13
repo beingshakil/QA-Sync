@@ -100,13 +100,12 @@ export async function upsertUser(input: { email: string; name?: string | null; i
   let user: User;
   if (existing) {
     user = toUser(existing);
-    if (input.image && input.image !== user.image) {
-      await run("UPDATE users SET image = ? WHERE id = ?", input.image, user.id);
-      user.image = input.image;
-    }
+    if (input.image) user.image = input.image;
+    await run("UPDATE users SET image = COALESCE(?, image), last_login_at = ?, login_count = login_count + 1 WHERE id = ?", input.image ?? null, now(), user.id);
   } else {
     user = { id: nanoid(12), email, name: (input.name?.trim() || email.split("@")[0]).slice(0, 60), image: input.image ?? null };
-    await run("INSERT INTO users (id, email, name, image, created_at) VALUES (?,?,?,?,?)", user.id, user.email, user.name, user.image, now());
+    const ts = now();
+    await run("INSERT INTO users (id, email, name, image, created_at, last_login_at, login_count) VALUES (?,?,?,?,?,?,1)", user.id, user.email, user.name, user.image, ts, ts);
   }
   await acceptInvites(user);
   const memberships = await q("SELECT workspace_id FROM memberships WHERE user_id = ?", user.id);

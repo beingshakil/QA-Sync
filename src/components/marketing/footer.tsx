@@ -6,13 +6,15 @@ import { BRAND } from "@/lib/brand";
 export function Footer() {
   const cols: { title: string; links: { href: string; label: string }[] }[] = [
     { title: "Product", links: PRODUCTS.map((p) => ({ href: `/product/${p.slug}`, label: p.name })) },
-    { title: "Solutions", links: SOLUTIONS.map((s) => ({ href: `/solutions/${s.slug}`, label: `For ${s.name.replace(/^\w/, (c) => c.toLowerCase())}` })) },
+    { title: "Solutions", links: SOLUTIONS.map((s) => ({ href: `/solutions/${s.slug}`, label: `For ${s.name.replace(/^([A-Z])(?=[a-z])/, (c) => c.toLowerCase())}` })) },
     {
       title: "Company",
       links: [
         { href: "/pricing", label: "Pricing" },
         { href: "/integrations", label: "Integrations" },
         { href: "/changelog", label: "Changelog" },
+        { href: "/privacy", label: "Privacy" },
+        { href: "/terms", label: "Terms" },
       ],
     },
     {

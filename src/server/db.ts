@@ -168,6 +168,8 @@ CREATE TABLE IF NOT EXISTS meta (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS login_count INTEGER NOT NULL DEFAULT 0;
 `;
 
 /** `?` → `$1, $2…` (our SQL never has a literal `?`; user text always goes in as a parameter). */

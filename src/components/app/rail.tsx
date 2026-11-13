@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, LogOut, MoreHorizontal, Pencil, Plus, Settings, Trash2 } from "lucide-react";
+import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, LogOut, MoreHorizontal, Pencil, Plus, Settings, ShieldCheck, Trash2 } from "lucide-react";
 import { signOutAction } from "@/app/actions";
 import { api } from "@/lib/api";
 import { useConfirm } from "@/components/confirm";
@@ -23,12 +23,15 @@ export function Rail({
   projects,
   workspace,
   workspaces = [],
+  isAdmin = false,
 }: {
   projects: { id: string; name: string; color: string; openCount?: number }[];
   workspace: Workspace;
   workspaces?: { id: string; name: string }[];
+  isAdmin?: boolean;
 }) {
   const path = usePathname();
+  const nav = isAdmin ? [...NAV, { href: "/app/admin", label: "Admin", icon: ShieldCheck }] : NAV;
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface md:flex">
       <div className="flex h-14 items-center gap-2 px-4">
@@ -37,7 +40,7 @@ export function Rail({
         </Link>
       </div>
       <nav className="space-y-0.5 px-2 py-2">
-        {NAV.map((n) => {
+        {nav.map((n) => {
           const active = path.startsWith(n.href);
           return (
             <Link

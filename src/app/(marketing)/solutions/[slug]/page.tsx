@@ -10,7 +10,7 @@ import { SOLUTIONS } from "@/content/marketing";
 type Props = { params: Promise<{ slug: string }> };
 
 /** "For designers", "For QA teams": lower-case only the first letter so acronyms survive. */
-const forLabel = (name: string) => `For ${name.replace(/^\w/, (c) => c.toLowerCase())}`;
+const forLabel = (name: string) => `For ${name.replace(/^([A-Z])(?=[a-z])/, (c) => c.toLowerCase())}`;
 
 export function generateStaticParams() {
   return SOLUTIONS.map((s) => ({ slug: s.slug }));

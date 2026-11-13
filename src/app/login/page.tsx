@@ -75,6 +75,16 @@ export default async function LoginPage({ searchParams }: Props) {
 
         <p className="mt-6 text-center text-[12.5px] leading-relaxed text-ink-3">
           Clients reviewing through a share link don&apos;t need to sign in.
+          <br />
+          By continuing you agree to the{" "}
+          <Link href="/terms" className="underline decoration-line-strong underline-offset-2 hover:text-ink">
+            Terms
+          </Link>{" "}
+          and{" "}
+          <Link href="/privacy" className="underline decoration-line-strong underline-offset-2 hover:text-ink">
+            Privacy Policy
+          </Link>
+          .
         </p>
       </div>
     </main>
