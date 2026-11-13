@@ -347,16 +347,16 @@ body {
 /* ── Hero story: pin → comment → fixed → verified (9s loop) ── */
 .story { --t: 9s; }
 .story-cursor { position: absolute; z-index: 5; left: 46%; top: 96%; animation: story-cursor var(--t) var(--ease-out) infinite; }
-/* Targets (share of the shot body): CTA ≈ 10% / 76%, "Mark fixed" ≈ 94% / 76% */
+/* Targets (share of the shot body, measured at 1440): Charted card ≈ 34.3% / 31%, "Mark fixed" ≈ 94.7% / 78.8% */
 @keyframes story-cursor {
   0% { left: 46%; top: 96%; opacity: 0; }
   6% { opacity: 1; }
-  20% { left: 10.5%; top: 73%; transform: scale(1); }
+  20% { left: 34.3%; top: 31%; transform: scale(1); }
   23% { transform: scale(0.85); }
-  26% { left: 10.5%; top: 73%; transform: scale(1); }
-  48% { left: 94.5%; top: 77.5%; }
+  26% { left: 34.3%; top: 31%; transform: scale(1); }
+  48% { left: 94.7%; top: 78.8%; }
   52% { transform: scale(0.85); }
-  55% { left: 94.5%; top: 77.5%; transform: scale(1); opacity: 1; }
+  55% { left: 94.7%; top: 78.8%; transform: scale(1); opacity: 1; }
   70%, 100% { left: 98%; top: 97%; opacity: 0; }
 }
 .story-dot { background: #f97316; animation: story-dot var(--t) linear infinite; }

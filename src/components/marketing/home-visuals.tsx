@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import {
   Check,
   ChevronDown,
@@ -18,18 +19,18 @@ import {
 import { LogoMark } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { d } from "./sections";
-import { ProductTile } from "./demo-art";
 import { FailBadge, Spec, Swatch } from "./spec";
 
-/* Palette for the demo site (a coffee roaster) so it reads as "someone else's website". */
-const NW = { bg: "#f3f6f9", ink: "#10202e", muted: "#52616e", brand: "#1A9AA6" };
+/* Brand colour of the demo site used in the smaller visuals (bento cards). */
+const NW = { brand: "#1A9AA6" };
 const PIN = { critical: "#ef4444", medium: "#f97316", verified: "#16a34a" };
 
-function Pin({ children, color, className }: { children: ReactNode; color: string; className?: string }) {
+/** A pin whose tip sits at (x%, y%) of the screenshot. */
+function PinAt({ x, y, color, children }: { x: number; y: number; color: string; children: ReactNode }) {
   return (
     <span
-      className={cn("absolute flex h-7 w-7 items-center justify-center rounded-[14px_14px_14px_3px] font-sans text-[12px] font-semibold text-white shadow-2 ring-2 ring-white", className)}
-      style={{ background: color }}
+      className="absolute z-10 flex h-6 w-6 items-center justify-center rounded-[12px_12px_12px_3px] text-[11px] font-semibold text-white shadow-2 ring-2 ring-white"
+      style={{ left: `${x}%`, top: `${y}%`, background: color, transform: "translate(-3px, -100%)" }}
     >
       {children}
     </span>
@@ -45,10 +46,10 @@ export function ProductShot() {
         {/* app toolbar */}
         <div className="flex h-12 items-center gap-3 border-b border-line bg-surface px-3.5">
           <LogoMark className="h-6 w-6" />
-          <span className="hidden text-[13px] font-medium text-ink sm:inline">northwind.coffee</span>
+          <span className="hidden text-[13px] font-medium text-ink sm:inline">afternow.co</span>
           <div className="ml-1 flex h-7 min-w-0 max-w-[320px] flex-1 items-center gap-2 rounded-lg border border-line bg-paper px-2.5 text-[12px] text-ink-3">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-pass" />
-            <span className="truncate">https://northwind.coffee/</span>
+            <span className="truncate">https://afternow.co/work</span>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <ToolGroup className="hidden lg:flex">
@@ -80,59 +81,45 @@ export function ProductShot() {
         </div>
 
         <div className="relative grid md:grid-cols-[1fr_340px]">
-          {/* the site under review */}
-          <div className="relative min-h-[400px] overflow-hidden p-7 sm:p-10" style={{ background: NW.bg, color: NW.ink }}>
-            <div className="flex items-center justify-between text-[12px]" style={{ color: NW.muted }}>
-              <span className="text-[15px] font-bold" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", color: NW.ink }}>
-                ● Northwind
-              </span>
-              <span className="relative hidden gap-5 sm:flex">
-                <span>Shop</span>
-                <span className="relative">
-                  Subscriptions
-                  <Pin color={PIN.medium} className="-right-6 -top-5 scale-[0.85]">
-                    2
-                  </Pin>
-                </span>
-                <span>Our story</span>
-              </span>
-            </div>
-
-            <div className="relative mt-10 max-w-[64%] sm:mt-12">
-              {/* The demo site's headline: a div, not a heading of this page */}
-              <div className="text-[30px] font-bold leading-[1.04] sm:text-[40px]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", letterSpacing: "-0.01em" }}>
-                Coffee roasted <i style={{ color: NW.brand }}>this week</i>, at your door by Friday.
-              </div>
-              <Pin color={PIN.critical} className="z-10 right-0 -top-5">
+          {/* the site under review: a real screenshot, with pins on real problems in it */}
+          <div className="relative overflow-hidden bg-white">
+            <div className="relative">
+              <Image
+                src="/demo/afternow-work.webp"
+                alt="Example website under review in QASync: an agency's work page with comment pins"
+                width={2000}
+                height={919}
+                quality={90}
+                sizes="(min-width: 1200px) 760px, (min-width: 768px) 60vw, 100vw"
+                className="block h-auto w-full"
+              />
+              {/*
+                Every pin sits in empty white space next to what it points at, so none covers
+                a logo, title, text or tag. Coordinates are % of the 2000×919 screenshot.
+              */}
+              {/* 1 · Solvd's description runs as one long line */}
+              <PinAt x={77.5} y={76.2} color={PIN.critical}>
                 1
-              </Pin>
-              <p className="mt-4 max-w-[30ch] text-[13.5px] leading-relaxed" style={{ color: NW.muted }}>
-                Small-batch beans from three farms we visit every year.
-              </p>
-              <div className="relative mt-6 inline-block">
-                <div className="rounded-md px-4 py-2.5 text-[12.5px] font-semibold text-white" style={{ background: NW.brand }}>
-                  Start a subscription
-                </div>
-                {/* hover outline + measurement, as the cursor arrives */}
-                <div className="story-outline pointer-events-none absolute -inset-1 rounded-lg outline outline-[1.5px] outline-[#5b86f2]">
-                  <div className="absolute -bottom-6 left-0 right-0 flex items-center gap-1.5 text-[10.5px] font-semibold tabular-nums text-[#5b86f2]">
-                    <span className="h-px flex-1 bg-[#5b86f2]" />
-                    184 px
-                    <span className="h-px flex-1 bg-[#5b86f2]" />
-                  </div>
-                </div>
-                <span className="story-pin absolute -right-4 -top-6 h-7 w-7 rounded-[14px_14px_14px_3px] text-[12px] font-semibold text-white shadow-2 ring-2 ring-white">
-                  <span className="story-pin-num">3</span>
-                  <span className="story-pin-check">✓</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="absolute bottom-8 right-8 top-24 hidden w-[28%] sm:block">
-              <ProductTile className="h-full" />
-              <Pin color={PIN.verified} className="-left-3 bottom-16">
+              </PinAt>
+              {/* 2 · tag text is too small */}
+              <PinAt x={28.5} y={76} color={PIN.medium}>
+                2
+              </PinAt>
+              {/* 4 · nav pill vs logo baseline, verified (in the gap between logo and nav) */}
+              <PinAt x={60} y={9} color={PIN.verified}>
                 ✓
-              </Pin>
+              </PinAt>
+              {/* 3 · the story: the Charted card is taller than its neighbours */}
+              <div className="story-outline pointer-events-none absolute rounded-lg outline outline-[1.5px] outline-[#5b86f2]" style={{ left: "34.1%", top: "9.9%", width: "31.05%", height: "67.7%" }}>
+                <div className="absolute bottom-2 right-2 rounded bg-[#5b86f2] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white">+146 px</div>
+              </div>
+              <span
+                className="story-pin absolute h-6 w-6 rounded-[12px_12px_12px_3px] text-[11px] font-semibold text-white shadow-2 ring-2 ring-white"
+                style={{ left: "53%", top: "92.7%", transform: "translate(-3px, -100%)" }}
+              >
+                <span className="story-pin-num">3</span>
+                <span className="story-pin-check">✓</span>
+              </span>
             </div>
           </div>
 
@@ -140,7 +127,7 @@ export function ProductShot() {
           <aside className="hidden flex-col border-l border-line bg-surface md:flex">
             <div className="flex items-center justify-between border-b border-line px-4 py-3">
               <div className="text-[13px] font-semibold text-ink">
-                Comments <span className="font-normal text-ink-3">· Home</span>
+                Comments <span className="font-normal text-ink-3">· Work</span>
               </div>
               <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-ink-3">4</span>
             </div>
@@ -163,8 +150,8 @@ export function ProductShot() {
               </div>
             </div>
             <ul className="space-y-2 p-3 text-[12.5px]">
-              <IssueRow n="1" color={PIN.critical} title="Headline wraps badly on iPhone 15" meta="iPhone 15 · Maya" status="Open" />
-              <IssueRow n="2" color={PIN.medium} title="Nav links sit 4px too low" meta="Desktop · Jordan" status="In review" />
+              <IssueRow n="1" color={PIN.critical} title="Solvd description should wrap like the others" meta="Desktop 1440 · Maya" status="Open" />
+              <IssueRow n="2" color={PIN.medium} title="Tag text is too small to read" meta="Desktop · Jordan" status="In review" />
               <li className="rounded-xl border border-brand/40 bg-brand-soft/40 p-3">
                 <div className="flex items-start gap-2.5">
                   <span className="story-dot relative mt-0.5 h-5 w-5 shrink-0 rounded-full text-[10px] font-semibold text-white">
@@ -172,17 +159,16 @@ export function ProductShot() {
                     <span className="story-pin-check">✓</span>
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium leading-snug text-ink">Button colour doesn&apos;t match the design</div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md bg-surface-2 px-2 py-1.5 text-ink">
-                      <Swatch size="xs" hex="#1A9AA6" />
-                      <span className="text-[10.5px] text-ink-3">→</span>
-                      <Swatch size="xs" hex="#0E7C86" note="design" />
+                    <div className="font-medium leading-snug text-ink">Charted card is taller than its neighbours</div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md bg-surface-2 px-2 py-1.5 text-[11px] text-ink-2">
+                      <span className="font-semibold tabular-nums text-ink">582 px</span>
+                      <span className="text-ink-3">vs 436 and 388 px</span>
                     </div>
                     <div className="mt-2 text-[11.5px] text-ink-2">
-                      <span className="font-medium text-ink">Maya</span> The token looks out of date.
+                      <span className="font-medium text-ink">Maya</span> Match the row so the titles line up.
                     </div>
                     <div className="story-reply mt-1 text-[11.5px] text-ink-2">
-                      <span className="font-medium text-ink">Arjun</span> Updated it. It&apos;s on staging.
+                      <span className="font-medium text-ink">Arjun</span> One media ratio for all cards. On staging.
                     </div>
                   </div>
                 </div>
@@ -197,7 +183,7 @@ export function ProductShot() {
                   </span>
                 </div>
               </li>
-              <IssueRow n="✓" color={PIN.verified} title="Product photo is soft on retina" meta="Desktop · Client" status="Verified" done />
+              <IssueRow n="✓" color={PIN.verified} title="Nav pill sits 2 px above the logo" meta="Desktop · Client" status="Verified" done />
             </ul>
           </aside>
 
@@ -482,19 +468,19 @@ export function AgentTerminal() {
       </div>
       <div className="space-y-0.5 p-5">
         <p data-reveal style={d(150)}>
-          <span className="text-white/40">›</span> Fix the open QASync issues on northwind.coffee
+          <span className="text-white/40">›</span> Fix the open QASync issues on afternow.co
         </p>
         <p data-reveal style={d(500)} className={cn("pt-2", line)}>
-          <span className="text-[#7aa2ff]">list_issues</span> project: northwind · <span className="text-white">3 open</span>
+          <span className="text-[#7aa2ff]">list_issues</span> project: afternow · <span className="text-white">3 open</span>
         </p>
         <p data-reveal style={d(800)} className={line}>
-          <span className="text-[#7aa2ff]">get_issue</span> #3 · <span className="text-white">#hero-cta</span> · bg #1A9AA6 · contrast 3.38
+          <span className="text-[#7aa2ff]">get_issue</span> #3 · <span className="text-white">.work-card__media</span> · 582 px vs 436 px
         </p>
         <p data-reveal style={d(1100)} className={line}>
-          edited <span className="text-white">styles/tokens.css</span>, <span className="text-white">components/Hero.tsx</span>
+          edited <span className="text-white">styles/work.css</span>, <span className="text-white">components/WorkCard.tsx</span>
         </p>
         <p data-reveal style={d(1400)} className={line}>
-          <span className="text-[#7aa2ff]">reply_to_issue</span> #3 “Brand token updated to #0E7C86, contrast 4.95”
+          <span className="text-[#7aa2ff]">reply_to_issue</span> #3 “All cards share one media ratio now”
         </p>
         <p data-reveal style={d(1700)} className={line}>
           <span className="text-[#7aa2ff]">update_issue</span> #1 #2 #3 → <span className="text-white">fixed</span>
