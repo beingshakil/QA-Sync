@@ -141,7 +141,10 @@ export function Header() {
         </nav>
         <div className="ml-auto hidden items-center gap-2 md:flex">
           <SiteThemeToggle />
-          <Link href="/app" className="px-3 text-sm text-ink-2 hover:text-ink">
+          <Link
+            href="/app"
+            className="inline-flex h-9 items-center rounded-lg border border-line-strong px-4 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2"
+          >
             Sign in
           </Link>
         </div>

@@ -21,7 +21,7 @@ import { PricingCards } from "@/components/marketing/pricing-cards";
 import { IntegrationIcon } from "@/components/integration-icon";
 import { cn } from "@/lib/utils";
 
-const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix"];
+const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix", "Squarespace", "React", "Ghost", "Vercel", "Netlify"];
 
 /** One content column for the whole page; sections are separated by a rule on that column. */
 function Block({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
@@ -93,15 +93,18 @@ export default function Home() {
           </div>
 
           <div data-reveal className="mt-16 flex flex-col gap-6 border-t border-line py-10 md:flex-row md:items-center md:justify-between md:gap-10">
-            <p className="max-w-[18rem] text-[14px] leading-snug text-ink-3">Review any live site. No script to add, no extension to install.</p>
-            <ul className="flex flex-wrap items-center gap-x-9 gap-y-4 text-ink-3">
-              {PLATFORMS.map((n) => (
-                <li key={n} className="flex items-center gap-2 text-[15px] font-medium">
-                  <IntegrationIcon name={n} size={17} mono />
-                  {n}
-                </li>
-              ))}
-            </ul>
+            <p className="max-w-[18rem] shrink-0 text-[14px] leading-snug text-ink-3">Review any live site. No script to add, no extension to install.</p>
+            {/* Endless loop: the list is rendered twice and the track slides by half its width */}
+            <div className="marquee min-w-0 flex-1" aria-label="Works with sites built on these platforms">
+              <ul className="marquee-track items-center gap-12 pr-12 text-ink-3">
+                {[...PLATFORMS, ...PLATFORMS].map((n, k) => (
+                  <li key={k} aria-hidden={k >= PLATFORMS.length} className="flex items-center gap-2 whitespace-nowrap text-[15px] font-medium transition-colors hover:text-ink">
+                    <IntegrationIcon name={n} size={17} mono />
+                    {n}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </div>
       </section>
