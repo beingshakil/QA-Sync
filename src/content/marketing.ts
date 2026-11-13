@@ -89,14 +89,14 @@ export const PRODUCTS: ProductPage[] = [
   {
     slug: "ai-agents",
     name: "AI & agents",
-    menuBlurb: "Claude, ChatGPT and Codex in the loop, with verified fixes",
+    menuBlurb: "Claude Code and Cursor fix issues over MCP",
     eyebrow: "AI & agents",
     headline: "Your agent fixes it.",
     accent: "QASync proves it.",
-    sub: "Connect Claude, ChatGPT, Codex or Cursor over MCP. Agents read open issues with full context, ship fixes, and QASync re-checks the page to confirm each fix landed.",
+    sub: "Connect Claude Code, Cursor or any MCP client with a token from Settings. Agents read open issues with full context, fix them in your code, reply with what changed, and mark them Fixed for you to verify.",
     features: [
       { title: "Fix verification", body: "When an issue is marked fixed, QASync re-renders the element and compares it with the original. If the fix didn't land, the issue reopens with evidence attached.", tag: "Beta" },
-      { title: "MCP server", body: "list_reviews, get_open_comments, get_repro_bundle, reply_and_resolve, verify_fix and deploy_site.", tag: "Soon" },
+      { title: "MCP server", body: "list_projects, list_issues, get_issue, reply_to_issue and update_issue, over Streamable HTTP with per-tool API tokens.", tag: "New" },
       { title: "Auto title & triage", body: "Type freely and QASync writes a clear title and suggests a priority. Duplicate reports are merged." },
       { title: "Two-way translation", body: "Clients write in their own language and developers read in theirs, within the same thread.", tag: "Soon" },
       { title: "Feedback to plan", body: "Turn a 40-comment review round into a prioritised sprint plan and client-ready release notes.", tag: "Soon" },
@@ -189,7 +189,7 @@ export const SOLUTIONS: SolutionPage[] = [
       { title: "Hunting for the element", body: "You get a selector you can paste straight into the devtools console." },
       { title: "Context switching", body: "Work from Jira, Linear or GitHub, with status synced both ways." },
     ],
-    gains: ["Stable CSS selectors", "Console error capture", "MCP for agent fixes (soon)", "Source file:line mapping (soon)"],
+    gains: ["Stable CSS selectors", "Console error capture", "MCP for agent fixes", "Source file:line mapping (soon)"],
     quote: { text: "I paste the selector into devtools and I'm looking at the bug. No back-and-forth.", who: "Placeholder quote: replace with a real customer" },
   },
   {
@@ -269,9 +269,9 @@ export const INTEGRATIONS: { group: string; items: { name: string; desc: string;
   {
     group: "AI & automation",
     items: [
-      { name: "Claude", desc: "MCP: read, fix, verify", status: "Soon" },
+      { name: "Claude", desc: "Claude Code over MCP: read, fix, reply" },
       { name: "ChatGPT", desc: "MCP connector", status: "Soon" },
-      { name: "Codex / Cursor", desc: "Fix issues from your editor", status: "Soon" },
+      { name: "Codex / Cursor", desc: "MCP: fix issues from your editor" },
       { name: "Webhooks", desc: "Signed, with a delivery log and replay", status: "Soon" },
       { name: "Zapier / Make / n8n", desc: "Connect anything", status: "Soon" },
       { name: "REST API", desc: "Everything the app can do", status: "Beta" },
@@ -336,7 +336,7 @@ export const FAQ: { q: string; a: string }[] = [
   { q: "How does reviewing work without installing anything?", a: "Paste a URL and QASync loads the page through a secure proxy with the reviewer tools added. For staging sites behind a login or on localhost, use the browser extension, which runs in your own session." },
   { q: "What does “Verified” mean?", a: "When an issue is marked Fixed, QASync re-checks the element against what was originally reported. Verified means someone, or something, confirmed the fix landed, not just that someone said it did." },
   { q: "Will the widget slow down my site?", a: "No. The widget is under 25 KB and loads only when a reviewer triggers it, through a shortcut, a query parameter or a button." },
-  { q: "Can AI agents fix issues?", a: "Yes. Connect Claude, ChatGPT, Codex or Cursor over MCP. Agents get the selector, specs and console context for each issue, and QASync verifies their fixes." },
+  { q: "Can AI agents fix issues?", a: "Yes. Create a token in Settings and connect Claude Code, Cursor or any MCP client. Agents get the selector, element styles and console errors for each issue, reply with what they changed and mark it Fixed; you verify it in the canvas." },
   { q: "Where is my data stored?", a: "In our managed cloud. A share link only opens the project it was made for, and guests can only edit what they wrote." },
 ];
 

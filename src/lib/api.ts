@@ -1,6 +1,6 @@
 "use client";
 
-import type { Activity, Attachment, Audit, Comment, Design, Issue, Page, Priority, Project, Status, Workspace } from "./types";
+import type { Activity, ApiToken, Attachment, Audit, Comment, Design, Issue, Page, Priority, Project, Status, Workspace } from "./types";
 
 export interface GuestCtx {
   shareToken: string;
@@ -64,5 +64,8 @@ export const api = {
   discoverPages: (projectId: string) =>
     call<{ pages: Page[]; added: number; source: string }>("/api/pages/discover", { method: "POST", body: JSON.stringify({ projectId }) }),
   workspace: () => call<Workspace>("/api/workspace"),
+  apiTokens: () => call<ApiToken[]>("/api/tokens"),
+  createApiToken: (name: string) => call<{ token: string; record: ApiToken }>("/api/tokens", { method: "POST", body: JSON.stringify({ name }) }),
+  revokeApiToken: (id: string) => call<{ ok: true }>(`/api/tokens/${id}`, { method: "DELETE" }),
   updateWorkspace: (patch: Partial<Workspace>) => call<Workspace>("/api/workspace", { method: "PATCH", body: JSON.stringify(patch) }),
 };

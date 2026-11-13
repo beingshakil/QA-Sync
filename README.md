@@ -84,6 +84,28 @@ Every URL in a project is a **page** with its own QA state:
 | `J` / `K` | Next / previous issue |
 | `Esc` | Cancel the current action |
 
+## AI agents (MCP)
+
+QASync runs an MCP server at `/api/mcp` (Streamable HTTP). AI tools such as Claude Code and Cursor can use it to read QA issues, fix them in your code, reply, and mark them Fixed. A person still marks each fix Verified.
+
+1. In the app, open **Settings → AI agents (MCP)** and create a token. It is shown once; QASync stores only a hash.
+2. Connect your tool. For Claude Code:
+   ```bash
+   claude mcp add --transport http qasync http://localhost:3000/api/mcp --header "Authorization: Bearer <your-token>"
+   ```
+   Settings also shows ready-to-paste config for Cursor and VS Code.
+3. Ask the agent, for example: *"Fix the open QASync issues for my site, reply on each one, and mark them fixed."*
+
+| Tool | What it does |
+|---|---|
+| `list_projects` | Projects with their URLs and open issue counts |
+| `list_issues` | Issues by project, page and status (default: still needs work) |
+| `get_issue` | Comment, page URL, device, CSS selector, element styles, browser, console errors, attachments and thread |
+| `reply_to_issue` | Adds a reply, authored as the token's name |
+| `update_issue` | Status, priority or assignee. Agents can't set `verified` |
+
+Tools on the same computer can use the `localhost` URL. Cloud apps (claude.ai, ChatGPT) need QASync on a public address. Revoking a token in Settings cuts off access immediately.
+
 ## How it fits together
 
 - `public/reviewer.js`: the in-page agent, injected by `/api/proxy`. It talks to the canvas over `postMessage`.

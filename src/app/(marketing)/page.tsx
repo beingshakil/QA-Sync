@@ -29,7 +29,7 @@ const FEATURES = [
   { icon: <BadgeCheck size={16} />, title: "Fix verification", body: "Fixed isn't done. Verified is. QASync re-checks the element before closing the loop." },
   { icon: <Gauge size={16} />, title: "Page audit score", body: "Broken links, labels, alt text, SEO and font sprawl, scored out of 100." },
   { icon: <Link2 size={16} />, title: "Guest links", body: "Clients pin and reply with no account and nothing to install." },
-  { icon: <Bot size={16} />, title: "AI agents (MCP)", body: "Claude, ChatGPT and Codex read issues, ship fixes and get them verified.", tag: "Soon" },
+  { icon: <Bot size={16} />, title: "AI agents (MCP)", body: "Claude Code, Cursor and other MCP clients read issues, ship fixes and hand them back for you to verify.", tag: "New" },
   { icon: <Mic size={16} />, title: "Voice notes", body: "Talk instead of typing, with an editable transcript.", tag: "Soon" },
   { icon: <FileText size={16} />, title: "Photo & PDF review", body: "Pin images and PDFs with the same tools.", tag: "Soon" },
   { icon: <ShieldCheck size={16} />, title: "Privacy by default", body: "Sensitive data is masked in the browser before anything is uploaded." },
@@ -141,7 +141,7 @@ export default function Home() {
             eyebrow="AI agents"
             title="Your agent fixes it."
             accent="QASync proves it."
-            sub="Connect Claude, ChatGPT, Codex or Cursor over MCP. Agents get selectors, specs and console output, and nothing counts as done until QASync has re-checked the page."
+            sub="Connect Claude Code, Cursor or any MCP client. Agents get the selector, element styles, browser and console errors for every issue, fix it, reply, and mark it Fixed. Nothing counts as done until a person verifies it."
           />
           <ButtonLink href="/product/ai-agents" variant="secondary" className="mt-6">
             How agents work with QASync
@@ -157,15 +157,14 @@ export default function Home() {
             <Bot size={14} className="ml-2" /> agent · qasync-mcp
           </div>
           <p data-reveal style={d(200)}>
-            <span className="text-white/50">you ›</span> Fix the open issues on Northwind and verify them.
+            <span className="text-white/50">you ›</span> Fix the open QASync issues on Northwind.
           </p>
-          <p data-reveal style={d(700)} className="mt-3 text-white/60">→ get_open_comments(project: &quot;northwind&quot;) · 5 open</p>
-          <p data-reveal style={d(1100)} className="text-white/60">→ get_repro_bundle(#1) · selector #hero-cta, bg #B5562D, design #C25E2E</p>
-          <p data-reveal style={d(1500)} className="text-white/60">→ edited tokens.css, components/Newsletter.tsx · deployed preview</p>
-          <p data-reveal style={d(1900)} className="text-white/60">→ verify_fix(#1, #3, #6)</p>
+          <p data-reveal style={d(700)} className="mt-3 text-white/60">→ list_issues(project: &quot;northwind&quot;) · 3 open</p>
+          <p data-reveal style={d(1100)} className="text-white/60">→ get_issue(#1) · selector #hero-cta · bg #B5562D · contrast 3.1</p>
+          <p data-reveal style={d(1500)} className="text-white/60">→ edited tokens.css, components/Newsletter.tsx</p>
+          <p data-reveal style={d(1900)} className="text-white/60">→ reply_to_issue(#1, &quot;CTA darkened to #9A4523, contrast 4.8&quot;)</p>
           <p data-reveal style={d(2500)} className="mt-3">
-            <span className="text-[#4ade80]">✓ #1 verified</span> <span className="text-[#4ade80]">✓ #3 verified</span>{" "}
-            <span className="text-[#cca9e0]">↺ #6 reopened: input still has no label</span>
+            <span className="text-[#4ade80]">✓ #1 #3 #6 marked fixed</span> <span className="text-[#cca9e0]">· waiting for you to verify</span>
           </p>
         </div>
       </Section>

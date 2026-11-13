@@ -113,6 +113,14 @@ CREATE TABLE IF NOT EXISTS pages (
   last_visited_at TEXT,
   UNIQUE (project_id, key)
 );
+CREATE TABLE IF NOT EXISTS api_tokens (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  token_hash TEXT NOT NULL UNIQUE,
+  prefix TEXT NOT NULL,
+  created_at TEXT NOT NULL,
+  last_used_at TEXT
+);
 `;
 
 /** Additive migrations for databases created by earlier versions. */

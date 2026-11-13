@@ -208,3 +208,13 @@ export function issueColor(i: { status: Status; priority: Priority }): string {
 export function issueTextColor(i: { status: Status; priority: Priority }): string {
   return issueColor(i) === PRIORITY_COLOR.low ? "#422006" : "#ffffff";
 }
+
+/** API token for the MCP server; the raw token is only shown once, on creation. */
+export interface ApiToken {
+  id: string;
+  name: string;
+  /** First characters of the token, so people can tell their tokens apart. */
+  prefix: string;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
