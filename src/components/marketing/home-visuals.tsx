@@ -98,9 +98,10 @@ export function ProductShot() {
             </div>
 
             <div className="relative mt-10 max-w-[64%] sm:mt-12">
-              <h3 className="text-[30px] font-bold leading-[1.04] sm:text-[40px]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", letterSpacing: "-0.01em" }}>
+              {/* The demo site's headline: a div, not a heading of this page */}
+              <div className="text-[30px] font-bold leading-[1.04] sm:text-[40px]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", letterSpacing: "-0.01em" }}>
                 Coffee roasted <i style={{ color: NW.brand }}>this week</i>, at your door by Friday.
-              </h3>
+              </div>
               <Pin color={PIN.critical} className="z-10 right-0 -top-5">
                 1
               </Pin>

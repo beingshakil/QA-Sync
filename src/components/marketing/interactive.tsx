@@ -114,56 +114,98 @@ export function ThreeViews() {
       </div>
 
       <div className="rounded-2xl border border-line bg-surface-2/60 p-5 sm:p-8">
-      <div className="rounded-xl border border-line bg-surface p-5 shadow-2">
-        <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-[12px_12px_12px_2px] bg-brand text-xs font-semibold text-white">3</span>
-          <span className="font-medium">Primary CTA colour doesn&apos;t match the design</span>
+      <div className="overflow-hidden rounded-xl border border-line bg-surface shadow-2">
+        <div className="flex items-start gap-3 border-b border-line px-5 py-4">
+          <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-[14px_14px_14px_3px] bg-[#f97316] text-[12px] font-semibold text-white">3</span>
+          <div className="min-w-0">
+            <div className="text-[15.5px] font-semibold leading-snug tracking-[-0.01em] text-ink">Primary CTA colour doesn&apos;t match the design</div>
+            <div className="mt-1 text-[12.5px] text-ink-3">Home · Desktop 1440px · Maya, 2h ago</div>
+          </div>
         </div>
+        <div className="px-5 py-5">
         {view === "designer" && (
-          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 font-mono text-[13px]">
-            {[
-              ["font", "DM Sans 700"],
-              ["size / lh", "16px / 24px"],
-              ["color", "#FFFFFF"],
-              ["background", "#1A9AA6 ≠ #0E7C86"],
-              ["contrast", "3.38 : 1  fails AA"],
-              ["padding", "15 26 15 26"],
-            ].map(([k, v]) => (
-              <div key={k} className="flex justify-between gap-2 border-b border-dashed border-line py-1">
-                <dt className="text-ink-3">{k}</dt>
-                <dd className={cn("text-right", v.includes("≠") && "text-accent-ink")}>{v}</dd>
-              </div>
-            ))}
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-5">
+            <Spec label="Font" value="DM Sans" note="Bold 700" />
+            <Spec label="Size / line height" value="16 / 24 px" />
+            <Spec label="Text colour" value={<Swatch hex="#FFFFFF" />} />
+            <Spec label="Padding" value="15 · 26 · 15 · 26" />
+            <Spec
+              label="Background"
+              value={
+                <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <Swatch hex="#1A9AA6" />
+                  <span className="text-[13px] font-semibold text-danger">≠</span>
+                  <Swatch hex="#0E7C86" note="design" />
+                </span>
+              }
+            />
+            <Spec
+              label="Contrast"
+              value={
+                <span className="flex items-center gap-2">
+                  3.38 : 1
+                  <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-semibold text-danger">Fails AA</span>
+                </span>
+              }
+            />
           </dl>
         )}
         {view === "developer" && (
-          <div className="mt-4 space-y-3 font-mono text-[12.5px]">
-            <div className="rounded-lg bg-surface-2 p-3">
-              <span className="text-ink-3">selector </span>
-              <span className="text-blue">#hero-cta</span>
+          <div className="space-y-5">
+            <div>
+              <div className="text-[12px] font-medium text-ink-3">Selector</div>
+              <div className="mt-1.5 inline-flex rounded-md border border-line bg-surface-2 px-2.5 py-1 font-mono text-[13px] text-brand-ink">#hero-cta</div>
             </div>
-            <div className="grid grid-cols-2 gap-2 text-ink-2">
-              <div>Chrome 131 · macOS 14.5</div>
-              <div>1280×800 @2x</div>
-            </div>
-            <div className="rounded-lg border border-brand/30 bg-accent-soft p-3 text-accent-ink">
-              ✕ GET /api/cart 404 (Not Found)
-              <br />✕ Uncaught TypeError: price is undefined @ cart.js:42
+            <dl className="grid grid-cols-3 gap-4">
+              <Spec label="Browser" value="Chrome 131" />
+              <Spec label="System" value="macOS 14.5" />
+              <Spec label="Viewport" value="1280 × 800" note="@2x" />
+            </dl>
+            <div>
+              <div className="text-[12px] font-medium text-ink-3">Console</div>
+              <ul className="mt-1.5 space-y-1.5 rounded-lg border border-danger/25 bg-danger-soft px-3 py-2.5 font-mono text-[12px] text-danger">
+                <li>GET /api/cart 404 (Not Found)</li>
+                <li>TypeError: price is undefined · cart.js:42</li>
+              </ul>
             </div>
           </div>
         )}
         {view === "client" && (
-          <div className="mt-4 space-y-3 text-sm">
-            <Bubble who="Jordan (client)" text="The button looks darker than in the mockup we approved." />
+          <div className="space-y-3 text-sm">
+            <Bubble who="Jordan (client)" text="The button looks lighter than in the mockup we approved." />
             <Bubble who="Maya" text="Good catch. The token was out of date. Fixed on staging, can you take a look?" me />
             <div className="flex items-center gap-2 rounded-lg bg-[color-mix(in_srgb,var(--st-verified)_12%,transparent)] px-3 py-2 text-[13px] font-medium text-[var(--st-verified)]">
               ✓ Jordan signed off · Verified
             </div>
           </div>
         )}
+        </div>
       </div>
       </div>
     </div>
+  );
+}
+
+/** One spec: small grey label, then a clear value (and an optional quiet note). */
+function Spec({ label, value, note }: { label: string; value: React.ReactNode; note?: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[12px] font-medium text-ink-3">{label}</dt>
+      <dd className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-semibold tabular-nums tracking-[-0.01em] text-ink">
+        {value}
+        {note && <span className="text-[12.5px] font-normal text-ink-3">{note}</span>}
+      </dd>
+    </div>
+  );
+}
+
+function Swatch({ hex, note }: { hex: string; note?: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <span className="h-4 w-4 shrink-0 rounded-[5px] border border-black/10 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]" style={{ background: hex }} />
+      <span className="text-[14px] font-semibold">{hex}</span>
+      {note && <span className="text-[12px] font-normal text-ink-3">{note}</span>}
+    </span>
   );
 }
 

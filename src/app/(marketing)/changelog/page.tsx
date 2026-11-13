@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
+import { JsonLd, breadcrumbs, graph } from "@/components/json-ld";
 import { PageHero, Section } from "@/components/marketing/sections";
 import { CHANGELOG } from "@/content/marketing";
 
-export const metadata: Metadata = { title: "Changelog" };
+export const metadata: Metadata = pageMetadata({
+  title: "Changelog: What's New in QASync",
+  description: "Release notes for QASync: new review tools, SEO audit checks, AI agent support over MCP and the fixes that shipped with each update.",
+  path: "/changelog",
+});
 
 export default function ChangelogPage() {
   return (
     <>
+      <JsonLd data={graph(breadcrumbs([{ name: "Changelog", path: "/changelog" }]))} />
       <PageHero eyebrow="Changelog" title="What's new" accent="in QASync." sub="Every release, newest first." />
       <Section className="max-w-3xl">
         <ol className="relative space-y-12 border-l border-line pl-8">

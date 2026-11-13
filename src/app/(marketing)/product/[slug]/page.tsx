@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
+import { JsonLd, breadcrumbs, graph } from "@/components/json-ld";
 import { CtaBand, FeatureGrid, PageHero, Section, SectionHead } from "@/components/marketing/sections";
 import { ButtonLink } from "@/components/ui";
 import { PRODUCTS } from "@/content/marketing";
@@ -14,7 +16,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const p = PRODUCTS.find((x) => x.slug === slug);
-  return p ? { title: p.name, description: p.sub } : {};
+  return p ? pageMetadata({ title: p.seoTitle, description: p.seoDescription, path: `/product/${p.slug}` }) : {};
 }
 
 export default async function ProductPage({ params }: Props) {
@@ -25,6 +27,7 @@ export default async function ProductPage({ params }: Props) {
 
   return (
     <>
+      <JsonLd data={graph(breadcrumbs([{ name: p.name, path: `/product/${p.slug}` }]))} />
       <PageHero eyebrow={p.eyebrow} title={p.headline} accent={p.accent} sub={p.sub}>
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/app" size="lg">

@@ -1,13 +1,20 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
+import { JsonLd, breadcrumbs, graph } from "@/components/json-ld";
 import { CtaBand, PageHero, Section } from "@/components/marketing/sections";
 import { INTEGRATIONS } from "@/content/marketing";
 import { IntegrationIcon } from "@/components/integration-icon";
 
-export const metadata: Metadata = { title: "Integrations" };
+export const metadata: Metadata = pageMetadata({
+  title: "Integrations: AI Agents, Jira, Slack and More",
+  description: "Connect AI agents like Claude Code and Cursor to QASync over MCP today. Jira, Linear, GitHub, Slack and more integrations are on the way.",
+  path: "/integrations",
+});
 
 export default function IntegrationsPage() {
   return (
     <>
+      <JsonLd data={graph(breadcrumbs([{ name: "Integrations", path: "/integrations" }]))} />
       <PageHero
         eyebrow="Integrations"
         title="Feedback goes"

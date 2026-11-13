@@ -106,6 +106,22 @@ QASync runs an MCP server at `/api/mcp` (Streamable HTTP). AI tools such as Clau
 
 Tools on the same computer can use the `localhost` URL. Cloud apps (claude.ai, ChatGPT) need QASync on a public address. Revoking a token in Settings cuts off access immediately.
 
+## SEO
+
+Set the public address before deploying, so canonical URLs, the sitemap, robots.txt, share images and structured data point at your domain:
+
+```bash
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+```
+
+On Vercel the production domain is used automatically when this isn't set; locally it falls back to `http://localhost:3000`.
+
+- **Metadata:** every marketing page has its own title, description, canonical URL, Open Graph and Twitter card (`src/lib/site.ts` → `pageMetadata`). Product and solution titles and descriptions live in `src/content/marketing.ts` (`seoTitle`, `seoDescription`).
+- **Share images:** generated at `/opengraph-image`, plus one per product and solution page (`src/lib/og.tsx`).
+- **Structured data:** Organization, WebSite, SoftwareApplication with the real plans, FAQPage and breadcrumbs (`src/components/json-ld.tsx`).
+- **Crawling:** `/robots.txt` and `/sitemap.xml`. The app (`/app`), the API and private share links (`/r/…`) are disallowed and marked `noindex`.
+- **Check it:** run QASync's own SEO audit on any page of the site.
+
 ## How it fits together
 
 - `public/reviewer.js`: the in-page agent, injected by `/api/proxy`. It talks to the canvas over `postMessage`.

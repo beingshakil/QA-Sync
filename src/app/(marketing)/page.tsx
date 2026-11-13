@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
@@ -20,6 +21,16 @@ import {
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { IntegrationIcon } from "@/components/integration-icon";
 import { cn } from "@/lib/utils";
+import { pageMetadata } from "@/lib/site";
+import { FAQ } from "@/content/marketing";
+import { JsonLd, faqPage, graph, organization, softwareApplication, website } from "@/components/json-ld";
+
+export const metadata: Metadata = pageMetadata({
+  title: "QASync: Visual Website Feedback and QA Tool",
+  absoluteTitle: true,
+  description: "Pin visual feedback on any live website, inspect specs, run SEO audits and verify every fix. Free plan, nothing to install, and clients need no account.",
+  path: "/",
+});
 
 const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix", "Squarespace", "React", "Ghost", "Vercel", "Netlify"];
 
@@ -67,6 +78,7 @@ function Feature({ head, visual, points, flip, children }: { head: ReactNode; vi
 export default function Home() {
   return (
     <>
+      <JsonLd data={graph(organization(), website(), softwareApplication(), faqPage(FAQ, "/"))} />
       {/* ───────── Hero ───────── */}
       <section className="relative overflow-hidden">
         <div className="site-glow" aria-hidden />

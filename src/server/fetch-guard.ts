@@ -13,7 +13,7 @@ export function resolveTarget(raw: string, selfOrigin: string): URL {
   if (!/^https?:$/.test(url.protocol)) throw new Error("Only http(s) URLs are supported");
   const self = new URL(selfOrigin);
   if (url.host !== self.host && PRIVATE_HOST.test(url.hostname)) {
-    throw new Error("Private network addresses can't be reviewed through the proxy. Use the browser extension for local sites.");
+    throw new Error("Private network and localhost addresses can't be reviewed through the proxy yet. Use a public or staging URL.");
   }
   return url;
 }

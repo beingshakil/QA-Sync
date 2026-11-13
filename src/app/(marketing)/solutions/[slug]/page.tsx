@@ -1,11 +1,16 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/site";
+import { JsonLd, breadcrumbs, graph } from "@/components/json-ld";
 import { CtaBand, PageHero, Section, SectionHead } from "@/components/marketing/sections";
 import { ButtonLink } from "@/components/ui";
 import { SOLUTIONS } from "@/content/marketing";
 
 type Props = { params: Promise<{ slug: string }> };
+
+/** "For designers", "For QA teams": lower-case only the first letter so acronyms survive. */
+const forLabel = (name: string) => `For ${name.replace(/^\w/, (c) => c.toLowerCase())}`;
 
 export function generateStaticParams() {
   return SOLUTIONS.map((s) => ({ slug: s.slug }));
@@ -14,7 +19,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const s = SOLUTIONS.find((x) => x.slug === slug);
-  return s ? { title: `For ${s.name.toLowerCase()}`, description: s.sub } : {};
+  return s ? pageMetadata({ title: s.seoTitle, description: s.seoDescription, path: `/solutions/${s.slug}` }) : {};
 }
 
 export default async function SolutionPage({ params }: Props) {
@@ -24,7 +29,8 @@ export default async function SolutionPage({ params }: Props) {
 
   return (
     <>
-      <PageHero eyebrow={`For ${s.name.toLowerCase()}`} title={s.headline} accent={s.accent} sub={s.sub}>
+      <JsonLd data={graph(breadcrumbs([{ name: forLabel(s.name), path: `/solutions/${s.slug}` }]))} />
+      <PageHero eyebrow={forLabel(s.name)} title={s.headline} accent={s.accent} sub={s.sub}>
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/app" size="lg">
             Start free

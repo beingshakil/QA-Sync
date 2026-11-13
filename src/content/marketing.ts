@@ -5,6 +5,9 @@ export type Feature = { title: string; body: string; tag?: string };
 export interface ProductPage {
   slug: string;
   name: string;
+  /** Search title (≤ 51 chars; " | QASync" is appended) and meta description (≤ 160 chars). */
+  seoTitle: string;
+  seoDescription: string;
   menuBlurb: string;
   eyebrow: string;
   headline: string;
@@ -19,6 +22,8 @@ export interface ProductPage {
 export const PRODUCTS: ProductPage[] = [
   {
     slug: "capture",
+    seoTitle: "Website Feedback Tool: Pin Comments on Live Sites",
+    seoDescription: "Pin feedback on any live website in seconds. No snippet and no install, and the clients you invite comment without creating an account.",
     name: "Capture",
     menuBlurb: "Pin feedback on any page, PDF or image",
     eyebrow: "Capture",
@@ -42,6 +47,8 @@ export const PRODUCTS: ProductPage[] = [
   },
   {
     slug: "design-qa",
+    seoTitle: "Design QA Tool: Compare the Build With the Design",
+    seoDescription: "Inspect type, spacing and contrast on the live page, then overlay the approved design to see exactly where the build drifted.",
     name: "Design QA",
     menuBlurb: "Check the build against the design",
     eyebrow: "Design QA",
@@ -65,6 +72,8 @@ export const PRODUCTS: ProductPage[] = [
   },
   {
     slug: "developer-context",
+    seoTitle: "Visual Bug Reports With Full Developer Context",
+    seoDescription: "Every QASync pin carries a CSS selector, browser, OS, viewport, pixel ratio and console errors, so developers can fix visual bugs without follow-ups.",
     name: "Developer context",
     menuBlurb: "Console, environment and selector on every issue",
     eyebrow: "Developer context",
@@ -88,6 +97,8 @@ export const PRODUCTS: ProductPage[] = [
   },
   {
     slug: "ai-agents",
+    seoTitle: "AI Agents for Website QA, Connected Over MCP",
+    seoDescription: "Connect Claude Code, Cursor or any MCP client to QASync. Agents read QA issues with full context, ship fixes and mark them Fixed for you to verify.",
     name: "AI & agents",
     menuBlurb: "Claude Code and Cursor fix issues over MCP",
     eyebrow: "AI & agents",
@@ -111,6 +122,8 @@ export const PRODUCTS: ProductPage[] = [
   },
   {
     slug: "monitoring",
+    seoTitle: "Website Audit: SEO, Broken Links and Accessibility",
+    seoDescription: "Audit any page for SEO basics, broken links, alt text, accessibility and font sprawl. Every failing check comes with the fix to make.",
     name: "Audits & monitoring",
     menuBlurb: "Broken links, accessibility, SEO, scored",
     eyebrow: "Audits & monitoring",
@@ -137,6 +150,8 @@ export const PRODUCTS: ProductPage[] = [
 export interface SolutionPage {
   slug: string;
   name: string;
+  seoTitle: string;
+  seoDescription: string;
   menuBlurb: string;
   headline: string;
   accent: string;
@@ -149,6 +164,8 @@ export interface SolutionPage {
 export const SOLUTIONS: SolutionPage[] = [
   {
     slug: "designers",
+    seoTitle: "Visual QA for Designers: Specs, Not Screenshots",
+    seoDescription: "Inspect, measure and compare your design on the live page, then hand developers exact values instead of screenshots with red circles.",
     name: "Designers",
     menuBlurb: "See whether the build matches",
     headline: "Your design,",
@@ -164,6 +181,8 @@ export const SOLUTIONS: SolutionPage[] = [
   },
   {
     slug: "agencies",
+    seoTitle: "Client Feedback Tool for Web Design Agencies",
+    seoDescription: "Send clients one link. They pin feedback on the real site with no account or install, and your team gets a clean, prioritised list of fixes.",
     name: "Agencies",
     menuBlurb: "Painless client feedback and sign-off",
     headline: "Client feedback",
@@ -179,6 +198,8 @@ export const SOLUTIONS: SolutionPage[] = [
   },
   {
     slug: "developers",
+    seoTitle: "Visual Bug Reports Developers Can Act On",
+    seoDescription: "Every issue arrives with a CSS selector, computed styles, browser, viewport and console errors, ready for you or your AI agent to fix.",
     name: "Developers",
     menuBlurb: "Precise context, zero follow-ups",
     headline: "Bug reports",
@@ -194,6 +215,8 @@ export const SOLUTIONS: SolutionPage[] = [
   },
   {
     slug: "qa-teams",
+    seoTitle: "Website QA Tool for QA Teams and Testers",
+    seoDescription: "Pin issues with keyboard shortcuts, test every device size, run page audits and track each page from not reviewed to passed in one canvas.",
     name: "QA teams",
     menuBlurb: "File visual issues faster",
     headline: "Visual QA",
@@ -209,6 +232,8 @@ export const SOLUTIONS: SolutionPage[] = [
   },
   {
     slug: "product-teams",
+    seoTitle: "Website Review Tool for Product Teams",
+    seoDescription: "Bring design, engineering, marketing and clients into one review of the live product, page by page, from first draft to launch.",
     name: "Product teams",
     menuBlurb: "Review releases before your users do",
     headline: "Ship the release",
@@ -341,6 +366,7 @@ export const FAQ: { q: string; a: string }[] = [
 ];
 
 export const CHANGELOG: { date: string; title: string; items: string[] }[] = [
+  { date: "2026-11-13", title: "AI agents and SEO audits", items: ["MCP server: Claude Code, Cursor and other MCP clients can read, reply to and fix issues", "Full SEO audit report with 12 pass/fail checks and a fix for every red item", "Exclude navbar and footer links from link checks", "Delete audit reports you no longer need"] },
   { date: "2026-11-13", title: "Phase 1 preview", items: ["Review canvas with live element pins, inspect mode and freeze hover", "Issue workflow from Open through Fixed to Verified, with list and board views", "Guest share links", "Page audits with a 100-point score"] },
   { date: "2026-10-28", title: "Design system", items: ["“Precision instrument” design language", "Light and dark themes", "Geist Sans and Mono typography"] },
 ];
