@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, Moon, MoreHorizontal, Pencil, Plus, Settings, Sun, Trash2 } from "lucide-react";
+import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, MoreHorizontal, Pencil, Plus, Settings, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { useConfirm } from "@/components/confirm";
 
@@ -62,36 +62,11 @@ export function Rail({ projects, workspace }: { projects: { id: string; name: st
             <div className="truncate text-[11px] text-ink-3">{workspace.name}</div>
           </div>
         </Link>
-        <ThemeToggle />
         <Link href="/" title="Marketing site" className="rounded-md p-1.5 text-ink-3 hover:text-ink">
           <Globe size={15} />
         </Link>
       </div>
     </aside>
-  );
-}
-
-export function ThemeToggle() {
-  const [dark, setDark] = useState(false);
-  useEffect(() => {
-    const t = document.documentElement.dataset.theme;
-    setDark(t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches);
-  }, []);
-  function toggle() {
-    const next = dark ? "light" : "dark";
-    const root = document.documentElement;
-    root.classList.add("theme-switching");
-    root.dataset.theme = next;
-    window.setTimeout(() => root.classList.remove("theme-switching"), 400);
-    try {
-      localStorage.setItem("qasync-theme", next);
-    } catch {}
-    setDark(!dark);
-  }
-  return (
-    <button onClick={toggle} title="Toggle theme" className="rounded-md p-1.5 text-ink-3 hover:text-ink">
-      {dark ? <Sun size={15} /> : <Moon size={15} />}
-    </button>
   );
 }
 

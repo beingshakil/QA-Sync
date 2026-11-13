@@ -14,7 +14,6 @@ import {
   Gauge,
   ListChecks,
   Menu,
-  Moon,
   Palette,
   PenTool,
   Plug,
@@ -22,7 +21,6 @@ import {
   Ruler,
   ScanSearch,
   Sparkles,
-  Sun,
   Wand2,
   X,
   type LucideIcon,
@@ -140,7 +138,6 @@ export function Header() {
           )}
         </nav>
         <div className="ml-auto hidden items-center gap-2 md:flex">
-          <SiteThemeToggle />
           <Link
             href="/app"
             className="inline-flex h-9 items-center rounded-lg border border-line-strong px-4 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2"
@@ -148,8 +145,7 @@ export function Header() {
             Sign in
           </Link>
         </div>
-        <SiteThemeToggle className="ml-auto md:hidden" />
-        <button className="rounded-md p-2 md:hidden" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}>
+        <button className="ml-auto rounded-md p-2 md:hidden" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}>
           {mobile ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>
@@ -218,32 +214,3 @@ function MegaItem({ item, onClick }: { item: MenuItem; onClick: () => void }) {
   );
 }
 
-/**
- * Light / dark switch. The site is dark unless the visitor picks light; the choice is shared with the app.
- * Icons are swapped purely in CSS (.ico-when-dark / .ico-when-light), so there is no hydration flicker.
- */
-export function SiteThemeToggle({ className }: { className?: string }) {
-  function toggle() {
-    const root = document.documentElement;
-    const next = root.dataset.theme === "light" ? "dark" : "light";
-    root.classList.add("theme-switching");
-    root.dataset.theme = next;
-    try {
-      localStorage.setItem("qasync-theme", next);
-    } catch {
-      /* storage unavailable: still switches for this visit */
-    }
-    window.setTimeout(() => root.classList.remove("theme-switching"), 400);
-  }
-  return (
-    <button
-      onClick={toggle}
-      title="Switch light / dark"
-      aria-label="Switch between light and dark theme"
-      className={cn("flex h-9 w-9 items-center justify-center rounded-lg border border-line text-ink-2 transition hover:border-line-strong hover:text-ink", className)}
-    >
-      <Sun size={16} className="ico-when-dark" />
-      <Moon size={16} className="ico-when-light" />
-    </button>
-  );
-}

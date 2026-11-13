@@ -30,20 +30,19 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: dark)", color: "#05070d" },
-    { media: "(prefers-color-scheme: light)", color: "#f7f8fc" },
-  ],
+  themeColor: "#05070d",
+  colorScheme: "dark",
 };
 
-// Runs before paint: apply the saved theme and mark that JS is on (scroll reveals only hide content when it is).
-const themeScript = `document.documentElement.classList.add('js');try{var t=localStorage.getItem('qasync-theme')||localStorage.getItem('fixproof-theme');if(t)document.documentElement.dataset.theme=t}catch(e){}`;
+// Runs before paint: mark that JS is on (scroll reveals only hide content when it is).
+const jsScript = `document.documentElement.classList.add('js')`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    // The site and the app are dark-only.
+    <html lang="en" data-theme="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: jsScript }} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}>
         <ConfirmProvider>{children}</ConfirmProvider>

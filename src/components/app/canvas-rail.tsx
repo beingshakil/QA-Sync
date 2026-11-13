@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FolderKanban, Gauge, ListChecks, PanelLeftClose, PanelLeftOpen, Plus, Settings } from "lucide-react";
 import { LogoMark, Wordmark } from "@/components/ui";
-import { ThemeToggle } from "./rail";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -99,7 +98,6 @@ export function CanvasRail({ projects, currentId }: { projects: { id: string; na
       </div>
 
       <div className={cn("flex items-center border-t border-line p-2", open ? "justify-between" : "flex-col gap-1")}>
-        <ThemeToggle />
         <button onClick={toggle} title={open ? "Collapse sidebar" : "Expand sidebar"} className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
           {open ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
         </button>
