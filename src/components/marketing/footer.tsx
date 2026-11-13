@@ -34,7 +34,7 @@ export function Footer() {
         </div>
         {cols.map((c) => (
           <div key={c.title}>
-            <div className="font-mono text-[11px] uppercase tracking-widest text-ink-3">{c.title}</div>
+            <div className="text-[13px] font-semibold text-ink">{c.title}</div>
             <ul className="mt-3 space-y-2">
               {c.links.map((l) => (
                 <li key={l.href}>
@@ -50,7 +50,7 @@ export function Footer() {
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-6 text-xs text-ink-3">
           <span>© 2026 {BRAND.name}. Phase 1 preview.</span>
-          <span className="font-mono">v0.1.0</span>
+          <span className="tabular-nums">v0.1.0</span>
         </div>
       </div>
     </footer>

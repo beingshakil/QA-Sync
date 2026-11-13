@@ -18,9 +18,9 @@ export default function ChangelogPage() {
       <Section className="max-w-3xl">
         <ol className="relative space-y-12 border-l border-line pl-8">
           {CHANGELOG.map((c) => (
-            <li key={c.date} data-reveal className="relative">
+            <li key={`${c.date}-${c.title}`} data-reveal className="relative">
               <span className="absolute -left-[37px] top-1.5 h-2.5 w-2.5 rounded-full bg-grad-brand ring-4 ring-paper" />
-              <time className="font-mono text-[12px] text-ink-3">{c.date}</time>
+              <time dateTime={c.date} className="text-[13px] font-medium tabular-nums text-ink-3">{new Date(`${c.date}T00:00:00Z`).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}</time>
               <h2 className="mt-1 text-2xl font-semibold tracking-tight">{c.title}</h2>
               <ul className="mt-3 space-y-1.5 text-ink-2">
                 {c.items.map((i) => (

@@ -38,7 +38,7 @@ export default async function ProductPage({ params }: Props) {
           </ButtonLink>
         </div>
         <div className="ring-grad mt-12 inline-flex items-baseline gap-3 rounded-2xl bg-surface px-5 py-4 shadow-1">
-          <span className="text-gradient font-mono text-3xl font-semibold tracking-tight">{p.stat.value}</span>
+          <span className="text-[34px] font-semibold tabular-nums tracking-[-0.03em] text-ink">{p.stat.value}</span>
           <span className="text-sm text-ink-2">{p.stat.label}</span>
         </div>
       </PageHero>
@@ -54,7 +54,7 @@ export default async function ProductPage({ params }: Props) {
           <ol className="mt-10 grid gap-6 md:grid-cols-3">
             {p.steps.map((s, i) => (
               <li key={s.title} data-reveal style={{ "--d": i * 120 } as React.CSSProperties} className="lift rounded-2xl border border-line bg-paper p-6">
-                <span className="font-mono text-sm text-accent-ink">0{i + 1}</span>
+                <span className="text-[13px] font-semibold tabular-nums text-brand-ink">0{i + 1}</span>
                 <h3 className="mt-3 text-lg font-semibold">{s.title}</h3>
                 <p className="mt-1 text-ink-2">{s.body}</p>
               </li>

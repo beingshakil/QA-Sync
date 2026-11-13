@@ -84,7 +84,7 @@ export function FeatureGrid({ items, cols = 3 }: { items: { title: string; body:
             {f.icon && <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink-2">{f.icon}</span>}
             <h3 className="font-semibold text-ink">{f.title}</h3>
             {f.tag && (
-              <span className={cn("rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider", f.tag === "Beta" ? "bg-blue-soft text-blue" : "bg-surface-2 text-ink-3")}>
+              <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", f.tag === "Beta" || f.tag === "New" ? "bg-blue-soft text-blue" : "bg-surface-2 text-ink-3")}>
                 {f.tag}
               </span>
             )}

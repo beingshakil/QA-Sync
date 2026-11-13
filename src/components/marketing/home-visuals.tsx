@@ -19,6 +19,7 @@ import { LogoMark } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { d } from "./sections";
 import { ProductTile } from "./demo-art";
+import { FailBadge, Spec, Swatch } from "./spec";
 
 /* Palette for the demo site (a coffee roaster) so it reads as "someone else's website". */
 const NW = { bg: "#f3f6f9", ink: "#10202e", muted: "#52616e", brand: "#1A9AA6" };
@@ -45,7 +46,7 @@ export function ProductShot() {
         <div className="flex h-12 items-center gap-3 border-b border-line bg-surface px-3.5">
           <LogoMark className="h-6 w-6" />
           <span className="hidden text-[13px] font-medium text-ink sm:inline">northwind.coffee</span>
-          <div className="ml-1 flex h-7 min-w-0 max-w-[320px] flex-1 items-center gap-2 rounded-lg border border-line bg-paper px-2.5 font-mono text-[11.5px] text-ink-3">
+          <div className="ml-1 flex h-7 min-w-0 max-w-[320px] flex-1 items-center gap-2 rounded-lg border border-line bg-paper px-2.5 text-[12px] text-ink-3">
             <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-pass" />
             <span className="truncate">https://northwind.coffee/</span>
           </div>
@@ -114,9 +115,9 @@ export function ProductShot() {
                 </div>
                 {/* hover outline + measurement, as the cursor arrives */}
                 <div className="story-outline pointer-events-none absolute -inset-1 rounded-lg outline outline-[1.5px] outline-[#5b86f2]">
-                  <div className="absolute -bottom-6 left-0 right-0 flex items-center gap-1 font-mono text-[10px] text-[#5b86f2]">
+                  <div className="absolute -bottom-6 left-0 right-0 flex items-center gap-1.5 text-[10.5px] font-semibold tabular-nums text-[#5b86f2]">
                     <span className="h-px flex-1 bg-[#5b86f2]" />
-                    184px
+                    184 px
                     <span className="h-px flex-1 bg-[#5b86f2]" />
                   </div>
                 </div>
@@ -141,7 +142,7 @@ export function ProductShot() {
               <div className="text-[13px] font-semibold text-ink">
                 Comments <span className="font-normal text-ink-3">· Home</span>
               </div>
-              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] text-ink-3">4</span>
+              <span className="rounded-md bg-surface-2 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-ink-3">4</span>
             </div>
             <div className="px-4 pt-3">
               <div className="flex justify-between text-[11.5px] text-ink-3">
@@ -172,8 +173,10 @@ export function ProductShot() {
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="font-medium leading-snug text-ink">Button colour doesn&apos;t match the design</div>
-                    <div className="mt-1.5 rounded-md bg-surface-2 px-2 py-1 font-mono text-[10.5px] text-ink-2">
-                      bg <span className="text-accent-ink">#1A9AA6</span> → design <span className="text-ink">#0E7C86</span>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 rounded-md bg-surface-2 px-2 py-1.5 text-ink">
+                      <Swatch size="xs" hex="#1A9AA6" />
+                      <span className="text-[10.5px] text-ink-3">→</span>
+                      <Swatch size="xs" hex="#0E7C86" note="design" />
                     </div>
                     <div className="mt-2 text-[11.5px] text-ink-2">
                       <span className="font-medium text-ink">Maya</span> The token looks out of date.
@@ -253,7 +256,7 @@ export function HowItWorks() {
       {STEPS.map((s, i) => (
         <li key={s.n} data-reveal style={d(i * 110)} className="flex flex-col bg-surface p-6 md:p-7">
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[12px] text-ink-3">{s.n}</span>
+            <span className="text-[13px] font-semibold tabular-nums text-ink-3">{s.n}</span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2 py-0.5 text-[11.5px] font-medium" style={{ color: s.color }}>
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
               {s.status}
@@ -282,33 +285,44 @@ export function BentoCard({ title, body, visual, className, delay = 0 }: { title
 }
 
 export function SpecVisual() {
-  const rows: [string, string, boolean?][] = [
-    ["font", "Inter 600"],
-    ["size / line", "15px / 22px"],
-    ["padding", "12 20 12 20"],
-    ["background", "#1A9AA6 ≠ #0E7C86", true],
-    ["contrast", "3.38 : 1 · fails AA"],
-  ];
   return (
-    <div className="flex w-full max-w-[560px] flex-col items-center gap-6 sm:flex-row sm:items-center">
+    <div className="flex w-full max-w-[600px] flex-col items-center gap-8 sm:flex-row">
       <div className="relative shrink-0">
         <div className="rounded-md px-5 py-3 text-[13px] font-semibold text-white" style={{ background: NW.brand }}>
           Start a subscription
         </div>
         <div className="pointer-events-none absolute -inset-1.5 rounded-lg border-[1.5px] border-dashed border-[#5b86f2]" />
-        <div className="absolute -bottom-7 left-0 right-0 flex items-center gap-1 font-mono text-[10px] text-[#5b86f2]">
+        <div className="absolute -bottom-7 left-0 right-0 flex items-center gap-1.5 text-[11px] font-semibold tabular-nums text-[#5b86f2]">
           <span className="h-px flex-1 bg-[#5b86f2]" />
-          184px
+          184 px
           <span className="h-px flex-1 bg-[#5b86f2]" />
         </div>
       </div>
-      <dl className="w-full flex-1 rounded-xl border border-line bg-surface p-3 font-mono text-[11.5px] shadow-1">
-        {rows.map(([k, v, diff]) => (
-          <div key={k} className="flex justify-between gap-3 border-b border-dashed border-line py-1.5 last:border-0">
-            <dt className="text-ink-3">{k}</dt>
-            <dd className={cn("text-right", diff ? "text-accent-ink" : "text-ink")}>{v}</dd>
-          </div>
-        ))}
+      <dl className="grid w-full flex-1 grid-cols-2 gap-x-5 gap-y-4 rounded-xl border border-line bg-surface p-4 shadow-1">
+        <Spec size="sm" label="Font" value="Inter" note="Semibold 600" />
+        <Spec size="sm" label="Size / line height" value="15 / 22 px" />
+        <Spec size="sm" label="Padding" value="12 · 20 · 12 · 20" />
+        <Spec
+          size="sm"
+          label="Contrast"
+          value={
+            <>
+              3.38 : 1 <FailBadge>Fails AA</FailBadge>
+            </>
+          }
+        />
+        <Spec
+          size="sm"
+          className="col-span-2"
+          label="Background"
+          value={
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Swatch size="sm" hex="#1A9AA6" />
+              <span className="text-[12px] font-semibold text-danger">≠</span>
+              <Swatch size="sm" hex="#0E7C86" note="design" />
+            </span>
+          }
+        />
       </dl>
     </div>
   );
@@ -330,7 +344,7 @@ export function FreezeVisual() {
       <span className="absolute -right-3 -top-3 flex items-center gap-1 rounded-full border border-[#5b86f2]/40 bg-surface px-2 py-0.5 text-[11px] font-medium text-[#5b86f2] shadow-1">
         <Snowflake size={11} /> Frozen
       </span>
-      <span className="absolute -bottom-3 -left-2 flex h-7 w-7 items-center justify-center rounded-md border border-line-strong bg-surface font-mono text-[12px] font-semibold text-ink shadow-1">F</span>
+      <span className="absolute -bottom-3 -left-2 flex h-7 w-7 items-center justify-center rounded-md border border-line-strong bg-surface text-[12px] font-semibold text-ink shadow-1">F</span>
     </div>
   );
 }
@@ -344,7 +358,7 @@ export function DevicesVisual() {
         <span className="h-1.5 w-3/5 rounded bg-ink-3/40" />
         <span className="mt-auto h-2.5 w-2/5 rounded-sm" style={{ background: NW.brand }} />
       </div>
-      <span className="font-mono text-[10px] text-ink-3">{label}</span>
+      <span className="text-[11px] font-medium tabular-nums text-ink-3">{label} px</span>
     </div>
   );
   return (
@@ -358,16 +372,16 @@ export function DevicesVisual() {
 
 export function PagesVisual() {
   const rows: [string, string, string][] = [
-    ["/", "Passed", "var(--pass)"],
-    ["/pricing", "Ready", "var(--st-fixed)"],
-    ["/about", "In review", "#f97316"],
-    ["/blog", "Not reviewed", "var(--ink-3)"],
+    ["Home", "Passed", "var(--pass)"],
+    ["Pricing", "Ready", "var(--st-fixed)"],
+    ["About", "In review", "#f97316"],
+    ["Blog", "Not reviewed", "var(--ink-3)"],
   ];
   return (
     <ul className="w-full max-w-[240px] divide-y divide-line rounded-xl border border-line bg-surface text-[12px] shadow-1">
       {rows.map(([p, s, c]) => (
         <li key={p} className="flex items-center justify-between px-3 py-2">
-          <span className="font-mono text-ink-2">{p}</span>
+          <span className="font-medium text-ink">{p}</span>
           <span className="flex items-center gap-1.5 font-medium" style={{ color: c }}>
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: c }} />
             {s}
@@ -382,7 +396,7 @@ export function ShareVisual() {
   return (
     <div className="w-full max-w-[250px] space-y-3">
       <div className="flex items-center gap-2 rounded-lg border border-line bg-surface py-1.5 pl-3 pr-1.5 shadow-1">
-        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-ink-2">qasync.app/r/7Kf2…/pricing</span>
+        <span className="min-w-0 flex-1 truncate text-[12px] text-ink-2">qasync.app/r/7Kf2…/pricing</span>
         <span className="flex h-6 w-6 items-center justify-center rounded-md bg-surface-2 text-ink-3">
           <Copy size={12} />
         </span>

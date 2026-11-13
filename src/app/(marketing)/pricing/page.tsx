@@ -49,7 +49,7 @@ export default function PricingPage() {
             {PLAN_MATRIX.map((g) => (
               <tbody key={g.group}>
                 <tr>
-                  <td colSpan={PLANS.length + 1} className="bg-surface-2 px-5 py-2 font-mono text-[11px] uppercase tracking-widest text-ink-3">
+                  <td colSpan={PLANS.length + 1} className="bg-surface-2 px-5 py-2.5 text-[12.5px] font-semibold text-ink-2">
                     {g.group}
                   </td>
                 </tr>

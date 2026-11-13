@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ProductTile } from "./demo-art";
+import { FailBadge, Spec, Swatch } from "./spec";
 
 /* ── Paste-a-URL hero input: creates a project and drops you into the canvas ── */
 /** variant "gradient" is the hero's brand button; "solid" is the quieter one used elsewhere. */
@@ -41,7 +42,7 @@ export function UrlStart({ size = "lg", className, variant = "solid" }: { size?:
           size === "lg" ? "pl-4" : "pl-3",
         )}
       >
-        <span className="hidden font-mono text-sm text-ink-3 sm:inline">https://</span>
+        <span className="hidden text-[15px] text-ink-3 sm:inline">https://</span>
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -144,7 +145,7 @@ export function ThreeViews() {
               value={
                 <span className="flex items-center gap-2">
                   3.38 : 1
-                  <span className="rounded-full bg-danger-soft px-2 py-0.5 text-[11px] font-semibold text-danger">Fails AA</span>
+                  <FailBadge>Fails AA</FailBadge>
                 </span>
               }
             />
@@ -183,29 +184,6 @@ export function ThreeViews() {
       </div>
       </div>
     </div>
-  );
-}
-
-/** One spec: small grey label, then a clear value (and an optional quiet note). */
-function Spec({ label, value, note }: { label: string; value: React.ReactNode; note?: string }) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-[12px] font-medium text-ink-3">{label}</dt>
-      <dd className="mt-1.5 flex flex-wrap items-baseline gap-x-1.5 text-[15px] font-semibold tabular-nums tracking-[-0.01em] text-ink">
-        {value}
-        {note && <span className="text-[12.5px] font-normal text-ink-3">{note}</span>}
-      </dd>
-    </div>
-  );
-}
-
-function Swatch({ hex, note }: { hex: string; note?: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5">
-      <span className="h-4 w-4 shrink-0 rounded-[5px] border border-black/10 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.08)]" style={{ background: hex }} />
-      <span className="text-[14px] font-semibold">{hex}</span>
-      {note && <span className="text-[12px] font-normal text-ink-3">{note}</span>}
-    </span>
   );
 }
 
@@ -300,7 +278,7 @@ function MiniHero({ offset, label }: { offset: 0 | 1; label: string }) {
   const design = offset === 1;
   return (
     <div className="absolute inset-0 p-[6%]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", color: "#10202e" }}>
-      <div className="absolute right-3 top-3 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[9px] text-white">{label}</div>
+      <div className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white">{label}</div>
       <div className="w-[55%]">
         <div style={{ fontSize: "clamp(14px,3.2vw,30px)", lineHeight: 1.05, fontWeight: 700, letterSpacing: design ? "-0.02em" : "0" }}>
           Coffee roasted <i style={{ color: design ? "#0E7C86" : "#1A9AA6" }}>this week</i>, at your door by Friday.

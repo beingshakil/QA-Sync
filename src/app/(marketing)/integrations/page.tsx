@@ -24,7 +24,7 @@ export default function IntegrationsPage() {
       <Section className="space-y-14">
         {INTEGRATIONS.map((g) => (
           <div key={g.group}>
-            <h2 className="font-mono text-[12px] uppercase tracking-widest text-ink-3">{g.group}</h2>
+            <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{g.group}</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {g.items.map((i) => (
                 <div key={i.name} data-reveal data-spotlight className="lift flex items-start gap-4 rounded-2xl border border-line bg-surface p-5 shadow-1">
@@ -35,7 +35,7 @@ export default function IntegrationsPage() {
                     <div className="flex items-center gap-2 font-medium">
                       {i.name}
                       {i.status && (
-                        <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] uppercase ${i.status === "Beta" ? "bg-blue-soft text-blue" : "bg-surface-2 text-ink-3"}`}>
+                        <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${i.status === "Beta" ? "bg-blue-soft text-blue" : "bg-surface-2 text-ink-3"}`}>
                           {i.status}
                         </span>
                       )}

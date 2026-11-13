@@ -46,9 +46,9 @@ export default async function SolutionPage({ params }: Props) {
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {s.pains.map((p, i) => (
             <div key={p.title} data-reveal data-spotlight style={{ "--d": i * 120 } as React.CSSProperties} className="lift rounded-2xl border border-line bg-surface p-6 shadow-1">
-              <div className="font-mono text-[11px] uppercase tracking-widest text-ink-3">Before</div>
+              <div className="text-[13px] font-semibold text-ink-3">Before</div>
               <h3 className="mt-1 text-lg font-semibold line-through decoration-brand decoration-2">{p.title}</h3>
-              <div className="mt-4 font-mono text-[11px] uppercase tracking-widest text-[var(--st-verified)]">With QASync</div>
+              <div className="mt-4 text-[13px] font-semibold text-[var(--st-verified)]">With QASync</div>
               <p className="mt-1 text-ink-2">{p.body}</p>
             </div>
           ))}
@@ -70,7 +70,7 @@ export default async function SolutionPage({ params }: Props) {
           </div>
           <figure data-reveal className="ring-grad self-center rounded-2xl bg-paper p-8">
             <blockquote className="text-[22px] font-medium leading-snug tracking-tight text-ink">“{s.quote.text}”</blockquote>
-            <figcaption className="mt-4 font-mono text-[12px] text-ink-3">{s.quote.who}</figcaption>
+            <figcaption className="mt-4 text-[13.5px] font-medium text-ink-3">{s.quote.who}</figcaption>
           </figure>
         </Section>
       </div>
