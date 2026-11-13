@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QASync: visual feedback that gets fixed
 
-## Getting Started
+Phase 1 of the product described in [docs/SYSTEM_DESIGN.md](docs/SYSTEM_DESIGN.md): a marketing site and a working review app in one Next.js project.
 
-First, run the development server:
+## Run it
+
+Requires Node 22.5 or later. It uses the built-in `node:sqlite`; Node 24 is recommended.
 
 ```bash
+npm install
+
+# Fast (recommended for using the app): compile once, then every click is instant
+npm run build
+npm start          # http://localhost:3000
+
+# While editing code: hot reload, but each screen compiles on first use (slow clicks)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+After changing code, run `npm run build` again before `npm start`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The first request creates `.data/qasync.db` (empty) and `.data/uploads/` for attachments and design images. To reset everything, stop the server and delete `.data/`. Set your name, workspace name and team members in **Settings**.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Where to look
 
-## Learn More
+| URL | What it is |
+|---|---|
+| `/` | Marketing homepage (paste a URL in the hero to start reviewing) |
+| `/product/capture`, `/design-qa`, `/developer-context`, `/ai-agents`, `/monitoring` | Product pages |
+| `/solutions/designers`, `/agencies`, `/developers`, `/qa-teams`, `/product-teams` | Solution pages |
+| `/integrations` · `/pricing` · `/changelog` | The rest of the marketing site |
+| `/app` | Inbox: paste a URL to start, then stats, needs-verification queue, activity |
+| `/app/projects/<id>/review` | **Review canvas** (see below) |
+| `/app/issues` | All issues: list and drag-and-drop board |
+| `/app/projects/<id>?tab=audits` | Page audit with a 100-point score |
+| `/r/<token>` | Guest share view (copy the link with the Share button) |
+| `/app/settings` | Your name, workspace and team members |
 
-To learn more about Next.js, take a look at the following resources:
+## Page-by-page QA tracking
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Every URL in a project is a **page** with its own QA state:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| State | Meaning |
+|---|---|
+| Not reviewed | No issues yet and not signed off |
+| In review | Has open issues |
+| Ready to sign off | All of its issues are resolved |
+| QA passed | Someone signed it off. Their name and the time are recorded |
 
-## Deploy on Vercel
+- **How pages get added:**
+  - automatically, when you open them in the canvas or comment on them;
+  - by hand, with **+ Add page**;
+  - in bulk, with **Import pages from site** (sitemap, or the start page's links).
+- **Where you see them:** the canvas has page tabs, and the **Pages** button opens the full overview. The overview is also the first tab of each project. Guests see it too and can sign pages off.
+- **Automatic reset:** a new or reopened issue on a passed page puts it back to *In review*.
+- **One project per site:** pasting a URL of a site that already has a project opens that page in it.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Review canvas
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **Devices:** Desktop, Tablet (768), Mobile (390), and **Split view** (desktop + mobile side by side).
+- **Zoom:** *Fit to pane*, 50%, 75%, 100%, 125%.
+- **Design tools:**
+  - **Upload design:** a PNG/JPG per page and device.
+  - **Compare:** the design beside the live page, scrolling together.
+  - **Overlay:** the design on top of the page, with opacity and a *Difference* blend.
+- **Inline comment box** at the pin:
+  - Text, with **Enter** to send.
+  - **Voice note** (with live transcript in Chrome and Edge).
+  - **Attach** images or PDFs. Pasting images works too.
+  - **Priority tag** and **@mention**, which also assigns the person.
+- **Panel:**
+  - Search comments, and sort (newest, oldest, priority, pin number, show resolved).
+  - Progress bar with *This page / All pages*.
+  - Device filter chips with counts, and a one-click resolve on each comment.
+
+## Canvas shortcuts
+
+| Key | Action |
+|---|---|
+| `C` | Comment mode: click any element to pin it |
+| `I` | Inspect mode: font, size, spacing and contrast |
+| `B` | Browse mode: links navigate inside the canvas |
+| `F` | Freeze hover states and animations |
+| `J` / `K` | Next / previous issue |
+| `Esc` | Cancel the current action |
+
+## How it fits together
+
+- `public/reviewer.js`: the in-page agent, injected by `/api/proxy`. It talks to the canvas over `postMessage`.
+- `src/app/api/*`: REST routes. They call `src/server/repo.ts`, which uses SQLite in `src/server/db.ts`.
+- `src/content/marketing.ts`: all marketing copy, kept separate from the page templates.
+- Testimonials on the solution pages are **placeholders**. Replace them with real customer quotes before launch.
