@@ -277,8 +277,8 @@ export function saveAudit(a: Omit<Audit, "id" | "createdAt">): Audit {
   const id = nanoid(10);
   const ts = now();
   db()
-    .prepare("INSERT INTO audits (id, project_id, url, score, findings, stats, created_at) VALUES (?,?,?,?,?,?,?)")
-    .run(id, a.projectId, a.url, a.score, JSON.stringify(a.findings), JSON.stringify(a.stats), ts);
+    .prepare("INSERT INTO audits (id, project_id, url, score, findings, stats, seo, created_at) VALUES (?,?,?,?,?,?,?,?)")
+    .run(id, a.projectId, a.url, a.score, JSON.stringify(a.findings), JSON.stringify(a.stats), a.seo ? JSON.stringify(a.seo) : null, ts);
   return { ...a, id, createdAt: ts };
 }
 
@@ -286,15 +286,25 @@ export function listAudits(projectId?: string): Audit[] {
   const rows = (projectId
     ? db().prepare("SELECT * FROM audits WHERE project_id = ? ORDER BY created_at DESC").all(projectId)
     : db().prepare("SELECT * FROM audits ORDER BY created_at DESC LIMIT 50").all()) as Row[];
-  return rows.map((r) => ({
+  return rows.map(toAudit);
+}
+
+export function getAudit(id: string): Audit | null {
+  const r = db().prepare("SELECT * FROM audits WHERE id = ?").get(id) as Row | undefined;
+  return r ? toAudit(r) : null;
+}
+
+function toAudit(r: Row): Audit {
+  return {
     id: r.id as string,
     projectId: r.project_id as string,
     url: r.url as string,
     score: r.score as number,
     findings: JSON.parse(r.findings as string),
     stats: JSON.parse(r.stats as string),
+    seo: r.seo ? JSON.parse(r.seo as string) : null,
     createdAt: r.created_at as string,
-  }));
+  };
 }
 
 /* ───────── dashboard stats ───────── */

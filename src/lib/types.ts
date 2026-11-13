@@ -145,7 +145,49 @@ export interface Audit {
   score: number;
   findings: AuditFinding[];
   stats: Record<string, number | string>;
+  /** On-page and technical SEO data; null for audits run before the SEO report existed. */
+  seo: SeoReport | null;
   createdAt: string;
+}
+
+/* ── SEO report: raw facts gathered by the audit; pass/fail rules live in lib/seo-checks.ts ── */
+export interface SeoLink {
+  url: string;
+  anchor: string;
+  /** false when rel contains nofollow, sponsored or ugc */
+  dofollow: boolean;
+  /** HTTP status when the link was checked (0 = unreachable), undefined when not checked */
+  status?: number;
+}
+
+export interface SeoImage {
+  src: string;
+  /** null = no alt attribute; "" = marked decorative */
+  alt: string | null;
+}
+
+export interface SeoSchemaItem {
+  type: string;
+  source: "json-ld" | "microdata";
+  fields: [string, string][];
+}
+
+export interface SeoReport {
+  finalUrl: string;
+  status: number;
+  url: { length: number; pathLength: number; https: boolean; depth: number; params: number; hasUppercase: boolean; hasUnderscore: boolean; hasSpaces: boolean };
+  robots: { meta: string | null; header: string | null; indexable: boolean };
+  title: string | null;
+  description: string | null;
+  canonical: string | null;
+  lang: string | null;
+  wordCount: number;
+  headings: { level: number; text: string }[];
+  links: { internal: SeoLink[]; external: SeoLink[]; checked: number };
+  images: SeoImage[];
+  schema: SeoSchemaItem[];
+  og: Record<string, string>;
+  twitter: Record<string, string>;
 }
 
 

@@ -20,7 +20,7 @@ export default function AuditsPage() {
           {projects.map((p) => {
             const a = latest.get(p.id);
             return (
-              <Link key={p.id} href={`/app/projects/${p.id}?tab=audits`} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-1 hover:border-line-strong">
+              <Link key={p.id} href={a ? `/app/audits/${a.id}` : `/app/projects/${p.id}?tab=audits`} className="flex items-center gap-4 rounded-2xl border border-line bg-surface p-5 shadow-1 hover:border-line-strong">
                 {a ? <ScoreRing score={a.score} size={64} /> : <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-dashed border-line-strong font-mono text-[11px] text-ink-3">—</div>}
                 <div className="min-w-0">
                   <div className="truncate font-medium">{p.name}</div>
@@ -38,12 +38,21 @@ export default function AuditsPage() {
             <table className="w-full text-left text-sm">
               <tbody>
                 {audits.map((a) => (
-                  <tr key={a.id} className="border-b border-line last:border-0">
+                  <tr key={a.id} className="border-b border-line last:border-0 hover:bg-surface-2/60">
                     <td className="px-5 py-3 font-mono font-semibold">{a.score}</td>
-                    <td className="px-5 py-3">{projects.find((p) => p.id === a.projectId)?.name}</td>
+                    <td className="px-5 py-3">
+                      <Link href={`/app/audits/${a.id}`} className="font-medium hover:text-brand">
+                        {projects.find((p) => p.id === a.projectId)?.name}
+                      </Link>
+                    </td>
                     <td className="hidden max-w-[260px] truncate px-5 py-3 font-mono text-[12px] text-ink-3 md:table-cell">{a.url}</td>
                     <td className="px-5 py-3 text-ink-3">{a.findings.length} findings</td>
                     <td className="px-5 py-3 text-right text-ink-3">{timeAgo(a.createdAt)}</td>
+                    <td className="px-5 py-3 text-right">
+                      <Link href={`/app/audits/${a.id}`} className="text-[13px] font-medium text-brand hover:underline">
+                        Report →
+                      </Link>
+                    </td>
                   </tr>
                 ))}
               </tbody>

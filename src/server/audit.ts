@@ -1,7 +1,8 @@
 import "server-only";
 import * as cheerio from "cheerio";
-import type { AuditFinding } from "@/lib/types";
+import type { AuditFinding, SeoImage, SeoLink, SeoReport, SeoSchemaItem } from "@/lib/types";
 import { FETCH_HEADERS } from "./fetch-guard";
+import { linkState } from "@/lib/seo-checks";
 
 /**
  * Phase 1 page audit (runs inline). Swap path: audit-worker with Playwright + axe-core + Lighthouse.
@@ -23,7 +24,7 @@ const MISSPELLINGS: Record<string, string> = {
 
 const WEIGHTS = { error: 9, warning: 4, info: 1 } as const;
 
-export async function runAudit(url: string): Promise<{ score: number; findings: AuditFinding[]; stats: Record<string, number | string> }> {
+export async function runAudit(url: string): Promise<{ score: number; findings: AuditFinding[]; stats: Record<string, number | string>; seo: SeoReport }> {
   const findings: AuditFinding[] = [];
   const res = await fetch(url, { headers: FETCH_HEADERS, redirect: "follow", signal: AbortSignal.timeout(15000) });
   if (!res.ok) {
@@ -102,36 +103,111 @@ export async function runAudit(url: string): Promise<{ score: number; findings: 
   typos.forEach((n, w) => findings.push({ rule: "spelling", severity: "warning", message: `“${w}” → “${MISSPELLINGS[w]}”`, detail: n > 1 ? `${n} occurrences` : undefined }));
   const wordCount = (text.match(/\b\w+\b/g) ?? []).length;
 
-  /* ── Links ── */
-  const hrefs = new Map<string, string>(); // absolute → original attribute value
+  /* ── Links: every anchor, deduped by URL; the first 60 are checked ── */
+  const pageHost = hostKey(base);
+  const linkMap = new Map<string, SeoLink & { raw: string }>();
   $("a[href]").each((_, el) => {
-    const h = $(el).attr("href")!.trim();
-    if (!h || h.startsWith("#") || /^(mailto|tel|javascript):/i.test(h)) return;
+    const $a = $(el);
+    const h = $a.attr("href")!.trim();
+    if (!h || h.startsWith("#") || /^(mailto|tel|javascript|data):/i.test(h)) return;
+    let abs: string;
     try {
       const u = new URL(h, base);
       u.hash = "";
-      if (!hrefs.has(u.toString())) hrefs.set(u.toString(), h);
+      abs = u.toString();
     } catch {
       findings.push({ rule: "link-malformed", severity: "warning", message: "Malformed link", detail: h });
+      return;
+    }
+    if (linkMap.has(abs)) return;
+    const rel = ($a.attr("rel") ?? "").toLowerCase();
+    const anchor = squash($a.text()) || $a.attr("aria-label")?.trim() || $a.find("img[alt]").attr("alt")?.trim() || $a.attr("title")?.trim() || "";
+    linkMap.set(abs, { url: abs, raw: h, anchor: anchor.slice(0, 120), dofollow: !/\b(nofollow|sponsored|ugc)\b/.test(rel) });
+  });
+  const allLinks = [...linkMap.values()];
+  const toCheck = allLinks.slice(0, 60);
+  let broken = 0;
+  await pool(toCheck, 12, async (l) => {
+    l.status = await probe(l.url);
+    const state = linkState(l.status);
+    if (state === "blocked") {
+      findings.push({ rule: "link-unverified", severity: "info", message: `Couldn't verify link (HTTP ${l.status}): the site blocks automated checks`, detail: l.url });
+    } else if (state === "broken") {
+      broken++;
+      findings.push({
+        rule: "link-broken",
+        severity: "error",
+        message: l.status ? `Broken link (HTTP ${l.status})` : "Link unreachable",
+        detail: l.url,
+        selector: `a[href="${l.raw.replace(/"/g, '\\"')}"]`,
+      });
     }
   });
-  const toCheck = [...hrefs.keys()].slice(0, 40);
-  let broken = 0;
-  await Promise.all(
-    toCheck.map(async (href) => {
-      const status = await probe(href);
-      if (status === 0 || status >= 400) {
-        broken++;
-        findings.push({
-          rule: "link-broken",
-          severity: "error",
-          message: status ? `Broken link (HTTP ${status})` : "Link unreachable",
-          detail: href,
-          selector: `a[href="${hrefs.get(href)!.replace(/"/g, '\\"')}"]`,
-        });
-      }
-    }),
-  );
+  const strip = ({ raw: _raw, ...l }: SeoLink & { raw: string }): SeoLink => l;
+  const isInternal = (u: string) => {
+    try {
+      return hostKey(u) === pageHost;
+    } catch {
+      return false;
+    }
+  };
+
+  /* ── SEO report data ── */
+  const finalUrl = new URL(base);
+  const robotsMeta = $('meta[name="robots"]').attr("content")?.trim() || null;
+  const robotsHeader = res.headers.get("x-robots-tag");
+  const canonicalHref = $('link[rel="canonical"]').attr("href")?.trim();
+  const images: SeoImage[] = $("img")
+    .map((_, el) => {
+      const $i = $(el);
+      const src = $i.attr("src") || $i.attr("data-src") || ($i.attr("srcset") ?? "").split(/\s+/)[0] || "";
+      const alt = $i.attr("alt");
+      return { src: absolute(src, base), alt: alt === undefined ? null : alt.trim() };
+    })
+    .get()
+    .slice(0, 400);
+  const metaMap = (attr: "property" | "name", prefix: string) => {
+    const out: Record<string, string> = {};
+    $(`meta[${attr}^="${prefix}"]`).each((_, el) => {
+      const k = $(el).attr(attr)!.trim();
+      const v = $(el).attr("content")?.trim();
+      if (v && !out[k]) out[k] = /image$|image:url$/.test(k) ? absolute(v, base) : v;
+    });
+    return out;
+  };
+  const seo: SeoReport = {
+    finalUrl: finalUrl.toString(),
+    status: res.status,
+    url: {
+      length: finalUrl.toString().length,
+      pathLength: safeDecode(finalUrl.pathname).length,
+      https: finalUrl.protocol === "https:",
+      depth: finalUrl.pathname.split("/").filter(Boolean).length,
+      params: [...new Set(finalUrl.searchParams.keys())].length,
+      hasUppercase: /[A-Z]/.test(finalUrl.pathname),
+      hasUnderscore: finalUrl.pathname.includes("_"),
+      hasSpaces: /%20|\s/.test(finalUrl.pathname),
+    },
+    robots: { meta: robotsMeta, header: robotsHeader, indexable: !/noindex|\bnone\b/i.test(`${robotsMeta ?? ""} ${robotsHeader ?? ""}`) && res.ok },
+    title: title || null,
+    description: desc || null,
+    canonical: canonicalHref ? absolute(canonicalHref, base) : null,
+    lang: $("html").attr("lang")?.trim() || null,
+    wordCount,
+    headings: $("h1,h2,h3,h4,h5,h6")
+      .map((_, el) => ({ level: Number(el.tagName.slice(1)), text: squash($(el).text()).slice(0, 160) }))
+      .get()
+      .slice(0, 300),
+    links: {
+      internal: allLinks.filter((l) => isInternal(l.url)).map(strip).slice(0, 400),
+      external: allLinks.filter((l) => !isInternal(l.url)).map(strip).slice(0, 400),
+      checked: toCheck.length,
+    },
+    images,
+    schema: readSchema($),
+    og: metaMap("property", "og:"),
+    twitter: metaMap("name", "twitter:"),
+  };
 
   /* ── Score ── */
   const penalty = findings.reduce((s, f) => s + WEIGHTS[f.severity], 0);
@@ -152,7 +228,78 @@ export async function runAudit(url: string): Promise<{ score: number; findings: 
       errors: findings.filter((f) => f.severity === "error").length,
       warnings: findings.filter((f) => f.severity === "warning").length,
     },
+    seo,
   };
+}
+
+const squash = (t: string) => t.replace(/\s+/g, " ").trim();
+const hostKey = (u: string) => new URL(u).hostname.toLowerCase().replace(/^www\./, "");
+function safeDecode(s: string) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+function absolute(u: string, base: string) {
+  if (!u) return "";
+  try {
+    return new URL(u, base).toString();
+  } catch {
+    return u;
+  }
+}
+
+/** Run `fn` over items with at most `size` in flight. */
+async function pool<T>(items: T[], size: number, fn: (item: T) => Promise<void>) {
+  let i = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(size, items.length) }, async () => {
+      while (i < items.length) await fn(items[i++]);
+    }),
+  );
+}
+
+/** JSON-LD blocks (flattening @graph) and top-level microdata items. */
+function readSchema($: cheerio.CheerioAPI): SeoSchemaItem[] {
+  const out: SeoSchemaItem[] = [];
+  const typeOf = (n: Record<string, unknown>) => (Array.isArray(n["@type"]) ? (n["@type"] as string[]).join(", ") : String(n["@type"] ?? "Thing"));
+  const flat = (node: Record<string, unknown>, prefix = "", acc: [string, string][] = []) => {
+    for (const [k, v] of Object.entries(node)) {
+      if (k === "@context" || acc.length >= 30 || v === null || v === undefined) continue;
+      const key = prefix ? `${prefix}.${k}` : k;
+      if (typeof v !== "object") acc.push([key, String(v).slice(0, 200)]);
+      else if (Array.isArray(v)) {
+        if (v.every((x) => typeof x !== "object")) acc.push([key, v.join(", ").slice(0, 200)]);
+        else v.slice(0, 3).forEach((x, i) => typeof x === "object" && x && flat(x as Record<string, unknown>, `${key}[${i}]`, acc));
+      } else if (!prefix) flat(v as Record<string, unknown>, key, acc);
+      else if ((v as Record<string, unknown>)["@id"]) acc.push([`${key}.@id`, String((v as Record<string, unknown>)["@id"])]);
+    }
+    return acc;
+  };
+  $('script[type="application/ld+json"]').each((_, el) => {
+    try {
+      const data = JSON.parse($(el).text());
+      const nodes: Record<string, unknown>[] = (Array.isArray(data) ? data : [data]).flatMap((d) => (d && Array.isArray(d["@graph"]) ? d["@graph"] : [d]));
+      for (const n of nodes) if (n && typeof n === "object") out.push({ type: typeOf(n), source: "json-ld", fields: flat(n) });
+    } catch {
+      out.push({ type: "Invalid JSON-LD", source: "json-ld", fields: [["error", "This block is not valid JSON, so search engines ignore it"]] });
+    }
+  });
+  $("[itemscope][itemtype]")
+    .filter((_, el) => !$(el).parents("[itemscope]").length)
+    .each((_, el) => {
+      const t = ($(el).attr("itemtype") ?? "").split(/\s+/)[0];
+      const fields: [string, string][] = [];
+      $(el)
+        .find("[itemprop]")
+        .slice(0, 20)
+        .each((_, p) => {
+          fields.push([$(p).attr("itemprop")!, squash($(p).attr("content") ?? $(p).text()).slice(0, 200)]);
+        });
+      out.push({ type: t.split("/").pop() || t, source: "microdata", fields });
+    });
+  return out.slice(0, 40);
 }
 
 async function probe(href: string): Promise<number> {

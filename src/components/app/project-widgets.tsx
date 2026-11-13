@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Check, Copy, Loader2, Plus, ExternalLink, AlertTriangle, AlertCircle, Info, MessageSquarePlus } from "lucide-react";
@@ -184,7 +186,7 @@ export function AuditPanel({ project, initial }: { project: Project; initial: Au
     try {
       const a = await api.runAudit(project.id, url);
       setAudits((xs) => [a, ...xs]);
-      setOpenId(a.id);
+      router.push(`/app/audits/${a.id}`);
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -234,6 +236,11 @@ export function AuditPanel({ project, initial }: { project: Project; initial: Au
             </div>
             <span className="font-mono text-[11px] text-ink-3">{openId === a.id ? "hide" : "details"}</span>
           </button>
+          <div className="flex justify-end border-t border-line px-4 py-2">
+            <Link href={`/app/audits/${a.id}`} className="text-[13px] font-medium text-brand hover:underline">
+              Open full SEO report →
+            </Link>
+          </div>
           {openId === a.id && (
             <ul className="divide-y divide-line border-t border-line">
               {a.findings.length === 0 && <li className="p-4 text-sm text-ink-3">No problems found. 🎉</li>}

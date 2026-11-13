@@ -130,6 +130,8 @@ function migrate(db: DatabaseSync) {
   if (!cols.includes("edited_at")) db.exec("ALTER TABLE issues ADD COLUMN edited_at TEXT");
   const ccols = (db.prepare("PRAGMA table_info(comments)").all() as { name: string }[]).map((c) => c.name);
   if (!ccols.includes("edited_at")) db.exec("ALTER TABLE comments ADD COLUMN edited_at TEXT");
+  const acols = (db.prepare("PRAGMA table_info(audits)").all() as { name: string }[]).map((c) => c.name);
+  if (!acols.includes("seo")) db.exec("ALTER TABLE audits ADD COLUMN seo TEXT");
   const ws = db.prepare("SELECT COUNT(*) AS n FROM workspace").get() as { n: number };
   if (ws.n === 0) {
     db.prepare("INSERT INTO workspace (id, name, user_name, members) VALUES (1, ?, ?, ?)").run("My workspace", "You", JSON.stringify(["You"]));
