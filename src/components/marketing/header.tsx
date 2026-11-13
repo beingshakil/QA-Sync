@@ -144,9 +144,6 @@ export function Header() {
           <Link href="/app" className="px-3 text-sm text-ink-2 hover:text-ink">
             Sign in
           </Link>
-          <Link href="/app" className={buttonClass("ink", "sm")}>
-            Open app
-          </Link>
         </div>
         <SiteThemeToggle className="ml-auto md:hidden" />
         <button className="rounded-md p-2 md:hidden" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}>
@@ -173,8 +170,8 @@ export function Header() {
             <Link href="/integrations" onClick={() => setMobile(false)}>Integrations</Link>
             <Link href="/pricing" onClick={() => setMobile(false)}>Pricing</Link>
           </div>
-          <Link href="/app" className={buttonClass("primary", "md", "mt-2 w-full")}>
-            Open app
+          <Link href="/app" onClick={() => setMobile(false)} className={buttonClass("secondary", "md", "mt-2 w-full")}>
+            Sign in
           </Link>
         </div>
       )}

@@ -124,8 +124,8 @@ export function ThreeViews() {
               ["font", "DM Sans 700"],
               ["size / lh", "16px / 24px"],
               ["color", "#FFFFFF"],
-              ["background", "#B5562D ≠ #C25E2E"],
-              ["contrast", "4.93 : 1  AA ✓"],
+              ["background", "#1A9AA6 ≠ #0E7C86"],
+              ["contrast", "3.38 : 1  fails AA"],
               ["padding", "15 26 15 26"],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-2 border-b border-dashed border-line py-1">
@@ -214,12 +214,12 @@ export function OverlayDemo() {
   }, []);
   return (
     <div ref={boxRef} data-reveal className="grid-bg rounded-2xl border border-line bg-surface-2/40 p-4 sm:p-6">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[#fbf6ef]">
+      <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[#f3f6f9]">
         {/* build */}
         <MiniHero offset={0} label="BUILD" />
         {/* design, revealed by slider */}
         <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - v}% 0 0)` }}>
-          <div className="absolute inset-0 bg-[#fbf6ef]" />
+          <div className="absolute inset-0 bg-[#f3f6f9]" />
           <MiniHero offset={1} label="DESIGN" />
         </div>
         <div className="absolute inset-y-0" style={{ left: `${v}%` }}>
@@ -240,24 +240,24 @@ export function OverlayDemo() {
 function MiniHero({ offset, label }: { offset: 0 | 1; label: string }) {
   const design = offset === 1;
   return (
-    <div className="absolute inset-0 p-[6%]" style={{ fontFamily: "Georgia, serif", color: "#2b1d14" }}>
+    <div className="absolute inset-0 p-[6%]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", color: "#10202e" }}>
       <div className="absolute right-3 top-3 rounded bg-black/70 px-1.5 py-0.5 font-mono text-[9px] text-white">{label}</div>
       <div className="w-[55%]">
         <div style={{ fontSize: "clamp(14px,3.2vw,30px)", lineHeight: 1.05, fontWeight: 700, letterSpacing: design ? "-0.02em" : "0" }}>
-          Coffee roasted <i style={{ color: design ? "#c25e2e" : "#b5562d" }}>this week</i>, at your door by Friday.
+          Coffee roasted <i style={{ color: design ? "#0E7C86" : "#1A9AA6" }}>this week</i>, at your door by Friday.
         </div>
-        <div className="mt-[6%] h-2 w-[85%] rounded bg-[#d9c7b4]" />
-        <div className="mt-2 h-2 w-[70%] rounded bg-[#d9c7b4]" />
+        <div className="mt-[6%] h-2 w-[85%] rounded bg-[#d3dde6]" />
+        <div className="mt-2 h-2 w-[70%] rounded bg-[#d3dde6]" />
         <div
           className="mt-[8%] inline-block rounded-md text-white"
-          style={{ background: design ? "#c25e2e" : "#b5562d", padding: design ? "9px 18px" : "8px 14px", fontSize: 11, fontFamily: "system-ui" }}
+          style={{ background: design ? "#0E7C86" : "#1A9AA6", padding: design ? "9px 18px" : "8px 14px", fontSize: 11, fontFamily: "system-ui" }}
         >
           Start a subscription
         </div>
       </div>
       <div
         className="absolute bottom-[10%] right-[6%] top-[14%] w-[34%] rounded-2xl"
-        style={{ background: "radial-gradient(circle at 30% 30%,#d79b6a,#7a4a2a 60%,#3c2214)", transform: design ? "none" : "translateY(6px)" }}
+        style={{ background: "radial-gradient(circle at 30% 30%,#8fd3d3,#1f6278 60%,#0f2b3c)", transform: design ? "none" : "translateY(6px)" }}
       />
     </div>
   );

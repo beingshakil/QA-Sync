@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { d } from "./sections";
 
 /* Palette for the demo site (a coffee roaster) so it reads as "someone else's website". */
-const NW = { bg: "#fbf6ef", ink: "#2b1d14", muted: "#6b5646", brand: "#b5562d" };
+const NW = { bg: "#f3f6f9", ink: "#10202e", muted: "#52616e", brand: "#1A9AA6" };
 const PIN = { critical: "#ef4444", medium: "#f97316", verified: "#16a34a" };
 
 function Pin({ children, color, className }: { children: ReactNode; color: string; className?: string }) {
@@ -81,7 +81,7 @@ export function ProductShot() {
           {/* the site under review */}
           <div className="relative min-h-[400px] overflow-hidden p-7 sm:p-10" style={{ background: NW.bg, color: NW.ink }}>
             <div className="flex items-center justify-between text-[12px]" style={{ color: NW.muted }}>
-              <span className="text-[15px] font-bold" style={{ fontFamily: "Georgia, serif", color: NW.ink }}>
+              <span className="text-[15px] font-bold" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", color: NW.ink }}>
                 ● Northwind
               </span>
               <span className="relative hidden gap-5 sm:flex">
@@ -97,7 +97,7 @@ export function ProductShot() {
             </div>
 
             <div className="relative mt-10 max-w-[64%] sm:mt-12">
-              <h3 className="text-[30px] font-bold leading-[1.04] sm:text-[40px]" style={{ fontFamily: "Georgia, serif", letterSpacing: "-0.01em" }}>
+              <h3 className="text-[30px] font-bold leading-[1.04] sm:text-[40px]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", letterSpacing: "-0.01em" }}>
                 Coffee roasted <i style={{ color: NW.brand }}>this week</i>, at your door by Friday.
               </h3>
               <Pin color={PIN.critical} className="-right-2 top-1 sm:-right-9">
@@ -127,7 +127,7 @@ export function ProductShot() {
 
             <div
               className="absolute bottom-8 right-8 top-24 hidden w-[28%] rounded-2xl sm:block"
-              style={{ background: "radial-gradient(circle at 30% 28%,#e0a878,#7a4a2a 62%,#3c2214)" }}
+              style={{ background: "radial-gradient(circle at 30% 28%,#8fd3d3,#1f6278 62%,#0f2b3c)" }}
             >
               <Pin color={PIN.verified} className="-left-3 bottom-6">
                 ✓
@@ -166,7 +166,7 @@ export function ProductShot() {
                   <div className="min-w-0 flex-1">
                     <div className="font-medium leading-snug text-ink">Button colour doesn&apos;t match the design</div>
                     <div className="mt-1.5 rounded-md bg-surface-2 px-2 py-1 font-mono text-[10.5px] text-ink-2">
-                      bg <span className="text-accent-ink">#B5562D</span> → design <span className="text-ink">#C25E2E</span>
+                      bg <span className="text-accent-ink">#1A9AA6</span> → design <span className="text-ink">#0E7C86</span>
                     </div>
                     <div className="mt-2 text-[11.5px] text-ink-2">
                       <span className="font-medium text-ink">Maya</span> The token looks out of date.
@@ -279,8 +279,8 @@ export function SpecVisual() {
     ["font", "Inter 600"],
     ["size / line", "15px / 22px"],
     ["padding", "12 20 12 20"],
-    ["background", "#B5562D ≠ #C25E2E", true],
-    ["contrast", "4.93 : 1 · AA"],
+    ["background", "#1A9AA6 ≠ #0E7C86", true],
+    ["contrast", "3.38 : 1 · fails AA"],
   ];
   return (
     <div className="flex w-full max-w-[560px] flex-col items-center gap-6 sm:flex-row sm:items-center">
@@ -467,13 +467,13 @@ export function AgentTerminal() {
           <span className="text-[#7aa2ff]">list_issues</span> project: northwind · <span className="text-white">3 open</span>
         </p>
         <p data-reveal style={d(800)} className={line}>
-          <span className="text-[#7aa2ff]">get_issue</span> #3 · <span className="text-white">#hero-cta</span> · bg #B5562D · contrast 3.1
+          <span className="text-[#7aa2ff]">get_issue</span> #3 · <span className="text-white">#hero-cta</span> · bg #1A9AA6 · contrast 3.38
         </p>
         <p data-reveal style={d(1100)} className={line}>
           edited <span className="text-white">styles/tokens.css</span>, <span className="text-white">components/Hero.tsx</span>
         </p>
         <p data-reveal style={d(1400)} className={line}>
-          <span className="text-[#7aa2ff]">reply_to_issue</span> #3 “Brand token updated to #C25E2E, contrast 4.8”
+          <span className="text-[#7aa2ff]">reply_to_issue</span> #3 “Brand token updated to #0E7C86, contrast 4.95”
         </p>
         <p data-reveal style={d(1700)} className={line}>
           <span className="text-[#7aa2ff]">update_issue</span> #1 #2 #3 → <span className="text-white">fixed</span>

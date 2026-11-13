@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
 import { CtaBand, FaqList, SectionHead, SpiderWeb, d } from "@/components/marketing/sections";
 import { OverlayDemo, ThreeViews, UrlStart } from "@/components/marketing/interactive";
@@ -32,18 +32,35 @@ function Block({ children, className, id }: { children: ReactNode; className?: s
   );
 }
 
-function Points({ items }: { items: string[] }) {
+/** Three short points beside a visual: a title and one line each, on a thin rule. */
+function Points({ items, children }: { items: [string, string][]; children?: ReactNode }) {
   return (
-    <ul data-reveal style={d(120)} className="mt-8 space-y-3">
-      {items.map((t) => (
-        <li key={t} className="flex items-start gap-3 text-[15px] text-ink-2">
-          <span className="mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border border-line-strong text-brand-ink">
-            <Check size={11} strokeWidth={3} />
-          </span>
-          {t}
-        </li>
-      ))}
-    </ul>
+    <div>
+      <ul className="space-y-8">
+        {items.map(([t, b], i) => (
+          <li key={t} data-reveal style={d(i * 100)} className="border-l border-line-strong pl-5">
+            <h3 className="text-[16px] font-semibold tracking-[-0.01em] text-ink">{t}</h3>
+            <p className="mt-1.5 text-pretty text-[14.5px] leading-[1.65] text-ink-2">{b}</p>
+          </li>
+        ))}
+      </ul>
+      {children}
+    </div>
+  );
+}
+
+/** Header across the top (same style as every section), then the visual and its points. */
+function Feature({ head, visual, points, flip, children }: { head: ReactNode; visual: ReactNode; points: [string, string][]; flip?: boolean; children?: ReactNode }) {
+  return (
+    <>
+      {head}
+      <div className="mt-14 grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+        <div className={cn("lg:col-span-7", flip && "lg:order-2")}>{visual}</div>
+        <div className={cn("lg:col-span-5", flip && "lg:order-1")}>
+          <Points items={points}>{children}</Points>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -131,58 +148,71 @@ export default function Home() {
       </Block>
 
       {/* ───────── Design QA ───────── */}
-      <Block className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionHead
-            size="sm"
-            eyebrow="Design QA"
-            title="Lay the design over the build."
-            accent="Drift has nowhere to hide."
-            sub="Upload the approved design for a page and fade between it and the live build at the same width."
-          />
-          <Points items={["Overlay with opacity or difference blending", "Or compare side by side as you scroll", "One design per page and per device"]} />
-        </div>
-        <div className="lg:col-span-7">
-          <OverlayDemo />
-        </div>
+      <Block>
+        <Feature
+          flip
+          head={
+            <SectionHead
+              eyebrow="Design QA"
+              title="Lay the design over the build."
+              accent="See the drift."
+              sub="Upload the approved design for a page and compare it with the live build at the same width."
+            />
+          }
+          visual={<OverlayDemo />}
+          points={[
+            ["Overlay", "Fade the design over the page with opacity or difference blending."],
+            ["Side by side", "Put the design next to the live page; both scroll together."],
+            ["Per page, per device", "Keep a desktop and a mobile design for every page you review."],
+          ]}
+        />
       </Block>
 
       {/* ───────── SEO audit ───────── */}
-      <Block className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
-        <div className="lg:order-2 lg:col-span-5">
-          <SectionHead
-            size="sm"
-            eyebrow="SEO audit"
-            title="See the page the way search engines do."
-            accent="With the fix spelled out."
-            sub="Titles, headings, links, images, schema and Open Graph each get a clear pass or fail, and every red item says what to change."
-          />
-          <Points items={["12 on-page and technical checks", "Every link tested, with blocked and broken told apart", "Navbar and footer links filtered out on demand"]} />
-        </div>
-        <div className="lg:order-1 lg:col-span-7">
-          <AuditPreview />
-        </div>
+      <Block>
+        <Feature
+          head={
+            <SectionHead
+              eyebrow="SEO audit"
+              title="See your page the way Google does."
+              accent="With the fix spelled out."
+              sub="Titles, headings, links, images, schema and Open Graph each get a clear pass or fail."
+            />
+          }
+          visual={<AuditPreview />}
+          points={[
+            ["12 clear checks", "On-page and technical: title, description, headings, images, links, URL, canonical, schema and more."],
+            ["A fix for every red item", "Not just “failed”: each problem says exactly what to change."],
+            ["Links you can trust", "Every link is tested, blocked and broken are told apart, and navbar and footer links can be left out."],
+          ]}
+        />
       </Block>
 
       {/* ───────── AI agents ───────── */}
-      <Block className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
-        <div className="lg:col-span-5">
-          <SectionHead
-            size="sm"
-            eyebrow="AI agents"
-            title="Let your agent take the first pass."
-            accent="You still decide what's done."
-            sub="Connect Claude Code, Cursor or any MCP client. The agent reads each issue with its selector, styles and console errors, ships the fix and marks it Fixed. Only a person can mark it Verified."
-          />
-          <div data-reveal style={d(120)} className="mt-8">
+      <Block>
+        <Feature
+          flip
+          head={
+            <SectionHead
+              eyebrow="AI agents"
+              title="Let your agent take the first pass."
+              accent="You decide what's done."
+              sub="Connect Claude Code, Cursor or any MCP client, and it works through your open issues."
+            />
+          }
+          visual={<AgentTerminal />}
+          points={[
+            ["Full context", "Every issue comes with its selector, element styles, browser and console errors."],
+            ["Your tools", "Claude Code, Cursor, VS Code or any MCP client, connected with a token from Settings."],
+            ["People sign off", "Agents can mark issues Fixed. Only a person can mark them Verified."],
+          ]}
+        >
+          <div data-reveal style={d(300)} className="mt-9 pl-5">
             <ButtonLink href="/product/ai-agents" variant="secondary">
               How agents connect <ArrowRight size={15} />
             </ButtonLink>
           </div>
-        </div>
-        <div className="lg:col-span-7">
-          <AgentTerminal />
-        </div>
+        </Feature>
       </Block>
 
       {/* ───────── Trust ───────── */}
