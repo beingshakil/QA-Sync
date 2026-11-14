@@ -19,7 +19,46 @@ const KEY = "qasync-canvas-rail";
  * Slim navigation rail for the review canvas: jump to Projects, Issues… or another project
  * without leaving the canvas. Collapsed to icons by default; expands to show labels (remembered).
  */
-export function CanvasRail({ projects, currentId }: { projects: { id: string; name: string; color: string; openCount?: number }[]; currentId: string }) {
+type RailProject = { id: string; name: string; color: string; openCount?: number; host?: string | null };
+
+/**
+ * The site's own logo (its favicon, found by Google's favicon service), on a white tile so dark
+ * and light logos both read. Falls back to the coloured initials when the site has no icon.
+ */
+function ProjectIcon({ p, active }: { p: RailProject; active: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const initials = p.name.replace(/^https?:\/\//, "").slice(0, 2).toUpperCase();
+  const logo = p.host && !failed ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(p.host)}&sz=64` : null;
+  return (
+    <span
+      className={cn(
+        "flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-md text-[11px] font-semibold text-white",
+        active && "ring-2 ring-offset-2 ring-offset-surface",
+      )}
+      style={{ background: logo ? "#fff" : p.color, ...(active ? { ["--tw-ring-color" as string]: p.color } : {}) }}
+    >
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logo}
+          alt=""
+          width={20}
+          height={20}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-5 w-5 object-contain"
+          // Google answers an unknown site with a 16px generic globe: treat that as "no logo".
+          onLoad={(e) => e.currentTarget.naturalWidth <= 16 && setFailed(true)}
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        initials
+      )}
+    </span>
+  );
+}
+
+export function CanvasRail({ projects, currentId }: { projects: RailProject[]; currentId: string }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -37,7 +76,17 @@ export function CanvasRail({ projects, currentId }: { projects: { id: string; na
   };
 
   return (
-    <aside className={cn("hidden h-dvh shrink-0 flex-col border-r border-line bg-surface transition-[width] duration-200 md:flex", open ? "w-56" : "w-14")}>
+    <aside className={cn("relative z-30 hidden h-dvh shrink-0 flex-col border-r border-line bg-surface transition-[width] duration-200 md:flex", open ? "w-56" : "w-14")}>
+      {/* Collapse/expand handle on the rail's edge, halfway down, so it's always within reach. */}
+      <button
+        onClick={toggle}
+        title={open ? "Collapse sidebar" : "Expand sidebar"}
+        aria-label={open ? "Collapse sidebar" : "Expand sidebar"}
+        aria-expanded={open}
+        className="absolute -right-3.5 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full border border-line-strong bg-surface text-ink-3 shadow-1 transition hover:border-blue hover:text-ink"
+      >
+        {open ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+      </button>
       <div className={cn("flex h-14 shrink-0 items-center border-b border-line", open ? "gap-2 px-4" : "justify-center")}>
         <Link href="/app/projects" title="QASync home" className="flex items-center gap-2 font-semibold">
           <LogoMark />
@@ -80,12 +129,7 @@ export function CanvasRail({ projects, currentId }: { projects: { id: string; na
                 active ? "bg-surface-2 text-ink" : "text-ink-2 hover:bg-surface-2/70 hover:text-ink",
               )}
             >
-              <span
-                className={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-semibold text-white", active && "ring-2 ring-offset-2 ring-offset-surface")}
-                style={{ background: p.color, ...(active ? { ["--tw-ring-color" as string]: p.color } : {}) }}
-              >
-                {p.name.replace(/^https?:\/\//, "").slice(0, 2).toUpperCase()}
-              </span>
+              <ProjectIcon p={p} active={active} />
               {open && (
                 <>
                   <span className="min-w-0 flex-1 truncate">{p.name}</span>
@@ -95,12 +139,6 @@ export function CanvasRail({ projects, currentId }: { projects: { id: string; na
             </Link>
           );
         })}
-      </div>
-
-      <div className={cn("flex items-center border-t border-line p-2", open ? "justify-between" : "flex-col gap-1")}>
-        <button onClick={toggle} title={open ? "Collapse sidebar" : "Expand sidebar"} className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
-          {open ? <PanelLeftClose size={16} /> : <PanelLeftOpen size={16} />}
-        </button>
       </div>
     </aside>
   );

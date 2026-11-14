@@ -96,7 +96,7 @@ function layout({ title, pill, intro, list, outro, button }: EmailParts) {
 const PRO_PERKS = [
   "Unlimited projects, comments and page audits",
   "Unlimited teammates and client guests",
-  "Inspect, freeze hover, device sizes and design overlay",
+  "Inspect, freeze hover, custom device sizes, split view and design overlay",
   "Page-wise QA tracking and AI agents",
 ];
 

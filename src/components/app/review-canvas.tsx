@@ -183,7 +183,7 @@ export function ReviewCanvas({
   }, [guest, project.id]);
   const confirmDialog = useConfirm();
 
-  /* ───────── plan: Free gets comment pins; inspect, freeze, devices, design tools and page QA are Pro ───────── */
+  /* ───────── plan: Free gets comment pins and desktop/tablet/mobile views; inspect, freeze, custom sizes, split view, design tools and page QA are Pro ───────── */
   const pro = access?.pro ?? true;
   const viewOnly = !!guest && !pro;
   const commentLimit = access?.comments.limit ?? null;
@@ -216,7 +216,10 @@ export function ReviewCanvas({
     } catch {
       /* storage unavailable: use defaults */
     }
+    // On a phone the panel covers the whole page, so always open on the page itself.
+    if (window.matchMedia("(max-width: 767px)").matches && !initialIssueId) setPanel(false);
     prefsLoaded.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- read once on load
   }, [prefsKey]);
   useEffect(() => {
     if (!prefsLoaded.current) return;
@@ -232,10 +235,11 @@ export function ReviewCanvas({
   useEffect(() => {
     if (pro) return;
     if (mode === "inspect" || (viewOnly && mode === "comment")) setMode(viewOnly ? "browse" : "comment");
-    if (device !== "desktop") setDevice("desktop");
+    if (device === "split") setDevice("desktop");
     if (tool) setTool(null);
-    if (sizeIds.desktop !== DEFAULT_SIZES.desktop) setSizeIds(DEFAULT_SIZES);
-  }, [pro, viewOnly, mode, device, tool, sizeIds.desktop]);
+    // Custom and alternative device sizes are Pro; Free uses the default size for each device.
+    if ((Object.keys(DEFAULT_SIZES) as FrameKey[]).some((k) => sizeIds[k] !== DEFAULT_SIZES[k])) setSizeIds(DEFAULT_SIZES);
+  }, [pro, viewOnly, mode, device, tool, sizeIds]);
 
   // Drag the panel's left edge. A full-screen shield keeps the iframes from swallowing the pointer.
   function startResize(e: React.PointerEvent) {
@@ -697,7 +701,8 @@ export function ReviewCanvas({
   /* ───────── actions ───────── */
   function chooseDevice(d: DeviceKey) {
     if (d === device) return;
-    if (!pro && d !== "desktop") return setUpsell("devices");
+    // Free has desktop, tablet and mobile at their default sizes; split view is Pro.
+    if (!pro && d === "split") return setUpsell("devices");
     if (d === "split" && tool === "compare") setTool(null);
     resetFrames();
     setDevice(d);
@@ -864,7 +869,7 @@ export function ReviewCanvas({
   return (
     <div className="flex h-dvh flex-col bg-paper">
       {/* ───────── toolbar ───────── */}
-      <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line bg-surface px-3">
+      <div className="flex h-14 shrink-0 items-center gap-1.5 border-b border-line bg-surface px-2 sm:gap-2 sm:px-3">
         {guest ? (
           <span className="flex items-center gap-2 pr-1 font-semibold">
             <LogoMark /> <span className="hidden max-w-[160px] truncate lg:inline">{project.name}</span>
@@ -877,7 +882,7 @@ export function ReviewCanvas({
         )}
 
         <form
-          className="flex min-w-[220px] max-w-[520px] flex-1 items-center gap-1 rounded-lg border border-line bg-paper px-2"
+          className="flex min-w-0 max-w-[520px] flex-1 items-center sm:min-w-[220px] gap-1 rounded-lg border border-line bg-paper px-2"
           onSubmit={(e) => {
             e.preventDefault();
             navigate(urlInput);
@@ -893,8 +898,8 @@ export function ReviewCanvas({
         {/* devices + zoom */}
         <div className="ml-auto hidden items-center gap-1 rounded-xl border border-line bg-paper p-1 md:flex">
           <DevBtn active={device === "desktop"} onClick={() => chooseDevice("desktop")} title="Desktop"><Monitor size={16} /></DevBtn>
-          <DevBtn active={device === "tablet"} locked={!pro} onClick={() => chooseDevice("tablet")} title="Tablet · 768"><Tablet size={16} /></DevBtn>
-          <DevBtn active={device === "mobile"} locked={!pro} onClick={() => chooseDevice("mobile")} title="Mobile · 390"><Smartphone size={16} /></DevBtn>
+          <DevBtn active={device === "tablet"} onClick={() => chooseDevice("tablet")} title="Tablet · 768"><Tablet size={16} /></DevBtn>
+          <DevBtn active={device === "mobile"} onClick={() => chooseDevice("mobile")} title="Mobile · 390"><Smartphone size={16} /></DevBtn>
           <DevBtn active={device === "split"} locked={!pro} onClick={() => chooseDevice("split")} title="Split view: desktop + mobile"><MonitorSmartphone size={16} /></DevBtn>
           {pro && <SizeMenu
             open={sizeMenu}
@@ -948,7 +953,7 @@ export function ReviewCanvas({
         </div>
 
         {/* modes */}
-        <div className="flex items-center rounded-xl border border-line bg-paper p-1">
+        <div className="flex shrink-0 items-center rounded-xl border border-line bg-paper p-1">
           <ModeBtn active={mode === "browse"} onClick={() => changeMode("browse")} icon={<MousePointer2 size={15} />} label="Browse" k="B" />
           <ModeBtn active={mode === "comment"} locked={viewOnly} onClick={() => changeMode("comment")} icon={<MessageSquarePlus size={15} />} label="Comment" k="C" />
           <ModeBtn active={mode === "inspect"} locked={!pro} onClick={() => changeMode("inspect")} icon={<ScanSearch size={15} />} label="Inspect" k="I" />
@@ -956,7 +961,7 @@ export function ReviewCanvas({
         <button
           onClick={toggleFreeze}
           title={pro ? "Freeze hover states (F)" : "Freeze hover states · Pro"}
-          className={cn("relative rounded-lg border p-2", frozen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
+          className={cn("relative hidden rounded-lg border p-2 md:block", frozen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
         >
           <Snowflake size={15} />
           {!pro && <LockDot />}
@@ -966,7 +971,7 @@ export function ReviewCanvas({
             onClick={() => setAuditOpen(true)}
             title="SEO audit report for this page"
             aria-label="SEO audit report for this page"
-            className={cn("rounded-lg border p-2", auditOpen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
+            className={cn("hidden rounded-lg border p-2 sm:block", auditOpen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
           >
             <Gauge size={15} />
           </button>
@@ -977,8 +982,8 @@ export function ReviewCanvas({
 
           </>
         )}
-        <div className="relative">
-          <Button size="sm" onClick={() => setShareOpen((o) => !o)} className="h-9" aria-expanded={shareOpen}>
+        <div className="relative shrink-0">
+          <Button size="sm" onClick={() => setShareOpen((o) => !o)} className="h-9 max-sm:px-2.5" aria-expanded={shareOpen}>
             <Link2 size={14} />
             <span className="hidden sm:inline">Share</span>
           </Button>
@@ -997,7 +1002,7 @@ export function ReviewCanvas({
             />
           )}
         </div>
-        <button onClick={() => setPanel((p) => !p)} className="rounded-lg p-2 text-ink-3 hover:text-ink" title="Toggle panel">
+        <button onClick={() => setPanel((p) => !p)} className="shrink-0 rounded-lg p-2 text-ink-3 hover:text-ink" title="Toggle panel" aria-label="Toggle comments panel" aria-pressed={panel}>
           {panel ? <PanelRightClose size={17} /> : <PanelRightOpen size={17} />}
         </button>
         <input
@@ -1090,7 +1095,7 @@ export function ReviewCanvas({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1">
+      <div className="relative flex min-h-0 flex-1">
         {/* ───────── stage ───────── */}
         <div ref={stageRef} className="relative flex min-w-0 flex-1">
           {tool === "compare" && (
@@ -1238,8 +1243,8 @@ export function ReviewCanvas({
         {/* ───────── side panel ───────── */}
         {panel && (
           <aside
-            style={{ width: panelW }}
-            className="relative flex shrink-0 flex-col border-l border-line bg-surface max-md:absolute max-md:inset-y-14 max-md:right-0 max-md:z-20 max-md:max-w-full max-md:shadow-2"
+            style={{ ["--panel-w" as string]: `${panelW}px` }}
+            className="relative flex w-[var(--panel-w)] shrink-0 flex-col border-l border-line bg-surface max-md:absolute max-md:inset-0 max-md:z-20 max-md:w-full max-md:border-l-0"
           >
             <div
               role="separator"
@@ -1257,7 +1262,7 @@ export function ReviewCanvas({
                 if (e.key === "ArrowRight") setPanelW((w) => clampPanel(w - 24));
               }}
               className={cn(
-                "group/rz absolute inset-y-0 -left-1.5 z-20 w-3 cursor-col-resize outline-none",
+                "group/rz absolute inset-y-0 -left-1.5 z-20 w-3 cursor-col-resize outline-none max-md:hidden",
                 "after:absolute after:inset-y-0 after:left-1/2 after:w-0.5 after:-translate-x-1/2 after:bg-transparent after:transition-colors",
                 "hover:after:bg-blue focus-visible:after:bg-blue",
                 resizing && "after:bg-blue",

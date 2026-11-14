@@ -647,7 +647,15 @@ export async function deleteComment(id: string) {
 }
 
 /* ───────── plans & limits ───────── */
+/**
+ * A local server on its own local database (not Vercel, not QASYNC_DB=remote) gives every workspace
+ * Pro with no limits, so every tool can be built and tested without plan gates. Production data
+ * is never touched this way: pointing a local server at the hosted database turns it off.
+ */
+const LOCAL_PRO = !process.env.VERCEL && process.env.QASYNC_DB !== "remote";
+
 export async function getWorkspacePlan(workspaceId: string): Promise<WorkspacePlan> {
+  if (LOCAL_PRO) return ADMIN_PLAN;
   const r = await q1(
     `SELECT w.plan, w.plan_expires_at, u.email AS owner_email,
             EXISTS (SELECT 1 FROM site_admins sa WHERE sa.email = lower(u.email)) AS owner_admin

@@ -22,7 +22,7 @@ export const METERED_LABEL: Record<Metered, { one: string; many: string }> = {
 export const FEATURE_LABEL: Record<Feature, string> = {
   inspect: "Inspect, measure and contrast",
   freeze: "Freeze hover",
-  devices: "Device sizes, split view and sync scroll",
+  devices: "Custom device sizes, split view and sync scroll",
   overlay: "Design overlay and compare",
   pageQa: "Page-wise QA tracking",
   guests: "Client guest comments",

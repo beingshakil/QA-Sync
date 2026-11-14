@@ -47,14 +47,15 @@ export function PageTabs({
   }
 
   return (
-    <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line bg-surface pl-2 pr-3">
+    <div className="flex h-11 shrink-0 items-center gap-2 border-b border-line bg-surface pl-2 pr-2 sm:pr-3">
       <button
         onClick={onOverview}
         className="flex h-8 shrink-0 items-center gap-1.5 rounded-lg border border-line bg-paper px-2.5 text-[13px] font-medium text-ink-2 hover:text-ink"
         title="All pages and their QA status"
+        aria-label="All pages"
       >
         <LayoutList size={14} />
-        Pages
+        <span className="hidden sm:inline">Pages</span>
         <span className="font-mono text-[11.5px] text-ink-3">
           {passed}/{pages.length}
         </span>
@@ -70,7 +71,7 @@ export function PageTabs({
               onClick={() => onSelect(p)}
               title={`${pagePath(p.url)} · ${PAGE_STATE_LABEL[p.state]}`}
               className={cn(
-                "flex h-8 max-w-[220px] shrink-0 items-center gap-2 rounded-lg px-2.5 text-[13px] transition",
+                "flex h-8 max-w-[140px] shrink-0 sm:max-w-[220px] items-center gap-2 rounded-lg px-2.5 text-[13px] transition",
                 active ? "bg-ink font-medium text-paper" : "text-ink-2 hover:bg-surface-2 hover:text-ink",
               )}
             >
@@ -102,8 +103,8 @@ export function PageTabs({
               </button>
             </form>
           ) : (
-            <button onClick={() => setAdding(true)} className="flex h-8 shrink-0 items-center gap-1 rounded-lg px-2.5 text-[13px] font-medium text-blue hover:bg-blue-soft">
-              <Plus size={14} /> Add page
+            <button onClick={() => setAdding(true)} aria-label="Add page" title="Add page" className="flex h-8 shrink-0 items-center gap-1 rounded-lg px-2 text-[13px] font-medium text-blue hover:bg-blue-soft sm:px-2.5">
+              <Plus size={14} /> <span className="hidden sm:inline">Add page</span>
             </button>
           ))}
         {err && <span className="shrink-0 text-[12px] text-accent-ink">{err}</span>}
@@ -111,11 +112,11 @@ export function PageTabs({
 
       {/* sign-off for the page being viewed */}
       {current && (
-        <div className="flex shrink-0 items-center gap-2 border-l border-line pl-3">
+        <div className="flex shrink-0 items-center gap-2 border-l border-line pl-2 sm:pl-3">
           {current.state === "passed" ? (
             <>
               <span className="flex items-center gap-1.5 text-[12.5px] font-medium text-[var(--st-verified)]">
-                <BadgeCheck size={14} /> QA passed{current.qaBy ? ` · ${current.qaBy}` : ""}
+                <BadgeCheck size={14} /> <span className="hidden sm:inline">QA passed{current.qaBy ? ` · ${current.qaBy}` : ""}</span>
               </span>
               <button onClick={() => onSignOff(current, false)} className="rounded p-1 text-ink-3 hover:text-ink" title="Undo sign-off">
                 <RotateCcw size={13} />
@@ -131,9 +132,10 @@ export function PageTabs({
                 onClick={() => onSignOff(current, true)}
                 disabled={current.open > 0}
                 title={current.open > 0 ? `Resolve the ${current.open} open issue${current.open === 1 ? "" : "s"} on this page first` : "Sign this page off as QA passed"}
-                className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--st-verified)] px-3 text-[12.5px] font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-35"
+                aria-label="Mark page passed"
+                className="flex h-8 items-center gap-1.5 rounded-lg bg-[var(--st-verified)] px-2.5 text-[12.5px] font-medium text-white transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-35 sm:px-3"
               >
-                <BadgeCheck size={14} /> Mark page passed
+                <BadgeCheck size={14} /> <span className="hidden sm:inline">Mark page passed</span><span className="sm:hidden">Pass</span>
               </button>
             </>
           )}

@@ -5,6 +5,7 @@ import { CanvasRail } from "@/components/app/canvas-rail";
 import { listIssues, listProjects, planAccess } from "@/server/repo";
 import { projectFor } from "@/server/http";
 import { getCurrentWorkspace, requireCtx } from "@/server/session";
+import { hostOf } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Review" };
@@ -18,7 +19,14 @@ export default async function ReviewPage({ params, searchParams }: Props) {
   const project = await projectFor(ctx, id);
   if (!project) notFound();
   const ws = await getCurrentWorkspace();
-  const projects = (await listProjects(ctx.workspaceId)).map((p) => ({ id: p.id, name: p.name, color: p.color, openCount: p.openCount }));
+  const projects = (await listProjects(ctx.workspaceId)).map((p) => ({
+    id: p.id,
+    name: p.name,
+    color: p.color,
+    openCount: p.openCount,
+    // Local path projects ("/demo") have no public site to take a logo from.
+    host: p.baseUrl.startsWith("/") ? null : hostOf(p.baseUrl),
+  }));
   return (
     <div className="flex h-dvh overflow-hidden">
       <CanvasRail projects={projects} currentId={project.id} />

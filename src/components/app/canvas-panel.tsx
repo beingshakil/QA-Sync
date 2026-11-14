@@ -337,7 +337,7 @@ export function CanvasPanel({
           </button>
         </div>
       ) : (
-      <div className="flex flex-wrap gap-x-3 gap-y-1 border-t border-line px-4 py-2.5 text-[11px] text-ink-3">
+      <div className="hidden flex-wrap gap-x-3 gap-y-1 border-t border-line px-4 py-2.5 text-[11px] text-ink-3 md:flex">
         <span><Kbd>C</Kbd> comment</span>
         <span><Kbd>I</Kbd> inspect</span>
         <span><Kbd>F</Kbd> freeze</span>
