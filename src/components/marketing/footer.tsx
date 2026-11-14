@@ -29,7 +29,7 @@ export function Footer() {
     <footer className="border-t border-line bg-paper">
       <div className="hairline-grad" />
       <div className="ruler-x opacity-40" />
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div>
           <Logo />
           <p className="mt-3 max-w-xs text-sm text-ink-3">{BRAND.description}</p>
@@ -49,7 +49,7 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-6 text-xs text-ink-3">
           <span>© 2026 {BRAND.name}. Phase 1 preview.</span>
           <span className="tabular-nums">v0.1.0</span>

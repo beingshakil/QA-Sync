@@ -37,7 +37,7 @@ const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix"
 /** One content column for the whole page; sections are separated by a rule on that column. */
 function Block({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
   return (
-    <section id={id} className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id={id} className="mx-auto max-w-7xl px-4 sm:px-6">
       <div className={cn("border-t border-line py-16 md:py-24", className)}>{children}</div>
     </section>
   );
@@ -83,7 +83,7 @@ export default function Home() {
       <section className="relative overflow-hidden">
         <div className="site-glow" aria-hidden />
         <SpiderWeb />
-        <div className="relative mx-auto max-w-6xl px-4 pt-16 sm:px-6 md:pt-24">
+        <div className="relative mx-auto max-w-7xl px-4 pt-16 sm:px-6 md:pt-24">
           {/* Centred hero: the original design, kept exactly */}
           <div className="text-center">
             <h1 data-reveal style={d(40)} className="mx-auto mt-4 max-w-4xl text-[46px] font-semibold leading-[0.98] tracking-[-0.04em] text-ink sm:text-[64px] md:text-[84px]">

@@ -114,7 +114,7 @@ export function Header() {
 
   return (
     <header className={cn("sticky top-0 z-50 transition-colors", scrolled ? "border-b border-line bg-paper/85 backdrop-blur-md" : "border-b border-transparent")}>
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-4 sm:px-6">
         <Logo />
         <nav className="relative hidden items-center gap-1 text-[14px] text-ink-2 md:flex" onMouseLeave={leave}>
           <MenuTrigger label="Product" k="product" open={open} enter={enter} />

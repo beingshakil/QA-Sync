@@ -10,7 +10,7 @@ export const d = (ms: number) => ({ "--d": ms }) as CSSProperties;
 
 export function Section({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
   return (
-    <section id={id} className={cn("mx-auto max-w-6xl px-4 py-20 sm:px-6 md:py-28", className)}>
+    <section id={id} className={cn("mx-auto max-w-7xl px-4 py-20 sm:px-6 md:py-28", className)}>
       {children}
     </section>
   );
@@ -72,7 +72,7 @@ export function SectionHead({
 
 /** Gradient hairline used between major sections. */
 export function Divider() {
-  return <div className="hairline-grad mx-auto max-w-6xl" aria-hidden />;
+  return <div className="hairline-grad mx-auto max-w-7xl" aria-hidden />;
 }
 
 export function FeatureGrid({ items, cols = 3 }: { items: { title: string; body: string; tag?: string; icon?: ReactNode }[]; cols?: 2 | 3 }) {
@@ -137,7 +137,7 @@ export function PageHero({ eyebrow, title, accent, sub, children }: { eyebrow: s
     <div className="relative overflow-hidden border-b border-line">
       <div className="site-glow site-glow-soft" aria-hidden />
       <SpiderWeb />
-      <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-20 sm:px-6 md:pt-28">
+      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 md:pt-28">
         <div data-reveal>
           <Kicker>{eyebrow}</Kicker>
         </div>
@@ -159,7 +159,7 @@ export function PageHero({ eyebrow, title, accent, sub, children }: { eyebrow: s
 
 export function CtaBand({ title = "Point at the problem.", accent = "Watch it get fixed." }: { title?: string; accent?: string }) {
   return (
-    <section className="mx-auto max-w-6xl px-4 pb-24 sm:px-6 md:pb-32">
+    <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 md:pb-32">
       <div data-reveal className="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-14 sm:px-10 md:px-14 md:py-16">
         <SpiderWeb />
         <div className="relative grid items-end gap-8 lg:grid-cols-[1fr_auto]">
