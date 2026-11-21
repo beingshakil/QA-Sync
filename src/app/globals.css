@@ -1,108 +1,123 @@
 @import "tailwindcss";
 
 /* ───────────── Design tokens ─────────────
- * Two brand scales (from the brand palette):
+ * QA palette: deep blue, green, near-black (see DESIGN.md).
  *   Blue   50 #D7E3F4 · 100 #BACEEC · 200 #9CB8E3 · 300 #7EA1D9 · 400 #5F8AD0
- *          500 #4074C7 · 600 #2B5EBE · 700 #1F4C9C · 800 #183C7A · 900 #102C5C
- *   Purple 50 #E9DAF2 · 100 #DBC2EA · 200 #CCA9E0 · 300 #BC8FD6 · 400 #A974CC
- *          500 #9558C0 · 600 #7B2FB0 · 700 #5E1D95 · 800 #4B1679 · 900 #3B0E64
- * Blue is the brand (buttons, links, pins, focus). Purple is the accent (highlights, badges, open issues).
- * Green / amber / red are kept only where colour carries meaning (verified, in progress, delete).
+ *          500 #4074C7 · 600 #2B5EBE · 700 #1F4C9C · 800 #183C7A · 900 #102C5C (navy)
+ *   Green  50 #E8FAF2 · 100 #C9F3DF · 200 #A7F0CF · 300 #6EE7B7 · 400 #22C27E
+ *          500 #16A36A · 600 #128A59 · 700 #0F6E48 · 800 #0C5639 · 900 #083F2A
+ * Blue is the brand (buttons, links, pins, focus). Green is the accent and means "checked":
+ * highlights, accent words, pass, verified. Amber = in progress, rose red = open, red = delete/error.
+ * Canvas is near-black with a faint navy cast so the blues sit in it.
  */
 :root {
   --blue-50: #d7e3f4; --blue-100: #baceec; --blue-200: #9cb8e3; --blue-300: #7ea1d9; --blue-400: #5f8ad0;
   --blue-500: #4074c7; --blue-600: #2b5ebe; --blue-700: #1f4c9c; --blue-800: #183c7a; --blue-900: #102c5c;
-  --purple-50: #e9daf2; --purple-100: #dbc2ea; --purple-200: #cca9e0; --purple-300: #bc8fd6; --purple-400: #a974cc;
-  --purple-500: #9558c0; --purple-600: #7b2fb0; --purple-700: #5e1d95; --purple-800: #4b1679; --purple-900: #3b0e64;
+  --green-50: #e8faf2; --green-100: #c9f3df; --green-200: #a7f0cf; --green-300: #6ee7b7; --green-400: #22c27e;
+  --green-500: #16a36a; --green-600: #128a59; --green-700: #0f6e48; --green-800: #0c5639; --green-900: #083f2a;
 
   --paper: #f6f7fb;
   --surface: #ffffff;
   --surface-2: #eef1f8;
-  --ink: #0f1730;
+  --ink: #0b1220;
   --ink-2: #3a4563;
-  --ink-3: #6b7591;
+  --ink-3: #5f6a84;
   --line: #e1e5ef;
   --line-strong: #cbd2e1;
 
   --brand: var(--blue-600);
-  --brand-ink: var(--blue-700);
+  --brand-ink: var(--blue-800);
   --brand-soft: #eaf0fa;
-  --accent: var(--purple-600);
-  --accent-ink: var(--purple-700);
-  --accent-soft: #f4ecfa;
+  --accent: var(--green-600);
+  --accent-ink: var(--green-700);
+  --accent-soft: #e6f7ee;
   --blue: var(--blue-600);
   --blue-soft: #eaf0fa;
   --danger: #c8364a;
   --danger-soft: #fcecee;
-  --pass: #12804f;
-  --pass-soft: #e6f5ed;
+  --pass: var(--green-600);
+  --pass-soft: #e6f7ee;
 
-  --st-open: var(--purple-600);
+  --st-open: #e0434f;
   --st-progress: #f0900c;
   --st-review: var(--blue-400);
   --st-fixed: var(--blue-700);
-  --st-verified: #16a36a;
+  --st-verified: var(--green-500);
   --st-wontfix: #8a92a6;
 
-  --shadow-1: 0 1px 2px rgb(15 23 48 / 0.06), 0 1px 1px rgb(15 23 48 / 0.04);
-  --shadow-2: 0 8px 24px -8px rgb(16 44 92 / 0.22), 0 2px 6px rgb(15 23 48 / 0.06);
+  --shadow-1: 0 1px 2px rgb(11 18 32 / 0.06), 0 1px 1px rgb(11 18 32 / 0.04);
+  --shadow-2: 0 8px 24px -8px rgb(16 44 92 / 0.22), 0 2px 6px rgb(11 18 32 / 0.06);
+
+  /* orbiting ring (.ring-flow, .device-ring) and canvas stage: deeper on a light canvas */
+  --ring-a: #2f66e0;
+  --ring-b: #16a36a;
+  --stage: #e8ecf3;
 }
 
+/* Dark (the shipped theme): one set of values for the app and the site */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --paper: #0a0e1a;
-    --surface: #111727;
-    --surface-2: #182036;
-    --ink: #e8ecf6;
-    --ink-2: #b6bfd6;
-    --ink-3: #8790aa;
-    --line: #232c45;
-    --line-strong: #2f3a57;
-    --brand: var(--blue-400);
-    --brand-ink: var(--blue-200);
-    --brand-soft: #14213d;
-    --accent: var(--purple-400);
-    --accent-ink: var(--purple-200);
-    --accent-soft: #221532;
-    --blue: var(--blue-300);
-    --blue-soft: #14213d;
+    --paper: #05070b;
+    --surface: #0b0e15;
+    --surface-2: #121722;
+    --ink: #eef1f6;
+    --ink-2: #aeb6c6;
+    --ink-3: #7d8699;
+    --line: #1b2130;
+    --line-strong: #283044;
+    --brand: #2f66e0;
+    --brand-ink: #8fb3ff;
+    --brand-soft: #0d1a38;
+    --accent: var(--green-400);
+    --accent-ink: var(--green-300);
+    --accent-soft: #0b2a1e;
+    --blue: #6f9bff;
+    --blue-soft: #0d1a38;
     --danger: #f07686;
     --danger-soft: #35161d;
-    --pass: #4ade80;
-    --pass-soft: #0f2a1c;
-    --st-open: var(--purple-400);
-    --st-review: var(--blue-300);
-    --st-fixed: var(--blue-500);
-    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.45);
-    --shadow-2: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+    --pass: var(--green-400);
+    --pass-soft: #0b2a1e;
+    --st-open: #f2555a;
+    --st-review: #6f9bff;
+    --st-fixed: #2f66e0;
+    --st-verified: var(--green-400);
+    --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
+    --shadow-2: 0 10px 30px -10px rgb(0 0 0 / 0.7);
+    --ring-a: #8fb3ff;
+    --ring-b: #6ee7b7;
+    --stage: #000;
   }
 }
 :root[data-theme="dark"] {
-  --paper: #0a0e1a;
-  --surface: #111727;
-  --surface-2: #182036;
-  --ink: #e8ecf6;
-  --ink-2: #b6bfd6;
-  --ink-3: #8790aa;
-  --line: #232c45;
-  --line-strong: #2f3a57;
-  --brand: var(--blue-400);
-  --brand-ink: var(--blue-200);
-  --brand-soft: #14213d;
-  --accent: var(--purple-400);
-  --accent-ink: var(--purple-200);
-  --accent-soft: #221532;
-  --blue: var(--blue-300);
-  --blue-soft: #14213d;
+  --paper: #05070b;
+  --surface: #0b0e15;
+  --surface-2: #121722;
+  --ink: #eef1f6;
+  --ink-2: #aeb6c6;
+  --ink-3: #7d8699;
+  --line: #1b2130;
+  --line-strong: #283044;
+  --brand: #2f66e0;
+  --brand-ink: #8fb3ff;
+  --brand-soft: #0d1a38;
+  --accent: var(--green-400);
+  --accent-ink: var(--green-300);
+  --accent-soft: #0b2a1e;
+  --blue: #6f9bff;
+  --blue-soft: #0d1a38;
   --danger: #f07686;
   --danger-soft: #35161d;
-  --pass: #4ade80;
-  --pass-soft: #0f2a1c;
-  --st-open: var(--purple-400);
-  --st-review: var(--blue-300);
-  --st-fixed: var(--blue-500);
-  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.45);
-  --shadow-2: 0 10px 30px -10px rgb(0 0 0 / 0.65);
+  --pass: var(--green-400);
+  --pass-soft: #0b2a1e;
+  --st-open: #f2555a;
+  --st-review: #6f9bff;
+  --st-fixed: #2f66e0;
+  --st-verified: var(--green-400);
+  --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
+  --shadow-2: 0 10px 30px -10px rgb(0 0 0 / 0.7);
+  --ring-a: #8fb3ff;
+  --ring-b: #6ee7b7;
+  --stage: #000;
 }
 
 @theme inline {
@@ -141,7 +156,7 @@
   --shadow-2: var(--shadow-2);
 }
 
-/* Blue → purple, for the hero headline accent */
+/* Blue → green, for brand accent words */
 .text-gradient {
   background: linear-gradient(90deg, var(--brand) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
@@ -160,6 +175,12 @@ html {
 }
 
 body {
+  /* Font stacks as real CSS variables, declared here because next/font puts --font-geist-* on <body>.
+     `@theme inline` only inlines them into utilities and never emits --font-*, so without these
+     var(--font-sans) is undefined and everything falls back to the system font. */
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
@@ -268,7 +289,7 @@ body {
   filter: blur(90px); opacity: 0.32; will-change: transform;
 }
 .aurora::before { background: radial-gradient(circle, var(--blue-400), transparent 62%); top: -38vmax; left: -14vmax; animation: drift-a 24s ease-in-out infinite alternate; }
-.aurora::after { background: radial-gradient(circle, var(--purple-400), transparent 62%); top: -34vmax; right: -18vmax; animation: drift-b 28s ease-in-out infinite alternate; }
+.aurora::after { background: radial-gradient(circle, var(--green-500), transparent 62%); top: -34vmax; right: -18vmax; animation: drift-b 28s ease-in-out infinite alternate; }
 .aurora-dark::before, .aurora-dark::after { opacity: 0.45; }
 :root[data-theme="dark"] .aurora::before, :root[data-theme="dark"] .aurora::after { opacity: 0.22; }
 @media (prefers-color-scheme: dark) {
@@ -413,33 +434,11 @@ body {
   color: var(--ink);
 }
 :root:not([data-theme="light"]) .site-dark {
+  /* Same palette as the app (tokens above); only the site's extras live here. */
   color-scheme: dark;
-  --paper: #05070d;
-  --surface: #0b0f1a;
-  --surface-2: #111727;
-  --ink: #eef1f8;
-  --ink-2: #aab3c8;
-  --ink-3: #737d96;
-  --line: #1a2133;
-  --line-strong: #263049;
-  --brand: #5b86f2;
-  --brand-ink: #9dbbff;
-  --brand-soft: #121c35;
-  --accent: #9d6cf0;
-  --accent-ink: #c4a3ff;
-  --accent-soft: #1c1430;
-  --blue: #7aa2ff;
-  --blue-soft: #121c35;
-  --danger: #f07686;
-  --danger-soft: #35161d;
-  --pass: #4ade80;
-  --pass-soft: #0f2a1c;
-  --st-open: var(--purple-400);
-  --st-review: var(--blue-300);
-  --st-fixed: var(--blue-500);
   --grad-from: #8fb3ff;
-  --grad-to: #c9a2ff;
-  --eyebrow: #9dbbff;
+  --grad-to: var(--green-300);
+  --eyebrow: #8fb3ff;
   --shadow-1: 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-2: 0 24px 60px -24px rgb(0 0 0 / 0.8), 0 0 0 1px rgb(255 255 255 / 0.02);
 }
@@ -452,7 +451,7 @@ body {
   --line: #e1e5ef;
   --line-strong: #cbd2e1;
   --grad-from: var(--blue-600);
-  --grad-to: var(--purple-600);
+  --grad-to: var(--green-600);
   --eyebrow: var(--blue-700);
 }
 :root[data-theme="light"] .site-dark .site-glow { opacity: 0.45; }
@@ -477,21 +476,94 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
   background-image: linear-gradient(100deg, var(--grad-from, var(--brand)) 0%, var(--grad-to, var(--accent)) 30%, #ffffff 45%, var(--grad-from, var(--brand)) 60%, var(--grad-to, var(--accent)) 100%);
 }
 
+/* Hero rotating word (RotatingWord): noticed → reviewed → fixed.
+ * A vertical reel: words slide top to bottom as whole pieces through a window with soft top and
+ * bottom edges. The old word slides out below while the new one slides in from above, together.
+ * Each letter samples its slice of one word-wide gradient, so the word reads as one sweep.
+ * The word always takes its own line under "...that gets", so the headline height never changes.
+ */
+.rw {
+  --ease-reel: cubic-bezier(0.76, 0, 0.24, 1);
+  --edge: 0.24em;
+  display: grid; justify-items: center;
+  /* the window: extra room above and below (cancelled by negative margin) where words fade out */
+  padding-block: var(--edge); margin-block: calc(var(--edge) * -1);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--edge), #000 calc(100% - var(--edge)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--edge), #000 calc(100% - var(--edge)), transparent 100%);
+}
+.rw-word {
+  grid-area: 1 / 1; white-space: nowrap;
+  /* parked above the window, ready to slide in */
+  transform: translateY(-115%); opacity: 0;
+  transition: transform 860ms var(--ease-reel);
+}
+.rw-word.is-active { transform: none; opacity: 1; }
+.rw-word.is-leaving { transform: translateY(115%); opacity: 1; }
+/* parked words jump back above the window instantly (outside it, so unseen) */
+.rw-word:not(.is-active):not(.is-leaving) { transition: none; }
+.rw-word[data-tone="noticed"]  { --g1: #a9c6ff; --g2: #4f86ff; --g3: #6fb6ff; --glow: rgb(79 134 255 / 0.6); }
+.rw-word[data-tone="reviewed"] { --g1: #6fb6ff; --g2: #3b8df0; --g3: #3fc6d6; --glow: rgb(59 160 230 / 0.6); }
+.rw-word[data-tone="fixed"]    { --g1: #7fb0ff; --g2: #22c27e; --g3: #6ee7b7; --glow: rgb(34 194 126 / 0.65); }
+
+.rw-ch {
+  display: inline-block;
+  background-image: linear-gradient(95deg, var(--g1) 0%, var(--g2) 62%, var(--g3) 100%);
+  background-size: calc(var(--n) * 100%) 100%;
+  background-position: calc(var(--i) / (var(--n) - 1) * 100%) 0;
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  padding-bottom: 0.08em; margin-bottom: -0.08em; /* keep descenders inside the clip */
+}
+
+/* landing glow in the stage's tone */
+.rw-word.is-active { animation: rw-glow 1800ms ease-out 520ms both; }
+@keyframes rw-glow {
+  0%   { filter: drop-shadow(0 0 0 transparent); }
+  30%  { filter: drop-shadow(0 0 26px var(--glow)); }
+  100% { filter: drop-shadow(0 0 10px color-mix(in srgb, var(--glow) 45%, transparent)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rw-word { transition: none !important; }
+  .rw-word.is-active { animation: none; }
+}
+
 /* Horizon glow: light spilling down from the top edge, breathing very slowly */
 .site-glow { position: absolute; inset: 0 0 auto 0; height: 760px; pointer-events: none; overflow: hidden; }
 .site-glow::before {
   content: ""; position: absolute; left: 50%; top: -420px; width: 1400px; height: 720px; transform: translateX(-50%);
   background:
-    radial-gradient(ellipse 45% 55% at 30% 60%, rgb(91 134 242 / 0.55), transparent 70%),
-    radial-gradient(ellipse 40% 50% at 70% 55%, rgb(157 108 240 / 0.5), transparent 70%),
-    radial-gradient(ellipse 30% 40% at 50% 75%, rgb(56 189 248 / 0.18), transparent 70%);
+    radial-gradient(ellipse 45% 55% at 30% 60%, rgb(47 102 224 / 0.6), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 70% 55%, rgb(34 194 126 / 0.32), transparent 70%),
+    radial-gradient(ellipse 30% 40% at 50% 75%, rgb(16 44 92 / 0.5), transparent 70%);
   filter: blur(40px);
   animation: glow-breathe 12s ease-in-out infinite alternate;
 }
 .site-glow::after {
-  /* a thin bright horizon line where the light "meets" the page */
+  /* a thin bright horizon line where the light "meets" the page; its blue→green flows slowly
+     along it, in step with the ring around the account button (.ring-flow) */
   content: ""; position: absolute; left: 50%; top: 0; width: min(1100px, 90vw); height: 1px; transform: translateX(-50%);
-  background: linear-gradient(90deg, transparent, rgb(157 187 255 / 0.7), rgb(201 162 255 / 0.7), transparent);
+  background: linear-gradient(90deg, rgb(143 179 255 / 0.75), rgb(110 231 183 / 0.7), rgb(143 179 255 / 0.75)) 0 0 / 200% 100%;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent);
+  animation: line-flow 6s linear infinite;
+}
+@keyframes line-flow { to { background-position: 200% 0; } }
+
+/* Account / sign-in button ring: the horizon line's blue→green as an arc orbiting the pill */
+@property --ring-angle { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.ring-flow {
+  --ring-fill: var(--paper);
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--ring-fill), var(--ring-fill)) padding-box,
+    conic-gradient(from var(--ring-angle), var(--ring-a), var(--ring-b) 22%, var(--line-strong) 42%, var(--line-strong) 62%, var(--ring-a)) border-box;
+  animation: ring-spin 6s linear infinite;
+  transition: --ring-fill 200ms var(--ease-out);
+}
+.ring-flow:hover, .ring-flow:focus-within, .ring-flow[aria-expanded="true"] { --ring-fill: var(--surface-2); }
+@keyframes ring-spin { to { --ring-angle: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .site-glow::after, .ring-flow { animation: none; }
 }
 @keyframes glow-breathe { from { opacity: 0.85; transform: translateX(-50%) scale(1); } to { opacity: 1; transform: translateX(-50%) scale(1.06); } }
 
@@ -508,10 +580,10 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .mesh-panel {
   position: relative; overflow: hidden; border-radius: 24px; border: 1px solid var(--line);
   background:
-    radial-gradient(60% 70% at 15% 20%, rgb(64 116 199 / 0.85), transparent 60%),
-    radial-gradient(55% 65% at 85% 25%, rgb(149 88 192 / 0.85), transparent 60%),
-    radial-gradient(60% 60% at 60% 100%, rgb(34 211 238 / 0.35), transparent 60%),
-    #0b1024;
+    radial-gradient(60% 70% at 15% 20%, rgb(47 102 224 / 0.8), transparent 60%),
+    radial-gradient(55% 65% at 85% 25%, rgb(22 163 106 / 0.6), transparent 60%),
+    radial-gradient(60% 60% at 60% 100%, rgb(16 44 92 / 0.7), transparent 60%),
+    #060a14;
 }
 .mesh-panel > * { position: relative; z-index: 1; }
 .mesh-panel::after {
@@ -527,7 +599,7 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 }
 
 /* Glowing gradient CTA on the dark site */
-.site-dark .btn-sheen.bg-grad-brand { box-shadow: 0 8px 30px -8px rgb(91 134 242 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.2); }
+.site-dark .btn-sheen.bg-grad-brand { box-shadow: 0 8px 30px -8px rgb(47 102 224 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.2); }
 
 @media (prefers-reduced-motion: reduce) {
   .site-glow::before { animation: none; }
@@ -535,20 +607,32 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 }
 
 /* Review canvas: device frames sit in a thin brand-gradient ring with a soft coloured glow */
+/* Device frames in the review canvas: the same orbiting blue→green ring as the header (.ring-flow).
+   An oversized conic layer rotates behind the frame (a transform, so the GPU animates it without
+   repainting), and the 1.5px padding shows it as the border. The layer is at least as wide as the
+   frame's diagonal so it always covers the corners. */
 .device-ring {
+  position: relative; isolation: isolate; overflow: hidden;
   padding: 1.5px; border-radius: 14px;
-  background: linear-gradient(140deg, color-mix(in srgb, var(--brand) 65%, transparent), color-mix(in srgb, var(--accent) 65%, transparent));
-  box-shadow: 0 22px 60px -26px color-mix(in srgb, var(--brand) 60%, transparent), 0 14px 44px -26px color-mix(in srgb, var(--accent) 60%, transparent);
+  background: var(--line-strong);
+  box-shadow: 0 22px 60px -26px color-mix(in srgb, var(--brand) 55%, transparent), 0 14px 44px -26px color-mix(in srgb, var(--accent) 50%, transparent);
 }
-.stage-wash {
-  background-color: var(--surface-2);
-  background-image:
-    radial-gradient(55% 45% at 25% 0%, color-mix(in srgb, var(--brand) 10%, transparent), transparent 70%),
-    radial-gradient(45% 40% at 85% 100%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
-    linear-gradient(to right, var(--line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
-  background-size: auto, auto, 32px 32px, 32px 32px;
+.device-ring::before {
+  content: ""; position: absolute; z-index: -1; left: 50%; top: 50%;
+  width: max(160%, 1600px); aspect-ratio: 1; translate: -50% -50%;
+  background: conic-gradient(var(--ring-a), var(--ring-b) 22%, var(--line-strong) 42%, var(--line-strong) 62%, var(--ring-a));
+  animation: ring-rotate 6s linear infinite;
 }
+@keyframes ring-rotate { to { rotate: 360deg; } }
+@media (prefers-reduced-motion: reduce) {
+  .device-ring::before { animation: none; }
+}
+/* Audit report score ring: draws in on open */
+.score-ring { transition: stroke-dashoffset 1100ms var(--ease-out); }
+@media (prefers-reduced-motion: reduce) { .score-ring { transition: none; } }
+
+/* Review canvas stage: plain black in dark mode (light grey in light), so the page under review and its ring are all that shows */
+.stage-wash { background: var(--stage); }
 
 /* Horizontal tab bars: scroll without a visible scrollbar */
 .no-scrollbar { scrollbar-width: none; }
@@ -559,21 +643,6 @@ html.theme-switching *, html.theme-switching *::before, html.theme-switching *::
 .site-glow-soft::after { opacity: 0.6; }
 
 /* Slim range control: hairline track filled in ink up to the thumb (--v), white round thumb */
-.range-premium { -webkit-appearance: none; appearance: none; height: 22px; background: transparent; cursor: pointer; }
-.range-premium:focus-visible { outline-offset: 4px; border-radius: 999px; }
-.range-premium::-webkit-slider-runnable-track {
-  height: 3px; border-radius: 999px;
-  background: linear-gradient(90deg, var(--ink) 0 var(--v, 50%), var(--line-strong) var(--v, 50%) 100%);
-}
-.range-premium::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; width: 18px; height: 18px; margin-top: -7.5px; border-radius: 999px;
-  background: #fff; border: 1px solid rgb(16 32 46 / 0.15);
-  box-shadow: 0 2px 6px rgb(16 32 46 / 0.25); transition: transform 0.15s ease;
-}
-.range-premium:active::-webkit-slider-thumb { transform: scale(1.12); }
-.range-premium::-moz-range-track { height: 3px; border-radius: 999px; background: var(--line-strong); }
-.range-premium::-moz-range-progress { height: 3px; border-radius: 999px; background: var(--ink); }
-.range-premium::-moz-range-thumb { width: 18px; height: 18px; border-radius: 999px; background: #fff; border: 1px solid rgb(16 32 46 / 0.15); box-shadow: 0 2px 6px rgb(16 32 46 / 0.25); }
 
 /* Section-title accents: brand gradient that sweeps through once as the heading scrolls into view
    (same look as the hero's "gets fixed."). Without JS or with reduced motion it just shows the gradient. */

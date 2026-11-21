@@ -151,7 +151,7 @@ export function PagesOverview({
           </>
         )}
       </div>
-      {msg && <p className={cn("text-sm", msg.tone === "err" ? "text-accent-ink" : "text-[var(--st-verified)]")}>{msg.text}</p>}
+      {msg && <p className={cn("text-sm", msg.tone === "err" ? "text-danger" : "text-[var(--st-verified)]")}>{msg.text}</p>}
 
       {/* page list */}
       <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-1">

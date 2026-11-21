@@ -14,7 +14,7 @@ export function LogoMark({ className }: { className?: string }) {
       <defs>
         <linearGradient id={g} x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#2b5ebe" />
-          <stop offset="1" stopColor="#7b2fb0" />
+          <stop offset="1" stopColor="#16a36a" />
         </linearGradient>
         <radialGradient id={h} cx="9" cy="5" r="20" gradientUnits="userSpaceOnUse">
           <stop offset="0" stopColor="#fff" stopOpacity=".22" />
@@ -64,7 +64,7 @@ const variants: Record<Variant, string> = {
 };
 const sizes: Record<Size, string> = {
   sm: "h-8 px-3 text-[13px] gap-1.5 rounded-md",
-  md: "h-10 px-4 text-sm gap-2 rounded-lg",
+  md: "h-11 sm:h-10 px-4 text-sm gap-2 rounded-lg", // 44px touch target on phones
   lg: "h-12 px-5 text-[15px] gap-2 rounded-xl",
 };
 
@@ -153,7 +153,7 @@ export function PriorityIcon({ priority, label }: { priority: Priority; label?: 
   );
 }
 
-const avatarColors = ["#2b5ebe", "#7b2fb0", "#4074c7", "#9558c0", "#1f4c9c", "#5e1d95"];
+const avatarColors = ["#2b5ebe", "#128a59", "#4074c7", "#0f6e48", "#1f4c9c", "#0c5639"];
 export function Avatar({ name, size = 24, image }: { name: string; size?: number; image?: string | null }) {
   const idx = [...name].reduce((a, c) => a + c.charCodeAt(0), 0) % avatarColors.length;
   if (image)

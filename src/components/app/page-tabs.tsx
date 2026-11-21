@@ -78,7 +78,7 @@ export function PageTabs({
               <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: PAGE_STATE_COLOR[p.state] }} />
               <span className="truncate">{pageLabel(p)}</span>
               {p.state === "passed" ? (
-                <BadgeCheck size={13} className={active ? "text-[#5fe0a2]" : "text-[var(--st-verified)]"} />
+                <BadgeCheck size={13} className={active ? "text-[var(--green-600)]" : "text-[var(--st-verified)]"} />
               ) : p.open > 0 ? (
                 <span className={cn("rounded-full px-1.5 font-mono text-[11px]", active ? "bg-paper/20" : "bg-surface-2 text-ink-2")}>{p.open}</span>
               ) : null}
@@ -107,7 +107,7 @@ export function PageTabs({
               <Plus size={14} /> <span className="hidden sm:inline">Add page</span>
             </button>
           ))}
-        {err && <span className="shrink-0 text-[12px] text-accent-ink">{err}</span>}
+        {err && <span role="alert" className="shrink-0 text-[12px] text-danger">{err}</span>}
       </div>
 
       {/* sign-off for the page being viewed */}

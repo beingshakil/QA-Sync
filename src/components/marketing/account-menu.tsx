@@ -56,8 +56,7 @@ export function AccountMenu({ me }: { me: Me }) {
         aria-expanded={open}
         aria-haspopup="menu"
         className={cn(
-          "flex h-9 items-center gap-2 rounded-full border border-line-strong py-1 pl-1 pr-3 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2",
-          open && "border-ink-3 bg-surface-2",
+          "ring-flow flex h-9 items-center gap-2 rounded-full py-1 pl-1 pr-3 text-sm font-medium text-ink",
         )}
       >
         <Avatar name={me.name} image={me.image} size={28} />

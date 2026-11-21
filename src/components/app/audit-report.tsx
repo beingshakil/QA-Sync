@@ -112,7 +112,7 @@ export function AuditReport({ audit, project, initialTab, embedded }: { audit: A
               onClick={() => go(t.id)}
               className={cn(
                 "flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-3 text-[14px] transition",
-                tab === t.id ? "border-brand font-medium text-ink" : "border-transparent text-ink-3 hover:text-ink",
+                tab === t.id ? "border-brand font-semibold text-ink" : "border-transparent text-ink-3 hover:border-line-strong hover:text-ink",
               )}
             >
               {t.label}
@@ -220,46 +220,81 @@ function Summary({ checks, onPick }: { checks: SeoCheck[]; onPick: (c: SeoCheck)
   const passed = checks.filter((c) => c.pass).length;
   const failing = checks.filter((c) => !c.pass);
   const score = Math.round((passed / checks.length) * 100);
-  const color = score >= 85 ? "var(--pass)" : score >= 60 ? "var(--st-progress)" : "var(--danger)";
-  const r = 34;
+  const tone = score >= 85 ? "var(--pass)" : score >= 60 ? "var(--st-progress)" : "var(--danger)";
+  const verdict = score >= 85 ? "Strong SEO foundation" : score >= 60 ? "Needs a few fixes" : "Needs work";
+  const r = 48;
   const c = 2 * Math.PI * r;
+  // The ring draws in from empty on open (CSS transition; off with reduced motion).
+  const [shown, setShown] = useState(0);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(score));
+    return () => cancelAnimationFrame(id);
+  }, [score]);
+
   return (
-    <div className="mt-6 grid gap-6 rounded-2xl border border-line bg-surface p-5 shadow-1 sm:p-6 md:grid-cols-[auto_1fr]">
-      <div className="flex items-center gap-4">
-        <div className="relative h-[84px] w-[84px] shrink-0">
-          <svg width="84" height="84" className="-rotate-90" aria-hidden>
-            <circle cx="42" cy="42" r={r} fill="none" stroke="var(--line)" strokeWidth="7" />
-            <circle cx="42" cy="42" r={r} fill="none" stroke={color} strokeWidth="7" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={c * (1 - score / 100)} />
+    <div
+      className="relative mt-6 grid gap-6 overflow-hidden rounded-2xl border border-line bg-surface p-5 shadow-1 sm:p-6 md:grid-cols-[auto_1fr] md:gap-8"
+      style={{
+        backgroundImage:
+          "radial-gradient(60% 90% at 0% 0%, color-mix(in srgb, var(--brand) 9%, transparent), transparent 70%), radial-gradient(50% 80% at 100% 100%, color-mix(in srgb, var(--accent) 8%, transparent), transparent 70%)",
+      }}
+    >
+      <div className="flex items-center gap-5">
+        <div className="relative h-[112px] w-[112px] shrink-0">
+          <svg width="112" height="112" viewBox="0 0 112 112" className="-rotate-90" aria-hidden>
+            <defs>
+              <linearGradient id="score-ring" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="var(--brand)" />
+                <stop offset="100%" stopColor={tone} />
+              </linearGradient>
+            </defs>
+            <circle cx="56" cy="56" r={r} fill="none" stroke="var(--line)" strokeWidth="9" />
+            <circle
+              cx="56"
+              cy="56"
+              r={r}
+              fill="none"
+              stroke="url(#score-ring)"
+              strokeWidth="9"
+              strokeLinecap="round"
+              strokeDasharray={c}
+              strokeDashoffset={c * (1 - shown / 100)}
+              className="score-ring"
+            />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-[24px] font-semibold leading-none tracking-tight">{score}</span>
-            <span className="mt-0.5 text-[10px] uppercase tracking-wider text-ink-3">/ 100</span>
+            <span className="text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{score}</span>
+            <span className="mt-1 font-mono text-[10.5px] text-ink-3">/ 100</span>
           </div>
         </div>
         <div className="md:hidden">
-          <div className="font-semibold">SEO score</div>
-          <div className="text-[13px] text-ink-3">{passed} of {checks.length} checks passed</div>
+          <div className="text-[17px] font-semibold tracking-tight">{verdict}</div>
+          <div className="text-[13px] text-ink-3">
+            SEO score · {passed} of {checks.length} checks passed
+          </div>
         </div>
       </div>
 
-      <div className="min-w-0">
-        <div className="hidden items-baseline justify-between gap-4 md:flex">
-          <div>
-            <span className="font-semibold">SEO score</span>
-            <span className="ml-2 text-[13px] text-ink-3">{passed} of {checks.length} checks passed</span>
+      <div className="min-w-0 self-center">
+        <div className="hidden md:block">
+          <div className="text-[19px] font-semibold tracking-[-0.015em]">{verdict}</div>
+          <div className="mt-0.5 text-[13px] text-ink-3">
+            SEO score · {passed} of {checks.length} checks passed
           </div>
         </div>
         {/* Segmented bar: one segment per check */}
-        <div className="mt-3 flex gap-1" aria-hidden>
-          {[...checks].sort((a, b) => Number(b.pass) - Number(a.pass)).map((ch) => (
-            <span key={ch.id} className={cn("h-2 flex-1 rounded-full", ch.pass ? "bg-pass" : "bg-danger")} />
-          ))}
+        <div className="mt-4 flex gap-1" aria-hidden>
+          {[...checks]
+            .sort((a, b) => Number(b.pass) - Number(a.pass))
+            .map((ch) => (
+              <span key={ch.id} className={cn("h-1.5 flex-1 rounded-full", ch.pass ? "bg-pass" : "bg-danger")} />
+            ))}
         </div>
-        <div className="mt-2.5 flex items-center gap-4 text-[13px]">
-          <span className="inline-flex items-center gap-1.5 text-pass">
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 text-[13px]">
+          <span className="inline-flex items-center gap-1.5 font-medium text-pass">
             <Check size={14} strokeWidth={2.5} /> {passed} passed
           </span>
-          <span className={cn("inline-flex items-center gap-1.5", failing.length ? "text-danger" : "text-ink-3")}>
+          <span className={cn("inline-flex items-center gap-1.5 font-medium", failing.length ? "text-danger" : "text-ink-3")}>
             <X size={14} strokeWidth={2.5} /> {failing.length} to fix
           </span>
         </div>
@@ -269,9 +304,11 @@ function Summary({ checks, onPick }: { checks: SeoCheck[]; onPick: (c: SeoCheck)
               <button
                 key={f.id}
                 onClick={() => (f.tab ? onPick(f) : document.getElementById(`check-${f.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }))}
-                className="inline-flex items-center gap-1.5 rounded-full border border-danger/25 bg-danger-soft px-3 py-1 text-[12.5px] text-danger transition hover:border-danger/50"
+                className="inline-flex items-center gap-1.5 rounded-full border border-danger/30 bg-danger-soft px-3 py-1.5 text-[12.5px] font-medium text-danger transition hover:border-danger/60"
               >
+                <AlertTriangle size={13} />
                 {f.label}: {f.badge}
+                <ChevronRight size={13} className="-mr-1 opacity-70" />
               </button>
             ))}
           </div>
@@ -301,9 +338,14 @@ function CheckGroup({ title, sub, checks, onOpen }: { title: string; sub: string
           <h2 className="font-semibold">{title}</h2>
           <p className="text-[12.5px] text-ink-3">{sub}</p>
         </div>
-        <span className={cn("shrink-0 rounded-full px-2.5 py-1 font-mono text-[11.5px]", passed === checks.length ? "bg-pass-soft text-pass" : "bg-surface-2 text-ink-2")}>
-          {passed}/{checks.length} passed
-        </span>
+        <div className="flex shrink-0 items-center gap-2.5" title={`${passed} of ${checks.length} passed`}>
+          <span className="h-1.5 w-16 overflow-hidden rounded-full bg-surface-2" aria-hidden>
+            <span className={cn("block h-full rounded-full", passed === checks.length ? "bg-pass" : "bg-st-progress")} style={{ width: `${(passed / checks.length) * 100}%` }} />
+          </span>
+          <span className={cn("font-mono text-[12px] tabular-nums", passed === checks.length ? "text-pass" : "text-ink-2")}>
+            {passed}/{checks.length}
+          </span>
+        </div>
       </header>
       <ul className="divide-y divide-line">
         {checks.map((c) => (
@@ -317,8 +359,8 @@ function CheckGroup({ title, sub, checks, onOpen }: { title: string; sub: string
 function CheckRow({ check: c, onOpen }: { check: SeoCheck; onOpen: (t: Tab) => void }) {
   const Icon = ICONS[c.id];
   return (
-    <li id={`check-${c.id}`} className="flex gap-3.5 px-5 py-4">
-      <span className={cn("mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", c.pass ? "bg-surface-2 text-ink-2" : "bg-danger-soft text-danger")}>
+    <li id={`check-${c.id}`} className={cn("flex gap-3.5 px-5 py-4 transition-colors", c.pass ? "hover:bg-surface-2/50" : "bg-danger-soft/40")}>
+      <span className={cn("mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl", c.pass ? "bg-pass-soft text-pass" : "bg-danger-soft text-danger ring-1 ring-danger/25")}>
         <Icon size={17} />
       </span>
       <div className="min-w-0 flex-1">

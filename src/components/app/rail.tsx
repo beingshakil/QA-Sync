@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "./app-theme";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, LogOut, MoreHorizontal, Pencil, Plus, Settings, ShieldCheck, Trash2 } from "lucide-react";
@@ -48,7 +49,7 @@ export function Rail({
               href={n.href}
               className={cn("flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-[14px]", active ? "bg-surface-2 font-medium text-ink" : "text-ink-2 hover:bg-surface-2/60 hover:text-ink")}
             >
-              <n.icon size={16} className={active ? "text-accent-ink" : "text-ink-3"} />
+              <n.icon size={16} className={active ? "text-brand-ink" : "text-ink-3"} />
               {n.label}
             </Link>
           );
@@ -78,6 +79,7 @@ export function Rail({
             <div className="truncate text-[11px] text-ink-3">{workspace.name}</div>
           </div>
         </Link>
+        <ThemeToggle />
         <Link href="/" title="Marketing site" className="rounded-md p-1.5 text-ink-3 hover:text-ink">
           <Globe size={15} />
         </Link>
@@ -97,10 +99,11 @@ export function MobileTopbar() {
       <Link href="/app/projects" className="flex items-center gap-2 font-semibold">
         <LogoMark /> <Wordmark className="text-[17px]" />
       </Link>
-      <nav className="ml-auto flex gap-3 text-[13px] text-ink-2">
+      <nav className="ml-auto flex items-center gap-3 text-[13px] text-ink-2">
         <Link href="/app/projects">Projects</Link>
         <Link href="/app/issues">Issues</Link>
         <Link href="/app/audits">Audits</Link>
+        <ThemeToggle className="-mr-1.5 p-2.5" />
       </nav>
     </div>
   );

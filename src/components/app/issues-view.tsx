@@ -216,7 +216,7 @@ export function IssuesView({ initial, projectId, projects, members = [], me }: {
           <div className="flex h-full w-full max-w-md flex-col border-l border-line bg-surface shadow-2" onClick={(e) => e.stopPropagation()}>
             <Link
               href={`/app/projects/${open.projectId}/review?issue=${open.id}`}
-              className="flex items-center gap-2 border-b border-line bg-surface-2 px-4 py-2.5 text-[13px] font-medium text-accent-ink hover:bg-accent-soft"
+              className="flex items-center gap-2 border-b border-line bg-surface-2 px-4 py-2.5 text-[13px] font-medium text-brand-ink hover:bg-brand-soft"
             >
               <Crosshair size={14} /> Open on the page
             </Link>

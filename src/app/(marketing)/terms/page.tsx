@@ -15,7 +15,7 @@ export default function TermsPage() {
   return (
     <>
       <JsonLd data={graph(breadcrumbs([{ name: "Terms of Service", path: "/terms" }]))} />
-      <PageHero eyebrow="Legal" title="Terms of" accent="Service." sub="The agreement between you and QASync when you use the website and the app." />
+      <PageHero title="Terms of" accent="Service." sub="The agreement between you and QASync when you use the website and the app." />
       <LegalDoc updated="14 November 2026">
         <LegalSection n={1} title="Agreeing to these terms">
           <p>

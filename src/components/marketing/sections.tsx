@@ -16,22 +16,11 @@ export function Section({ children, className, id }: { children: ReactNode; clas
   );
 }
 
-/** Section label: a short rule and a word or two. Quiet on purpose; the headline does the work. */
-export function Kicker({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={cn("flex items-center gap-3 text-[13px] font-medium tracking-[-0.005em] text-brand-ink", className)}>
-      <span className="h-px w-5 bg-current opacity-70" aria-hidden />
-      {children}
-    </div>
-  );
-}
-
 /**
- * Headline in solid ink with a muted second clause (no gradient text), balanced so no
- * single word is left on its own line.
+ * Section headline: no label above it, the heading carries its own weight. Balanced so no
+ * single word is left on its own line; the accent clause takes the brand gradient.
  */
 export function SectionHead({
-  eyebrow,
   title,
   accent,
   sub,
@@ -39,7 +28,6 @@ export function SectionHead({
   className,
   size = "md",
 }: {
-  eyebrow?: string;
   title: string;
   accent?: string;
   sub?: string;
@@ -49,23 +37,26 @@ export function SectionHead({
   size?: "md" | "sm";
 }) {
   return (
-    <div data-reveal className={cn("max-w-3xl", center && "mx-auto text-center", className)}>
-      {eyebrow && <Kicker className={center ? "justify-center" : undefined}>{eyebrow}</Kicker>}
+    <div data-reveal className={cn(size === "md" ? "max-w-5xl" : "max-w-3xl", center && "mx-auto text-center", className)}>
       <h2
         className={cn(
-          "mt-5 text-balance font-semibold leading-[1.08] tracking-[-0.032em] text-ink",
-          size === "md" ? "text-[32px] sm:text-[38px] md:text-[44px]" : "text-[28px] sm:text-[32px] md:text-[34px] md:leading-[1.12]",
+          "text-balance font-semibold text-ink",
+          size === "md"
+            ? "text-[32px] leading-[1.1] tracking-[-0.028em] sm:text-[40px] md:text-[50px] md:leading-[1.08] md:tracking-[-0.032em]"
+            : "text-[30px] leading-[1.1] tracking-[-0.028em] sm:text-[34px] md:text-[36px] md:leading-[1.1]",
         )}
       >
-        {title}
+        {/* Each clause is an inline-block, so a line break falls between the two clauses, not inside
+            one (a clause still wraps internally when it's wider than the screen). */}
+        <span className="inline-block">{title}</span>
         {accent && (
           <>
             {" "}
-            <span className="text-gradient-scroll">{accent}</span>
+            <span className="text-gradient-scroll inline-block">{accent}</span>
           </>
         )}
       </h2>
-      {sub && <p className={cn("mt-5 max-w-[36rem] text-pretty text-[17px] leading-[1.65] text-ink-2", center && "mx-auto")}>{sub}</p>}
+      {sub && <p className={cn("mt-6 max-w-[40rem] text-pretty text-[17px] leading-[1.65] text-ink-2 md:text-[18px]", center && "mx-auto")}>{sub}</p>}
     </div>
   );
 }
@@ -79,10 +70,10 @@ export function FeatureGrid({ items, cols = 3 }: { items: { title: string; body:
   return (
     <div className={cn("mt-12 grid gap-px overflow-hidden rounded-2xl border border-line bg-line", cols === 3 ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2")}>
       {items.map((f, i) => (
-        <div key={f.title} data-reveal style={d((i % 3) * 90)} className="bg-surface p-6">
+        <div key={f.title} data-reveal style={d((i % 3) * 90)} className="bg-surface p-6 transition-colors duration-300 hover:bg-surface-2/70 md:p-7">
           <div className="flex items-center gap-2">
             {f.icon && <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink-2">{f.icon}</span>}
-            <h3 className="font-semibold text-ink">{f.title}</h3>
+            <h3 className="text-[16.5px] font-semibold tracking-[-0.01em] text-ink">{f.title}</h3>
             {f.tag && (
               <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", f.tag === "Beta" || f.tag === "New" ? "bg-blue-soft text-blue" : "bg-surface-2 text-ink-3")}>
                 {f.tag}
@@ -132,23 +123,20 @@ export function SpiderWeb({ className }: { className?: string }) {
   );
 }
 
-export function PageHero({ eyebrow, title, accent, sub, children }: { eyebrow: string; title: string; accent: string; sub: string; children?: ReactNode }) {
+export function PageHero({ title, accent, sub, children }: { title: string; accent: string; sub: string; children?: ReactNode }) {
   return (
     <div className="relative overflow-hidden border-b border-line">
       <div className="site-glow site-glow-soft" aria-hidden />
       <SpiderWeb />
-      <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-20 sm:px-6 md:pt-28">
-        <div data-reveal>
-          <Kicker>{eyebrow}</Kicker>
-        </div>
-        <h1 data-reveal style={d(80)} className="mt-5 max-w-3xl text-balance text-[42px] font-semibold leading-[1.02] tracking-[-0.04em] text-ink md:text-[62px]">
+      <div className="relative mx-auto max-w-7xl px-4 pb-20 pt-24 sm:px-6 md:pb-24 md:pt-32">
+        <h1 data-reveal className="max-w-4xl text-balance text-[44px] font-semibold leading-[1.0] tracking-[-0.04em] text-ink sm:text-[56px] md:text-[72px] md:leading-[0.98]">
           {title} <span className="text-gradient-scroll">{accent}</span>
         </h1>
-        <p data-reveal style={d(160)} className="mt-6 max-w-[36rem] text-pretty text-lg leading-relaxed text-ink-2">
+        <p data-reveal style={d(120)} className="mt-7 max-w-[38rem] text-pretty text-lg leading-relaxed text-ink-2">
           {sub}
         </p>
         {children && (
-          <div data-reveal style={d(240)}>
+          <div data-reveal style={d(200)}>
             {children}
           </div>
         )}
@@ -160,11 +148,11 @@ export function PageHero({ eyebrow, title, accent, sub, children }: { eyebrow: s
 export function CtaBand({ title = "Point at the problem.", accent = "Watch it get fixed." }: { title?: string; accent?: string }) {
   return (
     <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 md:pb-32">
-      <div data-reveal className="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-14 sm:px-10 md:px-14 md:py-16">
+      <div data-reveal className="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-14 sm:px-10 md:px-16 md:py-20">
         <SpiderWeb />
         <div className="relative grid items-end gap-8 lg:grid-cols-[1fr_auto]">
           <div>
-            <h2 className="max-w-xl text-balance text-[32px] font-semibold leading-[1.06] tracking-[-0.032em] text-ink md:text-[46px]">
+            <h2 className="max-w-xl text-balance text-[34px] font-semibold leading-[1.04] tracking-[-0.034em] text-ink md:text-[52px] md:tracking-[-0.038em]">
               {title} <span className="text-gradient-scroll">{accent}</span>
             </h2>
             <p className="mt-4 text-[16px] text-ink-2">Paste a URL to start. Free plan, no credit card, nothing to install.</p>

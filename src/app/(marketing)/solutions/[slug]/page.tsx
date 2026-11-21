@@ -30,7 +30,7 @@ export default async function SolutionPage({ params }: Props) {
   return (
     <>
       <JsonLd data={graph(breadcrumbs([{ name: forLabel(s.name), path: `/solutions/${s.slug}` }]))} />
-      <PageHero eyebrow={forLabel(s.name)} title={s.headline} accent={s.accent} sub={s.sub}>
+      <PageHero title={s.headline} accent={s.accent} sub={s.sub}>
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/app" size="lg">
             Start free
@@ -42,7 +42,7 @@ export default async function SolutionPage({ params }: Props) {
       </PageHero>
 
       <Section>
-        <SectionHead eyebrow="What changes" title="The problems you have now," accent="solved." />
+        <SectionHead title="The problems you have now," accent="solved." />
         <div className="mt-10 grid gap-4 md:grid-cols-3">
           {s.pains.map((p, i) => (
             <div key={p.title} data-reveal data-spotlight style={{ "--d": i * 120 } as React.CSSProperties} className="lift rounded-2xl border border-line bg-surface p-6 shadow-1">
@@ -58,7 +58,7 @@ export default async function SolutionPage({ params }: Props) {
       <div className="border-y border-line bg-surface">
         <Section className="grid gap-12 md:grid-cols-2">
           <div>
-            <SectionHead eyebrow="Built for you" title="What you'll" accent="use every day." />
+            <SectionHead title="What you'll" accent="use every day." />
             <ul className="mt-6 space-y-3">
               {s.gains.map((g) => (
                 <li key={g} className="flex items-center gap-3 text-[15px]">

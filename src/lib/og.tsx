@@ -14,9 +14,9 @@ export function ogImage({ eyebrow, title, accent }: { eyebrow?: string; title: s
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "72px 80px",
-          background: "#05070d",
+          background: "#05070b",
           backgroundImage:
-            "radial-gradient(ellipse 55% 60% at 18% 0%, rgba(91,134,242,0.38), transparent 70%), radial-gradient(ellipse 50% 55% at 88% 6%, rgba(157,108,240,0.32), transparent 70%)",
+            "radial-gradient(ellipse 55% 60% at 18% 0%, rgba(47,102,224,0.42), transparent 70%), radial-gradient(ellipse 50% 55% at 88% 6%, rgba(34,194,126,0.2), transparent 70%)",
           color: "#eef1f8",
           fontFamily: "sans-serif",
         }}
@@ -26,7 +26,7 @@ export function ogImage({ eyebrow, title, accent }: { eyebrow?: string; title: s
             <defs>
               <linearGradient id="g" x1="2" y1="2" x2="30" y2="30" gradientUnits="userSpaceOnUse">
                 <stop offset="0" stopColor="#2b5ebe" />
-                <stop offset="1" stopColor="#7b2fb0" />
+                <stop offset="1" stopColor="#16a36a" />
               </linearGradient>
             </defs>
             <rect width="32" height="32" rx="8" fill="url(#g)" />
@@ -36,12 +36,12 @@ export function ogImage({ eyebrow, title, accent }: { eyebrow?: string; title: s
             <path d="M16.3 17.6l3.4 3.4 7-7" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
           <div style={{ display: "flex", fontSize: 40, fontWeight: 700, letterSpacing: -1 }}>
-            QA<span style={{ color: "#b9a3ff" }}>Sync</span>
+            QA<span style={{ color: "#6ee7b7" }}>Sync</span>
           </div>
         </div>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-          {eyebrow && <div style={{ fontSize: 28, color: "#9dbbff", fontWeight: 600 }}>{eyebrow}</div>}
+          {eyebrow && <div style={{ fontSize: 28, color: "#8fb3ff", fontWeight: 600 }}>{eyebrow}</div>}
           {/* Title, then the muted accent on its own line (no indent on wrap) */}
           <div style={{ display: "flex", flexDirection: "column", fontSize: title.length > 40 ? 64 : 76, fontWeight: 700, lineHeight: 1.04, letterSpacing: -2.5, maxWidth: 1000 }}>
             <span>{title}</span>

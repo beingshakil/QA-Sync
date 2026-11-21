@@ -291,7 +291,7 @@ export function CanvasComposer({ x, y, bounds, element, members, guest, onCancel
         </div>
       )}
 
-      {err && <p className="mt-2 px-1 text-[12.5px] text-accent-ink">{err}</p>}
+      {err && <p role="alert" className="mt-2 px-1 text-[12.5px] text-danger">{err}</p>}
 
       {/* toolbar */}
       <div className="relative mt-2 flex items-center gap-1.5">

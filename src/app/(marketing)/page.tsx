@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui";
 import { CtaBand, FaqList, SectionHead, SpiderWeb, d } from "@/components/marketing/sections";
-import { OverlayDemo, ThreeViews, UrlStart } from "@/components/marketing/interactive";
+import { RotatingWord, ThreeViews, UrlStart } from "@/components/marketing/interactive";
 import {
   AgentTerminal,
   AuditPreview,
@@ -38,7 +38,7 @@ const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix"
 function Block({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
   return (
     <section id={id} className="mx-auto max-w-7xl px-4 sm:px-6">
-      <div className={cn("border-t border-line py-16 md:py-24", className)}>{children}</div>
+      <div className={cn("border-t border-line py-20 md:py-32", className)}>{children}</div>
     </section>
   );
 }
@@ -50,8 +50,8 @@ function Points({ items, children }: { items: [string, string][]; children?: Rea
       <ul className="space-y-8">
         {items.map(([t, b], i) => (
           <li key={t} data-reveal style={d(i * 100)} className="border-l border-line-strong pl-5">
-            <h3 className="text-[16px] font-semibold tracking-[-0.01em] text-ink">{t}</h3>
-            <p className="mt-1.5 text-pretty text-[14.5px] leading-[1.65] text-ink-2">{b}</p>
+            <h3 className="text-[17px] font-semibold tracking-[-0.012em] text-ink">{t}</h3>
+            <p className="mt-2 text-pretty text-[14.5px] leading-[1.65] text-ink-2">{b}</p>
           </li>
         ))}
       </ul>
@@ -65,7 +65,7 @@ function Feature({ head, visual, points, flip, children }: { head: ReactNode; vi
   return (
     <>
       {head}
-      <div className="mt-14 grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+      <div className="mt-16 grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-20">
         <div className={cn("lg:col-span-7", flip && "lg:order-2")}>{visual}</div>
         <div className={cn("lg:col-span-5", flip && "lg:order-1")}>
           <Points items={points}>{children}</Points>
@@ -86,8 +86,8 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl px-4 pt-16 sm:px-6 md:pt-24">
           {/* Centred hero: the original design, kept exactly */}
           <div className="text-center">
-            <h1 data-reveal style={d(40)} className="mx-auto mt-4 max-w-4xl text-[46px] font-semibold leading-[0.98] tracking-[-0.04em] text-ink sm:text-[64px] md:text-[84px]">
-              Visual feedback that <span className="text-gradient-sweep">gets fixed.</span>
+            <h1 data-reveal style={d(40)} className="mx-auto mt-4 max-w-5xl text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-ink sm:text-[54px] md:text-[60px] lg:text-[76px] xl:text-[84px]">
+              Visual feedback that <span className="text-gradient-sweep">gets</span> <RotatingWord />
             </h1>
             <p data-reveal style={d(180)} className="mx-auto mt-6 max-w-[38rem] text-lg leading-relaxed text-ink-2">
               Pin feedback on any live site, check the build against the design, give developers full context, and verify every fix before it&apos;s closed.
@@ -124,7 +124,6 @@ export default function Home() {
       {/* ───────── How it works ───────── */}
       <Block id="how-it-works">
         <SectionHead
-          eyebrow="How it works"
           title="Most feedback tools stop at “resolved”."
           accent="QASync stops at verified."
           sub="Every issue moves through four plain statuses, so the client, the designer and the developer always know what's left."
@@ -134,8 +133,8 @@ export default function Home() {
 
       {/* ───────── One pin, three views ───────── */}
       <Block>
-        <SectionHead eyebrow="One pin, three views" title="The same issue," accent="written for whoever is reading it." />
-        <div className="mt-14">
+        <SectionHead title="The same issue," accent="written for whoever is reading it." />
+        <div className="mt-16">
           <ThreeViews />
         </div>
       </Block>
@@ -143,12 +142,11 @@ export default function Home() {
       {/* ───────── Review canvas ───────── */}
       <Block>
         <SectionHead
-          eyebrow="The review canvas"
           title="Say exactly what's wrong."
           accent="Once."
           sub="Everything a reviewer needs sits in one canvas over the live site, so nobody has to turn “it looks off” into a ticket."
         />
-        <div className="mt-14 grid gap-4 md:grid-cols-6">
+        <div className="mt-16 grid gap-4 md:grid-cols-6">
           <BentoCard
             className="md:col-span-4"
             title="Inspect and measure"
@@ -162,33 +160,11 @@ export default function Home() {
         </div>
       </Block>
 
-      {/* ───────── Design QA ───────── */}
-      <Block>
-        <Feature
-          flip
-          head={
-            <SectionHead
-              eyebrow="Design QA"
-              title="Lay the design over the build."
-              accent="See the drift."
-              sub="Upload the approved design for a page and compare it with the live build at the same width."
-            />
-          }
-          visual={<OverlayDemo />}
-          points={[
-            ["Overlay", "Fade the design over the page with opacity or difference blending."],
-            ["Side by side", "Put the design next to the live page; both scroll together."],
-            ["Per page, per device", "Keep a desktop and a mobile design for every page you review."],
-          ]}
-        />
-      </Block>
-
       {/* ───────── SEO audit ───────── */}
       <Block>
         <Feature
           head={
             <SectionHead
-              eyebrow="SEO audit"
               title="See your page the way Google does."
               accent="With the fix spelled out."
               sub="Titles, headings, links, images, schema and Open Graph each get a clear pass or fail."
@@ -209,7 +185,6 @@ export default function Home() {
           flip
           head={
             <SectionHead
-              eyebrow="AI agents"
               title="Let your agent take the first pass."
               accent="You decide what's done."
               sub="Connect Claude Code, Cursor or any MCP client, and it works through your open issues."
@@ -233,7 +208,7 @@ export default function Home() {
       {/* ───────── Trust ───────── */}
       <Block className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <SectionHead size="sm" eyebrow="Built to share" title="Safe to send to clients." />
+          <SectionHead size="sm" title="Safe to send to clients." />
         </div>
         <ul className="grid gap-10 sm:grid-cols-3 lg:col-span-8 lg:gap-8">
           {TRUST.map(({ icon: Icon, t, b }, i) => (
@@ -251,8 +226,8 @@ export default function Home() {
       {/* ───────── Pricing ───────── */}
       <Block className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <SectionHead size="sm" eyebrow="Pricing" title="Start free." accent="Upgrade for the price of a coffee." sub="Free covers comment pins on 2 projects. Pro unlocks every tool, with no limits." />
-          <Link data-reveal href="/pricing" className="mt-6 inline-flex items-center gap-1.5 text-[14px] font-medium text-brand-ink hover:underline">
+          <SectionHead size="sm" title="Start free." accent="Upgrade for the price of a coffee." sub="Free covers comment pins on 2 projects. Pro unlocks every tool, with no limits." />
+          <Link data-reveal href="/pricing" className="-my-1.5 mt-5 inline-flex items-center gap-1.5 py-1.5 text-[14px] font-medium text-brand-ink underline-offset-4 hover:underline">
             Compare plans <ArrowRight size={14} />
           </Link>
         </div>
@@ -264,7 +239,7 @@ export default function Home() {
       {/* ───────── FAQ ───────── */}
       <Block className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
-          <SectionHead size="sm" eyebrow="FAQ" title="Questions," accent="answered." />
+          <SectionHead size="sm" title="Questions," accent="answered." />
           <p data-reveal className="mt-5 max-w-[18rem] text-[15px] leading-relaxed text-ink-3">
             Still unsure? Paste a URL above. The free plan takes ten seconds to try.
           </p>

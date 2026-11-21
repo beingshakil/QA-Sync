@@ -172,7 +172,7 @@ function SitePreview({ url }: { url: string }) {
   }, []);
 
   return (
-    <div ref={boxRef} className="relative aspect-[16/10] w-full overflow-hidden bg-[#0b1024]">
+    <div ref={boxRef} className="relative aspect-[16/10] w-full overflow-hidden bg-surface-2">
       {!loaded && <div className="skeleton absolute inset-0" aria-hidden />}
       {mounted && <iframe
         src={`/api/proxy?url=${encodeURIComponent(url)}&thumb=1`}

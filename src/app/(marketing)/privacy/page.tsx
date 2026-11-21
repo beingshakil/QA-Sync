@@ -15,7 +15,7 @@ export default function PrivacyPage() {
   return (
     <>
       <JsonLd data={graph(breadcrumbs([{ name: "Privacy Policy", path: "/privacy" }]))} />
-      <PageHero eyebrow="Legal" title="Privacy" accent="Policy." sub="What we collect, why we need it, and the choices you have. Written to be read, not skimmed past." />
+      <PageHero title="Privacy" accent="Policy." sub="What we collect, why we need it, and the choices you have. Written to be read, not skimmed past." />
       <LegalDoc updated="14 November 2026">
         <LegalSection n={1} title="Who we are">
           <p>

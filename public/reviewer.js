@@ -32,7 +32,7 @@
   });
 
   var state = { mode: "browse", pins: [], frozen: false, hoverEl: null, selectedId: null };
-  var COLORS = { open: "#7b2fb0", in_progress: "#f0900c", in_review: "#5f8ad0", fixed: "#1f4c9c", verified: "#16a36a", wont_fix: "#8a92a6" };
+  var COLORS = { open: "#e0434f", in_progress: "#f0900c", in_review: "#5f8ad0", fixed: "#1f4c9c", verified: "#16a36a", wont_fix: "#8a92a6" };
 
   function init() {
     /* ── shadow UI layer ── */
@@ -45,10 +45,10 @@
       "<style>" +
       ":host{all:initial}" +
       ".hl{position:absolute;pointer-events:none;border:1.5px solid #2b5ebe;background:rgba(43,94,190,.08);border-radius:2px;transition:all 60ms ease-out;display:none;box-sizing:border-box}" +
-      ".hl.inspect{border-color:#7b2fb0;background:rgba(123,47,176,.07)}" +
-      ".pad{position:absolute;pointer-events:none;background:rgba(123,47,176,.16);display:none}" +
-      ".tag{position:absolute;pointer-events:none;font:500 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0f1730;color:#fff;padding:4px 6px;border-radius:4px;white-space:nowrap;display:none}" +
-      ".tag b{color:#bc8fd6;font-weight:600}" +
+      ".hl.inspect{border-color:#16a36a;background:rgba(22,163,106,.07)}" +
+      ".pad{position:absolute;pointer-events:none;background:rgba(22,163,106,.16);display:none}" +
+      ".tag{position:absolute;pointer-events:none;font:500 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;background:#0b1220;color:#fff;padding:4px 6px;border-radius:4px;white-space:nowrap;display:none}" +
+      ".tag b{color:#6ee7b7;font-weight:600}" +
       ".pin{position:absolute;pointer-events:auto;width:28px;height:28px;margin:-28px 0 0 -2px;border-radius:14px 14px 14px 2px;color:#fff;font:600 12px/28px ui-sans-serif,system-ui,sans-serif;text-align:center;cursor:pointer;box-shadow:0 4px 12px rgba(14,17,22,.3),0 0 0 2px #fff;transition:transform 120ms;animation:pop 240ms cubic-bezier(.2,.9,.3,1.2) both}" +
       ".pin:hover{transform:scale(1.12)}" +
       ".pin.sel{box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(43,94,190,.45),0 6px 16px rgba(14,17,22,.35);transform:scale(1.15)}" +

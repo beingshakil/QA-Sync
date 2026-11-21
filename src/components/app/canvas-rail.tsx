@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ThemeToggle } from "./app-theme";
 import { useEffect, useState } from "react";
 import { FolderKanban, Gauge, ListChecks, PanelLeftClose, PanelLeftOpen, Plus, Settings } from "lucide-react";
 import { LogoMark, Wordmark } from "@/components/ui";
@@ -139,6 +140,9 @@ export function CanvasRail({ projects, currentId }: { projects: RailProject[]; c
             </Link>
           );
         })}
+      </div>
+      <div className={cn("flex border-t border-line p-2", open ? "justify-end px-3" : "justify-center")}>
+        <ThemeToggle size={16} className="p-2" />
       </div>
     </aside>
   );

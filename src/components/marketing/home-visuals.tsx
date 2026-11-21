@@ -90,6 +90,7 @@ export function ProductShot() {
                 width={2000}
                 height={919}
                 quality={90}
+                priority
                 sizes="(min-width: 1200px) 760px, (min-width: 768px) 60vw, 100vw"
                 className="block h-auto w-full"
               />
@@ -110,8 +111,8 @@ export function ProductShot() {
                 ✓
               </PinAt>
               {/* 3 · the story: the Charted card is taller than its neighbours */}
-              <div className="story-outline pointer-events-none absolute rounded-lg outline outline-[1.5px] outline-[#5b86f2]" style={{ left: "34.1%", top: "9.9%", width: "31.05%", height: "67.7%" }}>
-                <div className="absolute bottom-2 right-2 rounded bg-[#5b86f2] px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white">+146 px</div>
+              <div className="story-outline pointer-events-none absolute rounded-lg outline outline-[1.5px] outline-brand" style={{ left: "34.1%", top: "9.9%", width: "31.05%", height: "67.7%" }}>
+                <div className="absolute bottom-2 right-2 rounded bg-brand px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-white">+146 px</div>
               </div>
               <span
                 className="story-pin absolute h-6 w-6 rounded-[12px_12px_12px_3px] text-[11px] font-semibold text-white shadow-2 ring-2 ring-white"
@@ -193,7 +194,7 @@ export function ProductShot() {
             Fix verified on the live page
           </div>
 
-          <MousePointer2 aria-hidden size={20} className="story-cursor hidden fill-[#0b0f1a] text-white drop-shadow md:block" />
+          <MousePointer2 aria-hidden size={20} className="story-cursor hidden fill-[#0b0e15] text-white drop-shadow md:block" />
         </div>
       </div>
     </div>
@@ -238,9 +239,9 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <ol className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
+    <ol className="mt-16 grid gap-px overflow-hidden rounded-2xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-4">
       {STEPS.map((s, i) => (
-        <li key={s.n} data-reveal style={d(i * 110)} className="flex flex-col bg-surface p-6 md:p-7">
+        <li key={s.n} data-reveal style={d(i * 110)} className="flex flex-col bg-surface p-6 transition-colors duration-300 hover:bg-surface-2/70 md:p-8">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-semibold tabular-nums text-ink-3">{s.n}</span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-line px-2 py-0.5 text-[11.5px] font-medium" style={{ color: s.color }}>
@@ -260,11 +261,11 @@ export function HowItWorks() {
 
 export function BentoCard({ title, body, visual, className, delay = 0 }: { title: string; body: string; visual: ReactNode; className?: string; delay?: number }) {
   return (
-    <div data-reveal style={d(delay)} className={cn("flex flex-col overflow-hidden rounded-2xl border border-line bg-surface", className)}>
-      <div className="relative flex min-h-[188px] flex-1 items-center justify-center border-b border-line bg-surface-2/60 p-6">{visual}</div>
-      <div className="p-6">
-        <h3 className="text-[16.5px] font-semibold tracking-[-0.01em] text-ink">{title}</h3>
-        <p className="mt-1.5 text-pretty text-[14.5px] leading-[1.6] text-ink-2">{body}</p>
+    <div data-reveal style={d(delay)} className={cn("group flex flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors duration-300 hover:border-line-strong", className)}>
+      <div className="relative flex min-h-[200px] flex-1 items-center justify-center border-b border-line bg-surface-2/50 p-6 transition-colors duration-300 group-hover:bg-surface-2/80">{visual}</div>
+      <div className="p-6 md:p-7">
+        <h3 className="text-[17px] font-semibold tracking-[-0.012em] text-ink">{title}</h3>
+        <p className="mt-2 text-pretty text-[14.5px] leading-[1.6] text-ink-2">{body}</p>
       </div>
     </div>
   );
@@ -277,11 +278,11 @@ export function SpecVisual() {
         <div className="rounded-md px-5 py-3 text-[13px] font-semibold text-white" style={{ background: NW.brand }}>
           Start a subscription
         </div>
-        <div className="pointer-events-none absolute -inset-1.5 rounded-lg border-[1.5px] border-dashed border-[#5b86f2]" />
-        <div className="absolute -bottom-7 left-0 right-0 flex items-center gap-1.5 text-[11px] font-semibold tabular-nums text-[#5b86f2]">
-          <span className="h-px flex-1 bg-[#5b86f2]" />
+        <div className="pointer-events-none absolute -inset-1.5 rounded-lg border-[1.5px] border-dashed border-brand" />
+        <div className="absolute -bottom-7 left-0 right-0 flex items-center gap-1.5 text-[11px] font-semibold tabular-nums text-brand-ink">
+          <span className="h-px flex-1 bg-brand" />
           184 px
-          <span className="h-px flex-1 bg-[#5b86f2]" />
+          <span className="h-px flex-1 bg-brand" />
         </div>
       </div>
       <dl className="grid w-full flex-1 grid-cols-2 gap-x-5 gap-y-4 rounded-xl border border-line bg-surface p-4 shadow-1">
@@ -327,7 +328,7 @@ export function FreezeVisual() {
           </div>
         ))}
       </div>
-      <span className="absolute -right-3 -top-3 flex items-center gap-1 rounded-full border border-[#5b86f2]/40 bg-surface px-2 py-0.5 text-[11px] font-medium text-[#5b86f2] shadow-1">
+      <span className="absolute -right-3 -top-3 flex items-center gap-1 rounded-full border border-brand/40 bg-surface px-2 py-0.5 text-[11px] font-medium text-brand-ink shadow-1">
         <Snowflake size={11} /> Frozen
       </span>
       <span className="absolute -bottom-3 -left-2 flex h-7 w-7 items-center justify-center rounded-md border border-line-strong bg-surface text-[12px] font-semibold text-ink shadow-1">F</span>
@@ -471,19 +472,19 @@ export function AgentTerminal() {
           <span className="text-white/40">›</span> Fix the open QASync issues on afternow.co
         </p>
         <p data-reveal style={d(500)} className={cn("pt-2", line)}>
-          <span className="text-[#7aa2ff]">list_issues</span> project: afternow · <span className="text-white">3 open</span>
+          <span className="text-[#6f9bff]">list_issues</span> project: afternow · <span className="text-white">3 open</span>
         </p>
         <p data-reveal style={d(800)} className={line}>
-          <span className="text-[#7aa2ff]">get_issue</span> #3 · <span className="text-white">.work-card__media</span> · 582 px vs 436 px
+          <span className="text-[#6f9bff]">get_issue</span> #3 · <span className="text-white">.work-card__media</span> · 582 px vs 436 px
         </p>
         <p data-reveal style={d(1100)} className={line}>
           edited <span className="text-white">styles/work.css</span>, <span className="text-white">components/WorkCard.tsx</span>
         </p>
         <p data-reveal style={d(1400)} className={line}>
-          <span className="text-[#7aa2ff]">reply_to_issue</span> #3 “All cards share one media ratio now”
+          <span className="text-[#6f9bff]">reply_to_issue</span> #3 “All cards share one media ratio now”
         </p>
         <p data-reveal style={d(1700)} className={line}>
-          <span className="text-[#7aa2ff]">update_issue</span> #1 #2 #3 → <span className="text-white">fixed</span>
+          <span className="text-[#6f9bff]">update_issue</span> #1 #2 #3 → <span className="text-white">fixed</span>
         </p>
         <p data-reveal style={d(2100)} className="pt-2">
           <span className="text-[#4ade80]">✓ 3 issues marked fixed</span> <span className="text-white/45">· waiting for you to verify</span>

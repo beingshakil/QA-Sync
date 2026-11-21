@@ -16,7 +16,6 @@ export default function IntegrationsPage() {
     <>
       <JsonLd data={graph(breadcrumbs([{ name: "Integrations", path: "/integrations" }]))} />
       <PageHero
-        eyebrow="Integrations"
         title="Feedback goes"
         accent="where work happens."
         sub="Two-way sync with your tracker, alerts where your team talks, and a review for every preview deploy. Integrations are on every paid plan, not just the top one."

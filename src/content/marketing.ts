@@ -9,7 +9,6 @@ export interface ProductPage {
   seoTitle: string;
   seoDescription: string;
   menuBlurb: string;
-  eyebrow: string;
   headline: string;
   accent: string;
   sub: string;
@@ -26,7 +25,6 @@ export const PRODUCTS: ProductPage[] = [
     seoDescription: "Pin feedback on any live website in seconds. No snippet and no install, and the clients you invite comment without creating an account.",
     name: "Capture",
     menuBlurb: "Pin feedback on any page, PDF or image",
-    eyebrow: "Capture",
     headline: "Point at it.",
     accent: "Don't describe it.",
     sub: "Paste a URL and start pinning in seconds. No snippet, no install, and no account needed for the people you invite.",
@@ -51,7 +49,6 @@ export const PRODUCTS: ProductPage[] = [
     seoDescription: "Inspect type, spacing and contrast on the live page, then overlay the approved design to see exactly where the build drifted.",
     name: "Design QA",
     menuBlurb: "Check the build against the design",
-    eyebrow: "Design QA",
     headline: "Catch the 2px drift",
     accent: "before your client does.",
     sub: "Inspect type, measure spacing and check contrast on the real page. Overlay the Figma frame and see exactly where the build drifted.",
@@ -76,7 +73,6 @@ export const PRODUCTS: ProductPage[] = [
     seoDescription: "Every QASync pin carries a CSS selector, browser, OS, viewport, pixel ratio and console errors, so developers can fix visual bugs without follow-ups.",
     name: "Developer context",
     menuBlurb: "Console, environment and selector on every issue",
-    eyebrow: "Developer context",
     headline: "Every report arrives",
     accent: "ready to fix.",
     sub: "A stable CSS selector, the browser and OS, the viewport, the pixel ratio and recent console errors are attached to every pin automatically.",
@@ -101,7 +97,6 @@ export const PRODUCTS: ProductPage[] = [
     seoDescription: "Connect Claude Code, Cursor or any MCP client to QASync. Agents read QA issues with full context, ship fixes and mark them Fixed for you to verify.",
     name: "AI & agents",
     menuBlurb: "Claude Code and Cursor fix issues over MCP",
-    eyebrow: "AI & agents",
     headline: "Your agent fixes it.",
     accent: "QASync proves it.",
     sub: "Connect Claude Code, Cursor or any MCP client with a token from Settings. Agents read open issues with full context, fix them in your code, reply with what changed, and mark them Fixed for you to verify.",
@@ -126,7 +121,6 @@ export const PRODUCTS: ProductPage[] = [
     seoDescription: "Audit any page for SEO basics, broken links, alt text, accessibility and font sprawl. Every failing check comes with the fix to make.",
     name: "Audits & monitoring",
     menuBlurb: "Broken links, accessibility, SEO, scored",
-    eyebrow: "Audits & monitoring",
     headline: "A health score",
     accent: "for every page.",
     sub: "One click checks for broken links, missing labels, alt text, SEO basics, font sprawl and misspellings, and scores the page out of 100. Turn any finding into an issue.",

@@ -1,10 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ProductTile } from "./demo-art";
 import { FailBadge, Spec, Swatch } from "./spec";
 
 /* ── Paste-a-URL hero input: creates a project and drops you into the canvas ── */
@@ -42,8 +41,9 @@ export function UrlStart({ size = "lg", className, variant = "solid" }: { size?:
     <form onSubmit={go} className={cn("w-full max-w-xl", className)}>
       <div
         className={cn(
-          "flex items-center gap-2 border border-line-strong bg-surface p-1.5 transition focus-within:border-ink-3",
-          variant === "gradient" ? "rounded-2xl shadow-2" : "rounded-xl shadow-1",
+          "flex items-center gap-2 p-1.5 transition",
+          // hero: the same orbiting blue→green ring as the account button; elsewhere a plain border
+          variant === "gradient" ? "ring-flow rounded-2xl shadow-2 [--ring-fill:var(--surface)]" : "rounded-xl border border-line-strong bg-surface shadow-1 focus-within:border-ink-3",
           size === "lg" ? "pl-4" : "pl-3",
         )}
       >
@@ -69,7 +69,7 @@ export function UrlStart({ size = "lg", className, variant = "solid" }: { size?:
           {!busy && <ArrowRight size={16} />}
         </button>
       </div>
-      {err && <p className="mt-2 text-sm text-accent-ink">{err}</p>}
+      {err && <p role="alert" className="mt-2 text-sm text-danger">{err}</p>}
     </form>
   );
 }
@@ -91,7 +91,7 @@ export function ThreeViews() {
             <button
               key={v.key}
               onClick={() => setView(v.key)}
-              className={cn("rounded-lg px-4 py-2 text-sm font-medium transition", view === v.key ? "bg-ink text-paper" : "text-ink-2 hover:text-ink")}
+              className={cn("rounded-lg px-4 py-3 text-sm font-medium transition sm:py-2", view === v.key ? "bg-ink text-paper" : "text-ink-2 hover:text-ink")}
             >
               {v.label}
             </button>
@@ -201,103 +201,44 @@ function Bubble({ who, text, me }: { who: string; text: string; me?: boolean }) 
   );
 }
 
-/* ── Design overlay slider ── */
-export function OverlayDemo() {
-  const [v, setV] = useState(50);
-  const boxRef = useRef<HTMLDivElement>(null);
-  const touched = useRef(false);
+/* ── Hero rotating word: noticed → reviewed → fixed (the product's own flow) ── */
+const HERO_WORDS = ["noticed.", "reviewed.", "fixed."];
+const HERO_TONES = ["noticed", "reviewed", "fixed"]; // colour per stage: light blue → blue/teal → blue/green
+const HERO_HOLD = [1900, 1900, 3800]; // "fixed" holds longest: it's the promise
+
+export function RotatingWord() {
+  // Start on "fixed." so first paint, no-JS and reduced motion all read the real headline.
+  const [i, setI] = useState(HERO_WORDS.length - 1);
+  const [prev, setPrev] = useState<number | null>(null);
 
   useEffect(() => {
-    const el = boxRef.current;
-    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    let raf = 0;
-    const io = new IntersectionObserver(
-      ([e]) => {
-        if (!e.isIntersecting || touched.current) return;
-        io.disconnect();
-        // 50 → 12 → 88 → 50 over ~3.2s: shows design vs build drift, then rests in the middle
-        const keys = [50, 12, 88, 50];
-        const dur = 3200;
-        const t0 = performance.now();
-        const ease = (x: number) => (x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2);
-        const tick = (now: number) => {
-          if (touched.current) return;
-          const p = Math.min(1, (now - t0) / dur);
-          const seg = Math.min(keys.length - 2, Math.floor(p * (keys.length - 1)));
-          const local = ease(p * (keys.length - 1) - seg);
-          setV(Math.round(keys[seg] + (keys[seg + 1] - keys[seg]) * local));
-          if (p < 1) raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-      },
-      { threshold: 0.5 },
-    );
-    io.observe(el);
-    return () => {
-      io.disconnect();
-      cancelAnimationFrame(raf);
-    };
-  }, []);
-  return (
-    <div ref={boxRef} data-reveal className="rounded-2xl border border-line bg-surface-2/60 p-4 sm:p-6">
-      <div className="relative aspect-[16/10] overflow-hidden rounded-xl bg-[#f3f6f9]">
-        {/* build */}
-        <MiniHero offset={0} label="BUILD" />
-        {/* design, revealed by slider */}
-        <div className="absolute inset-0" style={{ clipPath: `inset(0 ${100 - v}% 0 0)` }}>
-          <div className="absolute inset-0 bg-[#f3f6f9]" />
-          <MiniHero offset={1} label="DESIGN" />
-        </div>
-        <div className="absolute inset-y-0" style={{ left: `${v}%` }}>
-          <div className="h-full w-px bg-white shadow-[0_0_0_1px_rgb(16_32_46/0.18)]" />
-          <div className="absolute top-1/2 -ml-[15px] -mt-[15px] flex h-[30px] w-[30px] items-center justify-center rounded-full border border-black/10 bg-white text-[#10202e] shadow-[0_4px_14px_rgb(16_32_46/0.25)]">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-              <path d="M5 3.5 1.5 7 5 10.5M9 3.5 12.5 7 9 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </div>
-        </div>
-      </div>
-      <div className="mt-5 flex items-center gap-4">
-        <span className="w-12 text-[12px] font-medium text-ink-2">Build</span>
-        <input
-          type="range"
-          min={0}
-          max={100}
-          value={v}
-          onPointerDown={() => (touched.current = true)}
-          onChange={(e) => {
-            touched.current = true;
-            setV(+e.target.value);
-          }}
-          className="range-premium min-w-0 flex-1"
-          style={{ "--v": `${v}%` } as React.CSSProperties}
-          aria-label="Overlay position"
-        />
-        <span className="w-12 text-right text-[12px] font-medium text-ink-2">Design</span>
-      </div>
-    </div>
-  );
-}
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const t = setTimeout(() => {
+      setPrev(i);
+      setI((i + 1) % HERO_WORDS.length);
+    }, HERO_HOLD[i]);
+    return () => clearTimeout(t);
+  }, [i]);
 
-function MiniHero({ offset, label }: { offset: 0 | 1; label: string }) {
-  const design = offset === 1;
   return (
-    <div className="absolute inset-0 p-[6%]" style={{ fontFamily: "ui-sans-serif, system-ui, sans-serif", color: "#10202e" }}>
-      <div className="absolute right-3 top-3 rounded-full bg-black/70 px-2 py-0.5 text-[9px] font-semibold tracking-wide text-white">{label}</div>
-      <div className="w-[55%]">
-        <div style={{ fontSize: "clamp(14px,3.2vw,30px)", lineHeight: 1.05, fontWeight: 700, letterSpacing: design ? "-0.02em" : "0" }}>
-          Coffee roasted <i style={{ color: design ? "#0E7C86" : "#1A9AA6" }}>this week</i>, at your door by Friday.
-        </div>
-        <div className="mt-[6%] h-2 w-[85%] rounded bg-[#d3dde6]" />
-        <div className="mt-2 h-2 w-[70%] rounded bg-[#d3dde6]" />
-        <div
-          className="mt-[8%] inline-block rounded-md text-white"
-          style={{ background: design ? "#0E7C86" : "#1A9AA6", padding: design ? "9px 18px" : "8px 14px", fontSize: 11, fontFamily: "system-ui" }}
-        >
-          Start a subscription
-        </div>
-      </div>
-      <ProductTile compact className="absolute bottom-[10%] right-[6%] top-[14%] w-[34%]" style={{ transform: design ? "none" : "translateY(6px)" }} />
-    </div>
+    <>
+      <span className="sr-only">fixed.</span>
+      <span className="rw" aria-hidden>
+        {HERO_WORDS.map((word, k) => (
+          <span
+            key={word}
+            data-tone={HERO_TONES[k]}
+            className={cn("rw-word", k === i && "is-active", k === prev && "is-leaving")}
+            style={{ "--n": word.length } as React.CSSProperties}
+          >
+            {[...word].map((ch, j) => (
+              <span key={j} className="rw-ch" style={{ "--i": j } as React.CSSProperties}>
+                {ch}
+              </span>
+            ))}
+          </span>
+        ))}
+      </span>
+    </>
   );
 }

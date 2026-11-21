@@ -65,8 +65,8 @@ function layout({ title, pill, intro, list, outro, button }: EmailParts) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px">
     <tr><td style="padding:0 4px 18px">
       <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-        <td style="width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#2b5ebe,#7b2fb0);background-color:#4a46b8;color:#fff;font-weight:700;font-size:15px;text-align:center;line-height:28px">✓</td>
-        <td style="padding-left:9px;font-size:17px;font-weight:700;letter-spacing:-0.2px">QA<span style="color:#5b3fc0">Sync</span></td>
+        <td style="width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#2b5ebe,#16a36a);background-color:#1f6f8a;color:#fff;font-weight:700;font-size:15px;text-align:center;line-height:28px">✓</td>
+        <td style="padding-left:9px;font-size:17px;font-weight:700;letter-spacing:-0.2px">QA<span style="color:#0f6e48">Sync</span></td>
       </tr></table>
     </td></tr>
     <tr><td style="background:#ffffff;border:1px solid #e3e6ef;border-radius:14px;padding:32px 30px">
@@ -122,7 +122,7 @@ The QASync team`;
 
   const html = layout({
     title: "You're on QASync Pro",
-    pill: { text: "Pro plan", color: "#4b3bb8", bg: "#eeebfb" },
+    pill: { text: "Pro plan", color: "#1f4c9c", bg: "#eaf0fa" },
     intro: `Hi ${esc(first)}, good news: ${esc(ws)} is now on QASync Pro, ${esc(period)}. It's already active, so there's nothing to set up.`,
     list: { mark: "✓", color: "#16a34a", items: PRO_PERKS },
     button: { label: "Open QASync", url },

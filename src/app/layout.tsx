@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { APP_THEME_PREPAINT } from "@/lib/app-theme";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site";
@@ -30,16 +31,16 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#05070d",
+  themeColor: "#05070b",
   colorScheme: "dark",
 };
 
 // Runs before paint: mark that JS is on (scroll reveals only hide content when it is).
-const jsScript = `document.documentElement.classList.add('js')`;
+const jsScript = `document.documentElement.classList.add('js');${APP_THEME_PREPAINT}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    // The site and the app are dark-only.
+    // Dark by default (the marketing site is dark-only); the app can switch to light (see app-theme).
     <html lang="en" data-theme="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: jsScript }} />

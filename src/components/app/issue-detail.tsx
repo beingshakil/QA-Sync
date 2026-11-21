@@ -63,7 +63,7 @@ export function IssueDetail({ issueId, guest, onChange, onDeleted, onClose, onLo
     return () => clearInterval(t);
   }, [load]);
 
-  if (err) return <div className="p-5 text-sm text-accent-ink">{err}</div>;
+  if (err) return <div role="alert" className="p-5 text-sm text-danger">{err}</div>;
   if (!data) return <div className="space-y-3 p-5">{[0, 1, 2].map((i) => <div key={i} className="skeleton h-4 rounded" />)}</div>;
 
   const { issue, comments, activity } = data;
@@ -540,7 +540,7 @@ export function SpecTable({ el }: { el: NonNullable<Issue["element"]> & { margin
     ["type", `${el.size} / ${el.lineHeight} · ${el.weight}`],
     ["color", <Swatch key="c" c={el.color} />],
     ["background", <Swatch key="b" c={el.bg} />],
-    ["contrast", el.contrast != null ? <span key="k">{el.contrast}:1 <span className={cn("ml-1 rounded px-1 text-[10px]", aa === "Fail" ? "bg-accent-soft text-accent-ink" : "bg-[color-mix(in_srgb,var(--st-verified)_14%,transparent)] text-[var(--st-verified)]")}>{aa}</span></span> : "—"],
+    ["contrast", el.contrast != null ? <span key="k">{el.contrast}:1 <span className={cn("ml-1 rounded px-1 text-[10px]", aa === "Fail" ? "bg-danger-soft text-danger" : "bg-[color-mix(in_srgb,var(--st-verified)_14%,transparent)] text-[var(--st-verified)]")}>{aa}</span></span> : "—"],
     ["padding", el.padding],
   ];
   if (el.margin) rows.push(["margin", el.margin]);

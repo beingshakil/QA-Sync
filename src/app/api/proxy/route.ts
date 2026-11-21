@@ -2,6 +2,8 @@ import * as cheerio from "cheerio";
 import { FETCH_HEADERS, resolveTarget, selfOriginOf } from "@/server/fetch-guard";
 import { getProject, getShare } from "@/server/repo";
 import { getCtx } from "@/server/session";
+import { FRAME_MARKER, escapeAttr, rewriteForReview } from "@/server/proxy-rewrite";
+import { mintAssetToken, verifyAssetToken } from "@/server/proxy-token";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +15,15 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
-  const raw = params.get("url");
+  let raw = params.get("url");
+  let frameToken = params.get("t");
+  // A frame reloading itself arrives here via src/middleware.ts; the request still carries its
+  // original query, so read the `__qasync=<token>~<page url>` marker directly.
+  const marker = params.get(FRAME_MARKER);
+  if (!raw && marker && marker.indexOf("~") > 0) {
+    frameToken = marker.slice(0, marker.indexOf("~"));
+    raw = marker.slice(marker.indexOf("~") + 1);
+  }
   const self = selfOriginOf(req);
   if (!raw) return errorPage("Missing ?url=");
 
@@ -25,8 +35,10 @@ export async function GET(req: Request) {
   }
 
   // Never an open proxy: signed-in members may load any site; guests (?s=<share token>) only
-  // the site of the project their link covers.
-  if (process.env.QASYNC_ALLOW_PUBLIC_PROXY !== "1" && !(await getCtx())) {
+  // the site of the project their link covers. A frame reloading itself (routed here by
+  // src/middleware.ts) carries no cookies, so it presents the signed token for its site instead.
+  const tokenOk = !!frameToken && verifyAssetToken(frameToken) === target.origin;
+  if (process.env.QASYNC_ALLOW_PUBLIC_PROXY !== "1" && !tokenOk && !(await getCtx())) {
     const share = params.get("s") ? await getShare(params.get("s")!) : null;
     const project = share ? await getProject(share.projectId) : null;
     const host = (h: string) => h.toLowerCase().replace(/^www\./, "");
@@ -46,6 +58,23 @@ export async function GET(req: Request) {
   const hit = CACHE.get(cacheKey);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return htmlResponse(hit.html, hit.status, "hit");
 
+  // Split view mounts two or three frames at once with the same URL: they share one upstream
+  // fetch and rewrite instead of each downloading and processing the page.
+  let job = INFLIGHT.get(cacheKey);
+  if (!job) {
+    job = loadPage(target, { keepScripts, thumb, self }).finally(() => INFLIGHT.delete(cacheKey));
+    INFLIGHT.set(cacheKey, job);
+  }
+  const page = await job;
+  if (page instanceof Response) return page.clone();
+  CACHE.set(cacheKey, { ...page, at: Date.now() });
+  if (CACHE.size > CACHE_MAX) CACHE.delete(CACHE.keys().next().value!);
+  return htmlResponse(page.html, page.status, "miss");
+}
+
+type Page = { html: string; status: number };
+
+async function loadPage(target: URL, { keepScripts, thumb, self }: { keepScripts: boolean; thumb: boolean; self: string }): Promise<Page | Response> {
   let res: Response;
   try {
     res = await fetch(target, { headers: FETCH_HEADERS, redirect: "follow", signal: AbortSignal.timeout(15000) });
@@ -55,11 +84,21 @@ export async function GET(req: Request) {
 
   const type = res.headers.get("content-type") ?? "";
   if (!type.includes("text/html")) {
-    return new Response(res.body, { status: res.status, headers: { "content-type": type || "application/octet-stream" } });
+    // Buffered so concurrent callers can each get a copy of the shared result.
+    return new Response(await res.arrayBuffer(), { status: res.status, headers: { "content-type": type || "application/octet-stream" } });
   }
 
   const finalUrl = res.url || target.toString();
-  const $ = cheerio.load(await res.text());
+  const text = await res.text();
+
+  // Live review: fast text-level rewrite (see proxy-rewrite.ts).
+  if (keepScripts && !thumb) {
+    const token = mintAssetToken(new URL(finalUrl).origin);
+    return { html: rewriteForReview(text, { finalUrl, status: res.status, self, token }), status: res.status };
+  }
+
+  // Thumbnails and our own pages drop every script; a parser is the safe way to do that.
+  const $ = cheerio.load(text);
 
   $('meta[http-equiv="Content-Security-Policy" i]').remove();
   $('meta[http-equiv="refresh" i]').remove();
@@ -81,17 +120,16 @@ export async function GET(req: Request) {
           `<script src="${self}/reviewer.js" data-qasync></script>`,
   );
 
-  const html = $.html();
-  CACHE.set(cacheKey, { html, status: res.status, at: Date.now() });
-  if (CACHE.size > CACHE_MAX) CACHE.delete(CACHE.keys().next().value!);
-  return htmlResponse(html, res.status, "miss");
+  return { html: $.html(), status: res.status };
 }
 
-/* Small in-memory cache of rewritten pages (per server process). */
-const CACHE_TTL_MS = 2 * 60 * 1000;
-const CACHE_MAX = 60;
-const CACHE: Map<string, { html: string; status: number; at: number }> =
-  ((globalThis as unknown as { __fxProxyCache?: Map<string, { html: string; status: number; at: number }> }).__fxProxyCache ??= new Map());
+/* Small in-memory cache of rewritten pages (per server process). Reload in the canvas changes
+   `r`, so a fresh copy is always one click away. */
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const CACHE_MAX = 40;
+const g = globalThis as unknown as { __fxProxyCache?: Map<string, Page & { at: number }>; __fxProxyInflight?: Map<string, Promise<Page | Response>> };
+const CACHE = (g.__fxProxyCache ??= new Map());
+const INFLIGHT = (g.__fxProxyInflight ??= new Map());
 
 function htmlResponse(html: string, status: number, cache: "hit" | "miss") {
   return new Response(html, {
@@ -103,10 +141,6 @@ function htmlResponse(html: string, status: number, cache: "hit" | "miss") {
       "x-qasync-cache": cache,
     },
   });
-}
-
-function escapeAttr(s: string) {
-  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
 function errorPage(msg: string, status = 200) {

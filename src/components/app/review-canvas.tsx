@@ -37,7 +37,7 @@ import { CanvasPanel, DONE, type DeviceFilter, type PanelFilters } from "./canva
 import { PageTabs } from "./page-tabs";
 import { PagesOverview } from "./pages-overview";
 import { SharePopover } from "./share-popover";
-import { AuditModal } from "./audit-modal";
+import { AuditModal, prefetchAudit } from "./audit-modal";
 import { cn, pageKey, pageLabel } from "@/lib/utils";
 import { useConfirm } from "@/components/confirm";
 import { FEATURE_LABEL, usageState, type Feature, type PlanAccess } from "@/lib/plans";
@@ -969,6 +969,8 @@ export function ReviewCanvas({
         {!guest && (
           <button
             onClick={() => setAuditOpen(true)}
+            onPointerEnter={() => prefetchAudit(project.id, pageUrl)}
+            onFocus={() => prefetchAudit(project.id, pageUrl)}
             title="SEO audit report for this page"
             aria-label="SEO audit report for this page"
             className={cn("hidden rounded-lg border p-2 sm:block", auditOpen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
@@ -1219,7 +1221,7 @@ export function ReviewCanvas({
           )}
 
           {designErr && (
-            <div className="absolute left-1/2 top-14 z-20 -translate-x-1/2 rounded-lg bg-accent-soft px-3 py-1.5 text-[12.5px] text-accent-ink shadow-1">
+            <div className="absolute left-1/2 top-14 z-20 -translate-x-1/2 rounded-lg bg-danger-soft px-3 py-1.5 text-[12.5px] text-danger shadow-1" role="alert">
               {designErr} <button className="ml-2 underline" onClick={() => setDesignErr(null)}>OK</button>
             </div>
           )}

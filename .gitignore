@@ -42,3 +42,12 @@ next-env.d.ts
 
 # local database
 /.data
+
+# design skills (junctions into ../design-toolkit) and their scratch output
+/.claude/skills/
+/.impeccable/
+/.taste-skill/
+/.mcp.json
+
+# Google OAuth client secrets: never commit
+client_secret_*.json

@@ -20,7 +20,7 @@ function toProject(r: Row): Project {
     type: r.type as Project["type"],
     baseUrl: r.base_url as string,
     figmaUrl: (r.figma_url as string) ?? null,
-    color: r.color as string,
+    color: legacyColor(r.color as string),
     createdAt: r.created_at as string,
     issueCount: num(r.issue_count),
     openCount: num(r.open_count),
@@ -251,7 +251,13 @@ export async function getProject(id: string): Promise<Project | null> {
   return r ? toProject(r) : null;
 }
 
-const PROJECT_COLORS = ["#2b5ebe", "#7b2fb0", "#5f8ad0", "#a974cc", "#1f4c9c", "#5e1d95"];
+// Projects created before the blue/green palette stored purple; show them in the current palette.
+const LEGACY_PROJECT_COLORS: Record<string, string> = { "#7b2fb0": "#128a59", "#a974cc": "#4074c7", "#5e1d95": "#0f6e48", "#5f8ad0": "#4074c7" };
+function legacyColor(c: string) {
+  return LEGACY_PROJECT_COLORS[c?.toLowerCase()] ?? c;
+}
+
+const PROJECT_COLORS = ["#2b5ebe", "#128a59", "#4074c7", "#0f6e48", "#1f4c9c", "#0c5639"];
 
 export async function createProject(workspaceId: string, input: { name: string; baseUrl: string; type?: Project["type"]; figmaUrl?: string | null }): Promise<Project> {
   const id = nanoid(10);
@@ -451,12 +457,22 @@ export async function saveAudit(a: Omit<Audit, "id" | "createdAt">): Promise<Aud
 }
 
 /** A project's audits, or (with workspaceId) the 50 newest across the workspace. */
+/** Audit lists (newest first). Leave out `seo`, the large per-link/image/heading detail that only
+ *  the full report reads, so lists stay light; open one with getAudit for everything. */
 export async function listAudits(scope: { projectId: string } | { workspaceId: string }): Promise<Audit[]> {
+  const cols = "a.id, a.project_id, a.url, a.score, a.findings, a.stats, a.created_at";
   const rows =
     "projectId" in scope
-      ? await q("SELECT * FROM audits WHERE project_id = ? ORDER BY created_at DESC", scope.projectId)
-      : await q("SELECT a.* FROM audits a JOIN projects p ON p.id = a.project_id WHERE p.workspace_id = ? ORDER BY a.created_at DESC LIMIT 50", scope.workspaceId);
+      ? await q(`SELECT ${cols} FROM audits a WHERE a.project_id = ? ORDER BY a.created_at DESC`, scope.projectId)
+      : await q(`SELECT ${cols} FROM audits a JOIN projects p ON p.id = a.project_id WHERE p.workspace_id = ? ORDER BY a.created_at DESC LIMIT 50`, scope.workspaceId);
   return rows.map(toAudit);
+}
+
+/** The newest full audit of one page: matches on ids and URLs only, then loads just that row. */
+export async function latestAuditForPage(projectId: string, page: string): Promise<Audit | null> {
+  const rows = await q("SELECT id, url FROM audits WHERE project_id = ? ORDER BY created_at DESC", projectId);
+  const hit = rows.find((r) => pageKey(r.url as string) === pageKey(page));
+  return hit ? getAudit(hit.id as string) : null;
 }
 
 export async function deleteAudit(id: string): Promise<boolean> {

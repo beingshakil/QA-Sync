@@ -25,7 +25,6 @@ export default function PricingPage() {
     <>
       <JsonLd data={graph(softwareApplication(), faqPage(PRICING_FAQ, "/pricing"), breadcrumbs([{ name: "Pricing", path: "/pricing" }]))} />
       <PageHero
-        eyebrow="Pricing"
         title="Start free."
         accent="Pro costs a coffee."
         sub="Free covers comment pins on 2 projects. Pro is $5 a month for every review tool, client guests and AI agents, with no limits."
@@ -35,7 +34,7 @@ export default function PricingPage() {
       </Section>
 
       <Section className="pt-0 md:pt-0">
-        <SectionHead eyebrow="Compare plans" title="Everything," accent="side by side." />
+        <SectionHead title="Everything," accent="side by side." />
         <div data-reveal className="mx-auto mt-10 max-w-3xl overflow-x-auto rounded-2xl border border-line bg-surface">
           <table className="w-full min-w-[480px] text-left text-sm">
             <thead>
@@ -72,7 +71,7 @@ export default function PricingPage() {
       </Section>
 
       <Section className="pt-0 md:pt-0">
-        <SectionHead eyebrow="FAQ" title="Pricing," accent="explained." />
+        <SectionHead title="Pricing," accent="explained." />
         <FaqList items={PRICING_FAQ} />
       </Section>
       <CtaBand />

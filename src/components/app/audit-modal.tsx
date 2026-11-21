@@ -9,6 +9,27 @@ import { AuditReport } from "./audit-report";
 
 type State = { kind: "loading" } | { kind: "empty" } | { kind: "running" } | { kind: "ready"; audit: Audit } | { kind: "error"; message: string };
 
+/* The canvas prefetches the report when the pointer reaches the audit button, so the popup usually
+   opens on a request that's already done. Entries live for a minute; a re-run replaces its entry. */
+const CACHE_MS = 60_000;
+const cache = new Map<string, { at: number; p: Promise<Audit | null> }>();
+const keyOf = (projectId: string, pageUrl: string) => `${projectId}|${pageUrl}`;
+
+function loadAudit(projectId: string, pageUrl: string): Promise<Audit | null> {
+  const k = keyOf(projectId, pageUrl);
+  const hit = cache.get(k);
+  if (hit && Date.now() - hit.at < CACHE_MS) return hit.p;
+  const p = api.latestAudit(projectId, pageUrl);
+  cache.set(k, { at: Date.now(), p });
+  p.catch(() => cache.delete(k));
+  return p;
+}
+
+/** Start loading the page's audit report ahead of opening the popup. */
+export function prefetchAudit(projectId: string, pageUrl: string) {
+  void loadAudit(projectId, pageUrl).catch(() => {});
+}
+
 /** SEO audit report for the page open in the review canvas, as a popup. */
 export function AuditModal({ project, pageUrl, onClose }: { project: Project; pageUrl: string; onClose: () => void }) {
   const [state, setState] = useState<State>({ kind: "loading" });
@@ -16,8 +37,7 @@ export function AuditModal({ project, pageUrl, onClose }: { project: Project; pa
 
   useEffect(() => {
     let alive = true;
-    api
-      .latestAudit(project.id, pageUrl)
+    loadAudit(project.id, pageUrl)
       .then((a) => alive && setState(a ? { kind: "ready", audit: a } : { kind: "empty" }))
       .catch((e: Error) => alive && setState({ kind: "error", message: e.message }));
     return () => {
@@ -39,7 +59,9 @@ export function AuditModal({ project, pageUrl, onClose }: { project: Project; pa
   async function run() {
     setState({ kind: "running" });
     try {
-      setState({ kind: "ready", audit: await api.runAudit(project.id, pageUrl) });
+      const audit = await api.runAudit(project.id, pageUrl);
+      cache.set(keyOf(project.id, pageUrl), { at: Date.now(), p: Promise.resolve(audit) });
+      setState({ kind: "ready", audit });
     } catch (e) {
       setState({ kind: "error", message: (e as Error).message });
     }
@@ -60,7 +82,17 @@ export function AuditModal({ project, pageUrl, onClose }: { project: Project; pa
       >
         {state.kind === "ready" ? (
           <div className="min-h-0 flex-1 overflow-y-auto">
-            <AuditReport audit={state.audit} project={project} embedded={{ onRerun: (a) => setState({ kind: "ready", audit: a }), onClose }} />
+            <AuditReport
+              audit={state.audit}
+              project={project}
+              embedded={{
+                onRerun: (a) => {
+                  cache.set(keyOf(project.id, pageUrl), { at: Date.now(), p: Promise.resolve(a) });
+                  setState({ kind: "ready", audit: a });
+                },
+                onClose,
+              }}
+            />
           </div>
         ) : (
           <>

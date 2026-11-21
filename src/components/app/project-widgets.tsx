@@ -58,7 +58,7 @@ export function NewProjectForm() {
             <input value={figma} onChange={(e) => setFigma(e.target.value)} placeholder="https://figma.com/design/…" className="input" />
           </Field>
         </div>
-        {err && <p className="mt-3 text-sm text-accent-ink">{err}</p>}
+        {err && <p role="alert" className="mt-3 text-sm text-danger">{err}</p>}
         <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
             Cancel
@@ -75,7 +75,7 @@ function Field({ label, required, children }: { label: string; required?: boolea
     <label className="block space-y-1.5">
       <span className="text-[13px] font-medium text-ink-2">
         {label}
-        {required && <span className="text-accent-ink"> *</span>}
+        {required && <span className="text-danger"> *</span>}
       </span>
       {children}
     </label>
@@ -216,7 +216,7 @@ export function AuditPanel({ project, initial }: { project: Project; initial: Au
         <Button disabled={busy}>
           {busy && <Loader2 size={14} className="animate-spin" />} {busy ? "Auditing… (checks every link)" : "Run audit"}
         </Button>
-        {err && <p className="w-full text-sm text-accent-ink">{err}</p>}
+        {err && <p role="alert" className="w-full text-sm text-danger">{err}</p>}
       </form>
 
       {audits.length === 0 && <p className="text-sm text-ink-3">No audits yet. Run one to get a score out of 100.</p>}
@@ -227,7 +227,7 @@ export function AuditPanel({ project, initial }: { project: Project; initial: Au
             <div className="min-w-0 flex-1">
               <div className="truncate font-mono text-[13px]">{a.url}</div>
               <div className="mt-1 flex flex-wrap gap-3 text-[12.5px] text-ink-3">
-                <span className="text-accent-ink">{a.stats.errors} errors</span>
+                <span className="text-danger">{a.stats.errors} errors</span>
                 <span>{a.stats.warnings} warnings</span>
                 <span>{a.stats.linksChecked} links checked</span>
                 <span>{a.stats.fonts} fonts</span>
@@ -246,7 +246,7 @@ export function AuditPanel({ project, initial }: { project: Project; initial: Au
               {a.findings.length === 0 && <li className="p-4 text-sm text-ink-3">No problems found. 🎉</li>}
               {a.findings.map((f, i) => (
                 <li key={i} className="group flex items-start gap-3 px-4 py-3 text-[13.5px]">
-                  {f.severity === "error" ? <AlertCircle size={16} className="mt-0.5 shrink-0 text-accent-ink" /> : f.severity === "warning" ? <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[var(--st-progress)]" /> : <Info size={16} className="mt-0.5 shrink-0 text-ink-3" />}
+                  {f.severity === "error" ? <AlertCircle size={16} className="mt-0.5 shrink-0 text-danger" /> : f.severity === "warning" ? <AlertTriangle size={16} className="mt-0.5 shrink-0 text-[var(--st-progress)]" /> : <Info size={16} className="mt-0.5 shrink-0 text-ink-3" />}
                   <div className="min-w-0 flex-1">
                     <div>{f.message}</div>
                     {f.detail && <div className="mt-0.5 truncate font-mono text-[11.5px] text-ink-3">{f.detail}</div>}

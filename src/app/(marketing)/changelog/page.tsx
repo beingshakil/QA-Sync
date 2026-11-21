@@ -14,7 +14,7 @@ export default function ChangelogPage() {
   return (
     <>
       <JsonLd data={graph(breadcrumbs([{ name: "Changelog", path: "/changelog" }]))} />
-      <PageHero eyebrow="Changelog" title="What's new" accent="in QASync." sub="Every release, newest first." />
+      <PageHero title="What's new" accent="in QASync." sub="Every release, newest first." />
       <Section className="max-w-3xl">
         <ol className="relative space-y-12 border-l border-line pl-8">
           {CHANGELOG.map((c) => (

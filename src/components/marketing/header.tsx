@@ -148,13 +148,13 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="inline-flex h-9 items-center rounded-lg border border-line-strong px-4 text-sm font-medium text-ink transition hover:border-ink-3 hover:bg-surface-2"
+              className="ring-flow inline-flex h-9 items-center rounded-full px-4 text-sm font-medium text-ink"
             >
               Sign in
             </Link>
           )}
         </div>
-        <button className="ml-auto rounded-md p-2 md:hidden" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}>
+        <button className="-mr-1 ml-auto rounded-md p-3 md:hidden" aria-label="Menu" aria-expanded={mobile} onClick={() => setMobile((v) => !v)}>
           {mobile ? <X size={20} /> : <Menu size={20} />}
         </button>
       </div>

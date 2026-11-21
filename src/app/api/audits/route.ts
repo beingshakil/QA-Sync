@@ -1,8 +1,7 @@
-import { checkLimit, listAudits, saveAudit } from "@/server/repo";
+import { checkLimit, latestAuditForPage, listAudits, saveAudit } from "@/server/repo";
 import { fail, member, ok, projectFor, readJson } from "@/server/http";
 import { runAudit } from "@/server/audit";
 import { resolveTarget, selfOriginOf } from "@/server/fetch-guard";
-import { pageKey } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -18,10 +17,9 @@ export async function GET(req: Request) {
   if (!projectId) return ok(await listAudits({ workspaceId: ctx.workspaceId }));
   const project = await projectFor(ctx, projectId);
   if (!project) return fail("Project not found", 404);
-  const audits = await listAudits({ projectId: project.id });
   const page = params.get("page");
-  if (page) return ok(audits.find((a) => pageKey(a.url) === pageKey(page)) ?? null);
-  return ok(audits);
+  if (page) return ok(await latestAuditForPage(project.id, page));
+  return ok(await listAudits({ projectId: project.id }));
 }
 
 export async function POST(req: Request) {

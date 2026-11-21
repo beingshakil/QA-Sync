@@ -28,7 +28,7 @@ export default async function AuditsPage() {
                 <div className="min-w-0">
                   <div className="truncate font-medium">{p.name}</div>
                   <div className="mt-0.5 text-[12.5px] text-ink-3">{a ? `${a.stats.errors} errors · ${timeAgo(a.createdAt)}` : "Not audited yet"}</div>
-                  <div className="mt-2 text-[13px] text-accent-ink">{a ? "View report →" : "Run first audit →"}</div>
+                  <div className="mt-2 text-[13px] text-brand-ink">{a ? "View report →" : "Run first audit →"}</div>
                 </div>
               </Link>
             );

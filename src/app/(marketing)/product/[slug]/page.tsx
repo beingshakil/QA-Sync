@@ -28,7 +28,7 @@ export default async function ProductPage({ params }: Props) {
   return (
     <>
       <JsonLd data={graph(breadcrumbs([{ name: p.name, path: `/product/${p.slug}` }]))} />
-      <PageHero eyebrow={p.eyebrow} title={p.headline} accent={p.accent} sub={p.sub}>
+      <PageHero title={p.headline} accent={p.accent} sub={p.sub}>
         <div className="mt-8 flex flex-wrap gap-3">
           <ButtonLink href="/app" size="lg">
             Start reviewing
@@ -44,13 +44,13 @@ export default async function ProductPage({ params }: Props) {
       </PageHero>
 
       <Section>
-        <SectionHead eyebrow="What you get" title={`${p.name},`} accent="in detail." />
+        <SectionHead title={`${p.name},`} accent="in detail." />
         <FeatureGrid items={p.features} />
       </Section>
 
       <div className="border-y border-line bg-surface">
         <Section>
-          <SectionHead eyebrow="In three steps" title="How it" accent="works." />
+          <SectionHead title="How it" accent="works." />
           <ol className="mt-10 grid gap-6 md:grid-cols-3">
             {p.steps.map((s, i) => (
               <li key={s.title} data-reveal style={{ "--d": i * 120 } as React.CSSProperties} className="lift rounded-2xl border border-line bg-paper p-6">
@@ -64,13 +64,13 @@ export default async function ProductPage({ params }: Props) {
       </div>
 
       <Section>
-        <SectionHead eyebrow="Keep exploring" title="The rest of" accent="the loop." />
+        <SectionHead title="The rest of" accent="the loop." />
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {others.map((o) => (
             <Link key={o.slug} href={`/product/${o.slug}`} data-spotlight className="lift group rounded-2xl border border-line bg-surface p-5 shadow-1 hover:border-line-strong">
               <div className="font-medium">{o.name}</div>
               <p className="mt-1 text-sm text-ink-3">{o.menuBlurb}</p>
-              <span className="mt-3 inline-block text-sm text-accent-ink opacity-0 transition group-hover:opacity-100">Learn more →</span>
+              <span className="mt-3 inline-block text-sm text-brand-ink opacity-0 transition group-hover:opacity-100">Learn more →</span>
             </Link>
           ))}
         </div>
