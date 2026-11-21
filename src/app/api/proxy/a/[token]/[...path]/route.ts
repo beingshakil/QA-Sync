@@ -1,6 +1,7 @@
 import { FETCH_HEADERS, selfOriginOf } from "@/server/fetch-guard";
 import { rewriteCss } from "@/server/proxy-rewrite";
 import { verifyAssetToken } from "@/server/proxy-token";
+import { reportError } from "@/server/monitor";
 
 export const dynamic = "force-dynamic";
 
@@ -29,14 +30,21 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
   let res: Response;
   try {
     res = await fetch(upstream, { headers: { ...FETCH_HEADERS, accept: "*/*" }, redirect: "follow", signal: AbortSignal.timeout(15000) });
-  } catch {
+  } catch (e) {
+    reportError({ kind: "asset", message: `Asset unreachable: ${(e as Error).message}`, url: upstream.toString() });
     return deny(502, "Upstream unreachable");
   }
-  if (!res.ok) return deny(res.status, "Upstream error");
+  if (!res.ok) {
+    reportError({ kind: "asset", message: `Asset answered HTTP ${res.status}`, url: upstream.toString() });
+    return deny(res.status, "Upstream error");
+  }
 
   const type = (res.headers.get("content-type") ?? "").split(";")[0].trim();
   const fontByPath = FONT_PATH.test(upstream.pathname) && (!type || type === "application/octet-stream");
-  if (!ALLOWED.test(type) && !fontByPath) return deny(415, "Type not proxied");
+  if (!ALLOWED.test(type) && !fontByPath) {
+    reportError({ kind: "asset", message: `Asset type not proxied: ${type || "none"}`, url: upstream.toString() });
+    return deny(415, "Type not proxied");
+  }
 
   const headers = {
     "content-type": res.headers.get("content-type") || (fontByPath ? "font/woff2" : "application/octet-stream"),

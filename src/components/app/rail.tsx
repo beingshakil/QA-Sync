@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ThemeToggle } from "./app-theme";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, LogOut, MoreHorizontal, Pencil, Plus, Settings, ShieldCheck, Trash2 } from "lucide-react";
+import { Crosshair, FolderKanban, Gauge, Globe, ListChecks, LogOut, MoreHorizontal, Pencil, Plus, Settings, ShieldCheck, Trash2, Puzzle } from "lucide-react";
 import { signOutAction } from "@/app/actions";
 import { api } from "@/lib/api";
 import { useConfirm } from "@/components/confirm";
@@ -17,6 +17,7 @@ const NAV = [
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
   { href: "/app/issues", label: "Issues", icon: ListChecks },
   { href: "/app/audits", label: "Audits", icon: Gauge },
+  { href: "/app/extension", label: "Extension", icon: Puzzle },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
@@ -57,7 +58,7 @@ export function Rail({
       </nav>
       <div className="mt-3 flex items-center justify-between px-4">
         <span className="font-mono text-[10.5px] uppercase tracking-widest text-ink-3">Projects</span>
-        <Link href="/app/projects" title="All projects" className="rounded p-0.5 text-ink-3 hover:text-ink">
+        <Link href="/app/projects" title="All projects" aria-label="All projects" className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
           <Plus size={14} />
         </Link>
       </div>
@@ -100,10 +101,10 @@ export function MobileTopbar() {
         <LogoMark /> <Wordmark className="text-[17px]" />
       </Link>
       <nav className="ml-auto flex items-center gap-3 text-[13px] text-ink-2">
-        <Link href="/app/projects">Projects</Link>
-        <Link href="/app/issues">Issues</Link>
-        <Link href="/app/audits">Audits</Link>
-        <ThemeToggle className="-mr-1.5 p-2.5" />
+        <Link href="/app/projects" className="inline-flex h-11 items-center px-1">Projects</Link>
+        <Link href="/app/issues" className="inline-flex h-11 items-center px-1">Issues</Link>
+        <Link href="/app/audits" className="inline-flex h-11 items-center px-1">Audits</Link>
+        <ThemeToggle className="-mr-2 flex h-11 w-11 items-center justify-center p-0" />
       </nav>
     </div>
   );
@@ -189,7 +190,7 @@ function ProjectRow({ p, active }: { p: RailProject; active: boolean }) {
         title="Project options"
         aria-label={`Options for ${p.name}`}
         className={cn(
-          "absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1 text-ink-3 hover:bg-surface hover:text-ink",
+          "absolute right-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-ink-3 hover:bg-surface hover:text-ink",
           menu ? "opacity-100" : "opacity-0 focus:opacity-100 group-hover:opacity-100",
         )}
       >

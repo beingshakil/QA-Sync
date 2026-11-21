@@ -227,7 +227,7 @@ export default function Home() {
       <Block className="grid gap-12 lg:grid-cols-12">
         <div className="lg:col-span-4">
           <SectionHead size="sm" title="Start free." accent="Upgrade for the price of a coffee." sub="Free covers comment pins on 2 projects. Pro unlocks every tool, with no limits." />
-          <Link data-reveal href="/pricing" className="-my-1.5 mt-5 inline-flex items-center gap-1.5 py-1.5 text-[14px] font-medium text-brand-ink underline-offset-4 hover:underline">
+          <Link data-reveal href="/pricing" className="-my-1.5 mt-5 inline-flex items-center gap-1.5 py-1.5 text-[14px] font-medium text-brand-ink underline-offset-4 hover:underline max-sm:min-h-11">
             Compare plans <ArrowRight size={14} />
           </Link>
         </div>

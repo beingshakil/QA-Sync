@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Loader2 } from "lucide-react";
 import { cn, initials, timeAgo } from "@/lib/utils";
 import { PRIORITY_COLOR, PRIORITY_LABEL, STATUS_LABEL, type Priority, type Status } from "@/lib/types";
 import { useId, type ComponentProps, type ReactNode } from "react";
@@ -42,7 +43,7 @@ export function Wordmark({ className }: { className?: string }) {
 
 export function Logo({ href = "/", className }: { href?: string; className?: string }) {
   return (
-    <Link href={href} aria-label="QASync home" className={cn("flex items-center gap-2 text-ink", className)}>
+    <Link href={href} aria-label="QASync home" className={cn("flex items-center gap-2 text-ink max-sm:min-h-11", className)}>
       <LogoMark />
       <Wordmark className="text-[18px]" />
     </Link>
@@ -77,13 +78,22 @@ export function buttonClass(variant: Variant = "primary", size: Size = "md", cla
   );
 }
 
+/** `loading` shows a spinner and disables the button while an async action runs. */
 export function Button({
   variant = "primary",
   size = "md",
   className,
+  loading,
+  disabled,
+  children,
   ...props
-}: ComponentProps<"button"> & { variant?: Variant; size?: Size }) {
-  return <button className={buttonClass(variant, size, className)} {...props} />;
+}: ComponentProps<"button"> & { variant?: Variant; size?: Size; loading?: boolean }) {
+  return (
+    <button className={buttonClass(variant, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...props}>
+      {loading && <Loader2 size={15} className="shrink-0 animate-spin" aria-hidden />}
+      {children}
+    </button>
+  );
 }
 
 export function ButtonLink({

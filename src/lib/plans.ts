@@ -51,6 +51,8 @@ export interface WorkspacePlan {
   expired: boolean;
   /** Owned by a site admin (QASYNC_ADMIN_EMAILS): always Pro, with no end date. */
   admin?: boolean;
+  /** Local development: every workspace is Pro so all tools can be tested (see getWorkspacePlan). */
+  local?: boolean;
 }
 
 /** A site admin's workspaces have every feature, permanently. */

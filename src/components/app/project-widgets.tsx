@@ -124,14 +124,24 @@ export function ProjectSettings({ project }: { project: Project }) {
   const [url, setUrl] = useState(project.baseUrl);
   const [figma, setFigma] = useState(project.figmaUrl ?? "");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
   const confirmDialog = useConfirm();
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    await api.updateProject(project.id, { name, baseUrl: url, figmaUrl: figma || null });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1800);
-    router.refresh();
+    setSaving(true);
+    setSaveErr(null);
+    try {
+      await api.updateProject(project.id, { name, baseUrl: url, figmaUrl: figma || null });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 1800);
+      router.refresh();
+    } catch (err) {
+      setSaveErr((err as Error).message || "Couldn't save the project");
+    } finally {
+      setSaving(false);
+    }
   }
   async function remove() {
     const yes = await confirmDialog({
@@ -157,7 +167,10 @@ export function ProjectSettings({ project }: { project: Project }) {
         <Field label="Figma file">
           <input value={figma} onChange={(e) => setFigma(e.target.value)} placeholder="Link a Figma file for design overlay (Phase 2)" className="input" />
         </Field>
-        <Button>{saved ? <><Check size={14} /> Saved</> : "Save changes"}</Button>
+        <div className="flex flex-wrap items-center gap-3">
+          <Button loading={saving} className="shrink-0">{saved ? <><Check size={14} /> Saved</> : saving ? "Saving…" : "Save changes"}</Button>
+          {saveErr && <p role="alert" className="text-sm text-danger">{saveErr}</p>}
+        </div>
       </form>
       <div className="rounded-2xl border border-danger/30 bg-danger-soft/60 p-6">
         <div className="font-medium text-danger">Delete project</div>

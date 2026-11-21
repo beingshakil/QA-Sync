@@ -1,4 +1,5 @@
 import { deleteIssue, listActivity, listComments, resetPageQa, updateIssue } from "@/server/repo";
+import { pushChange } from "@/server/notion";
 import { actorFrom, canEditIssue, fail, isMember, issueFor, ok, readJson } from "@/server/http";
 import { autoTitle, stripMentions } from "@/server/ai";
 import { q } from "@/server/db";
@@ -65,6 +66,7 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
   const issue = await updateIssue(id, patch, actor.name);
   if (issue && patch.status && OPEN_STATUSES.includes(patch.status)) await resetPageQa(issue.projectId, issue.pageUrl);
+  if (issue) pushChange(issue.id); // keep its Notion row current, if it has one
   return issue ? ok(issue) : fail("Not found", 404);
 }
 

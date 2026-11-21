@@ -117,7 +117,8 @@
     }
     window.addEventListener("scroll", reportScroll, { passive: true });
 
-    var isOurs = function (el) { return el === host || (el && el.closest && el.closest("qasync-layer")); };
+    // Our own layer, or a host UI rendered on the page (the browser extension's toolbar: data-qasync-ui).
+    var isOurs = function (el) { return el === host || (el && el.closest && el.closest("qasync-layer, [data-qasync-ui]")); };
 
     /* ── selector generation ── */
     function cssEscape(s) { return window.CSS && CSS.escape ? CSS.escape(s) : s.replace(/[^a-zA-Z0-9_-]/g, "\\$&"); }
@@ -431,7 +432,8 @@
     }, true);
 
     document.addEventListener("keydown", function (e) {
-      var t = e.target;
+      // composedPath()[0]: the real target, even inside an open shadow root (e.g. the extension's inputs).
+      var t = (e.composedPath && e.composedPath()[0]) || e.target;
       if (t && (t.isContentEditable || /^(input|textarea|select)$/i.test(t.tagName))) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       var k = e.key.toLowerCase();

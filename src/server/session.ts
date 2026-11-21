@@ -1,9 +1,10 @@
 import "server-only";
 import { cache } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { createWorkspace, getUser, getWorkspace, listUserWorkspaces } from "./repo";
+import { verifyExtensionToken } from "./tokens";
 import type { Member, Workspace } from "@/lib/types";
 
 /** Cookie that remembers which workspace is active when a user belongs to several. */
@@ -20,11 +21,22 @@ export interface Ctx {
   workspaces: { id: string; name: string; role: Member["role"] }[];
 }
 
-/** The signed-in user and their active workspace, or null when signed out. Cached per request. */
+/**
+ * The signed-in user and their active workspace, or null when signed out. Cached per request.
+ * Without a session cookie, a browser-extension token (`Authorization: Bearer qasx_…`) signs the
+ * request in as the person who connected the extension, in the workspace it was connected to.
+ */
 export const getCtx = cache(async (): Promise<Ctx | null> => {
   const session = await auth();
-  const uid = (session?.user as { id?: string } | undefined)?.id;
-  if (!uid) return null;
+  let uid = (session?.user as { id?: string } | undefined)?.id;
+  let tokenWorkspace: string | null = null;
+  if (!uid) {
+    const bearer = (await headers()).get("authorization")?.match(/^Bearer\s+(qasx_\S+)$/i)?.[1];
+    const t = bearer ? await verifyExtensionToken(bearer) : null;
+    if (!t) return null;
+    uid = t.userId;
+    tokenWorkspace = t.workspaceId;
+  }
   const user = await getUser(uid);
   if (!user) return null;
   let workspaces = await listUserWorkspaces(uid);
@@ -33,7 +45,8 @@ export const getCtx = cache(async (): Promise<Ctx | null> => {
     await createWorkspace(user, `${user.name.split(" ")[0]}'s workspace`);
     workspaces = await listUserWorkspaces(uid);
   }
-  const wanted = (await cookies()).get(WS_COOKIE)?.value;
+  if (tokenWorkspace && !workspaces.some((w) => w.id === tokenWorkspace)) return null; // no longer a member there
+  const wanted = tokenWorkspace ?? (await cookies()).get(WS_COOKIE)?.value;
   const ws = workspaces.find((w) => w.id === wanted) ?? workspaces[0];
   return {
     userId: user.id,

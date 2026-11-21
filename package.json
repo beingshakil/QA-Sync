@@ -4,12 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/build-extension.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "extension": "node scripts/build-extension.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
+    "@sparticuz/chromium": "^153.0.0",
     "@vercel/blob": "^2.9.0",
     "cheerio": "^1.0.0",
     "clsx": "^2.1.1",
@@ -19,6 +22,7 @@
     "next-auth": "^5.0.0-beta.32",
     "nodemailer": "^8.0.11",
     "pg": "^8.23.1",
+    "playwright-core": "^1.65.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "simple-icons": "^13.21.0"

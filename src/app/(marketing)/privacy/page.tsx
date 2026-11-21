@@ -27,7 +27,16 @@ export default function PrivacyPage() {
         <LegalSection n={2} title="What we collect">
           <p>
             <strong>When you sign in with Google</strong>, Google shares your name, email address and profile picture with us. We never see or store your Google password,
-            and we don&apos;t ask for access to your Gmail, Drive or contacts.
+            and signing in doesn&apos;t give us access to your Gmail, Drive or contacts.
+          </p>
+          <p>
+            <strong>If you use the Google Drive features</strong> (exporting issues to Google Sheets, saving a report to Google Docs, or picking a design image from Drive),
+            Google asks you first and then gives QASync access only to the files you pick and the files QASync creates for you, never the rest of your Drive. QASync keeps
+            what it creates in a folder called &ldquo;QASync&rdquo; in your Drive. That access lives in your browser for about an hour and is not stored on our servers.
+          </p>
+          <p>
+            <strong>If you connect Notion</strong>, Notion gives your workspace an access token covering only the pages you choose to share with QASync. We store it encrypted
+            and use it only to create and update the issue rows you send there. Disconnect it at any time from a project&apos;s settings.
           </p>
           <p>We also keep:</p>
           <ul>

@@ -120,8 +120,8 @@ export function McpSettings({ initial }: { initial: ApiToken[] }) {
               maxLength={60}
               className="input h-10 min-w-0 flex-1"
             />
-            <Button type="submit" disabled={creating || !name.trim()} className="h-10">
-              <Plus size={15} /> Create token
+            <Button type="submit" loading={creating} disabled={!name.trim()} className="h-10">
+              {!creating && <Plus size={15} />} Create token
             </Button>
           </form>
           <p className="mt-1.5 text-[12px] text-ink-3">The name is shown as the author of the agent&apos;s replies and status changes.</p>

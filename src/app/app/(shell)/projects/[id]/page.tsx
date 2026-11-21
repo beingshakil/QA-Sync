@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Suspense } from "react";
+import { NotionCard } from "@/components/app/notion-card";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/app/page-header";
 import { AuditPanel, ProjectSettings, ShareBox } from "@/components/app/project-widgets";
@@ -78,7 +80,16 @@ export default async function ProjectPage({ params, searchParams }: Props) {
           </div>
         )}
         {tab === "audits" && <AuditPanel project={project} initial={await listAudits({ projectId: id })} />}
-        {tab === "settings" && <ProjectSettings project={project} />}
+        {tab === "settings" && (
+          <div className="space-y-8">
+            <ProjectSettings project={project} />
+            <div className="max-w-xl">
+              <Suspense>
+                <NotionCard projectId={project.id} />
+              </Suspense>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

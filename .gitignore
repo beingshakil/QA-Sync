@@ -51,3 +51,7 @@ next-env.d.ts
 
 # Google OAuth client secrets: never commit
 client_secret_*.json
+
+# browser extension build outputs (scripts/build-extension.mjs)
+/extension/reviewer.js
+/public/downloads/

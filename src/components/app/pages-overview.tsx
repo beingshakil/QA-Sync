@@ -217,18 +217,19 @@ export function PagesOverview({
                   </div>
                   <div className="flex items-center justify-end gap-1">
                     {p.qaStatus === "done" ? (
-                      <Button size="sm" variant="ghost" disabled={busy === p.id} onClick={() => run(p.id, () => api.setPageQa(p.id, "pending", guest))} title="Undo sign-off">
-                        <RotateCcw size={13} /> Undo
+                      <Button size="sm" variant="ghost" loading={busy === p.id} onClick={() => run(p.id, () => api.setPageQa(p.id, "pending", guest))} title="Undo sign-off">
+                        {busy !== p.id && <RotateCcw size={13} />} Undo
                       </Button>
                     ) : (
                       <Button
                         size="sm"
                         variant="secondary"
-                        disabled={busy === p.id || p.open > 0}
+                        loading={busy === p.id}
+                        disabled={p.open > 0}
                         title={p.open > 0 ? "Resolve this page's open issues first" : "Sign this page off as QA passed"}
                         onClick={() => run(p.id, () => api.setPageQa(p.id, "done", guest))}
                       >
-                        <BadgeCheck size={13} /> Mark passed
+                        {busy !== p.id && <BadgeCheck size={13} />} Mark passed
                       </Button>
                     )}
                     {onOpen ? (

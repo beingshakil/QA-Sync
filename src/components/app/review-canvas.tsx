@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { downloadDriveFile, googlePickerReady, pickDriveImage, preloadGoogle } from "@/lib/google-drive";
+import { IntegrationIcon } from "@/components/integration-icon";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownUp,
@@ -21,6 +23,7 @@ import {
   PanelRightClose,
   PanelRightOpen,
   RefreshCw,
+  Camera,
   ScanSearch,
   Smartphone,
   Snowflake,
@@ -144,6 +147,12 @@ export function ReviewCanvas({
   const [pageUrl, setPageUrl] = useState(initialPage ?? initialIssues.find((i) => i.id === initialIssueId)?.pageUrl ?? project.baseUrl);
   const [urlInput, setUrlInput] = useState(pageUrl);
   const [reloadKey, setReloadKey] = useState(0);
+  // Screenshot mode: frames show a server-captured image of the page (for sites that won't load live).
+  const [shot, setShot] = useState(false);
+  // No design yet and Google Drive is set up: ask where the design comes from.
+  const [designChoice, setDesignChoice] = useState(false);
+  // The live preview didn't come up in time (usually the site refuses to be framed): offer a screenshot.
+  const [stuck, setStuck] = useState(false);
   const [ready, setReady] = useState<Set<FrameKey>>(new Set());
   const [mode, setMode] = useState<Mode>(guest && access && !access.pro ? "browse" : "comment");
   const [frozen, setFrozen] = useState(false);
@@ -290,7 +299,7 @@ export function ReviewCanvas({
     return () => clearTimeout(t);
   }, [mode]);
   // Guests have no session cookie: their share token lets the proxy load this project's site.
-  const proxySrc = `/api/proxy?url=${encodeURIComponent(pageUrl)}&r=${reloadKey}${guest ? `&s=${encodeURIComponent(guest.shareToken)}` : ""}`;
+  const proxySrc = `/api/proxy?url=${encodeURIComponent(pageUrl)}&r=${reloadKey}${shot ? "&shot=1" : ""}${guest ? `&s=${encodeURIComponent(guest.shareToken)}` : ""}`;
   const primary: FrameKey = device === "split" ? "desktop" : device;
   const sizes = useMemo(
     () => ({
@@ -304,6 +313,38 @@ export function ReviewCanvas({
   const loading = frames.some((f) => !ready.has(f.key));
   // Switching between the full-pane frame and a scaled frame remounts the iframe: wait for it again.
   const frameSig = frames.map((f) => f.key + (f.bare ? ":bare" : "")).join("|");
+
+  // Live-preview watchdog: if the main frame hasn't reported "ready" within 15 s, the site most
+  // likely refused to be framed (or broke): offer screenshot mode, and log it for the admin Errors list.
+  // A frame can also come up and then leave (some sites navigate themselves away when framed): every
+  // frame load sends a "hello", and a load that gets no "ready" back within 4 s isn't our page.
+  const readyAt = useRef<Partial<Record<FrameKey, number>>>({});
+  const onFrameLoad = (k: FrameKey) => {
+    const at = Date.now();
+    sendTo(k, { type: "hello" });
+    window.setTimeout(() => {
+      if ((readyAt.current[k] ?? 0) < at && k === primaryRef.current) setStuck(true);
+    }, 4000);
+  };
+  const primaryRef = useRef(primary);
+  primaryRef.current = primary;
+  const primaryReady = ready.has(primary);
+  useEffect(() => {
+    if (shot || primaryReady) {
+      setStuck(false);
+      return;
+    }
+    const t = window.setTimeout(() => setStuck(true), 15000);
+    return () => window.clearTimeout(t);
+  }, [proxySrc, frameSig, shot, primaryReady]);
+  useEffect(() => {
+    if (!stuck || guest) return;
+    void fetch("/api/errors", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ kind: "preview", message: "The live preview didn't load, or the site left the frame (it may refuse to be framed)", url: pageUrl }),
+    }).catch(() => {});
+  }, [stuck, guest, pageUrl]);
   const lastSig = useRef(frameSig);
   useEffect(() => {
     if (lastSig.current !== frameSig) {
@@ -598,6 +639,7 @@ export function ReviewCanvas({
       const L = latest.current;
       switch (m.type) {
         case "ready":
+          readyAt.current[k] = Date.now();
           setReady((prev) => (prev.has(k) ? prev : new Set(prev).add(k)));
           sendTo(k, { type: "mode", mode: L.mode });
           sendTo(k, L.pinsMsg);
@@ -721,7 +763,9 @@ export function ReviewCanvas({
     if (!designFor(primary)) {
       if (guest) return setDesignErr("No design reference has been added for this page yet.");
       pendingTool.current = t;
-      designFileRef.current?.click();
+      // With Google Drive set up, offer both sources; otherwise go straight to the file dialog.
+      if (googlePickerReady()) setDesignChoice(true);
+      else designFileRef.current?.click();
       return;
     }
     if (t === "compare" && device === "split") chooseDevice("desktop");
@@ -742,6 +786,20 @@ export function ReviewCanvas({
     } catch (e) {
       setDesignErr((e as Error).message);
     } finally {
+      setDesignBusy(false);
+    }
+  }
+
+  /** Pick a design image in Google Drive (only that file is shared with QASync) and use it like an upload. */
+  async function designFromDrive() {
+    setDesignErr(null);
+    try {
+      const doc = await pickDriveImage();
+      if (!doc) return;
+      setDesignBusy(true);
+      await uploadDesign(await downloadDriveFile(doc));
+    } catch (e) {
+      setDesignErr((e as Error).message);
       setDesignBusy(false);
     }
   }
@@ -882,7 +940,7 @@ export function ReviewCanvas({
         )}
 
         <form
-          className="flex min-w-0 max-w-[520px] flex-1 items-center sm:min-w-[220px] gap-1 rounded-lg border border-line bg-paper px-2"
+          className="flex min-w-0 max-w-[520px] flex-1 items-center gap-1 rounded-lg border border-line bg-paper px-2 sm:min-w-40 xl:min-w-55"
           onSubmit={(e) => {
             e.preventDefault();
             navigate(urlInput);
@@ -890,8 +948,22 @@ export function ReviewCanvas({
         >
           {loading ? <Loader2 size={14} className="shrink-0 animate-spin text-ink-3" /> : <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--st-verified)]" />}
           <input value={urlInput} onChange={(e) => setUrlInput(e.target.value)} className="h-8 min-w-0 flex-1 bg-transparent font-mono text-[12px] text-ink-2 outline-none" aria-label="Page URL" />
-          <button type="button" onClick={() => { resetFrames(); setReloadKey((k) => k + 1); }} className="rounded p-1 text-ink-3 hover:text-ink" title="Reload">
+          <button type="button" onClick={() => { resetFrames(); setReloadKey((k) => k + 1); }} className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink" title="Reload the page" aria-label="Reload the page">
             <RefreshCw size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              resetFrames();
+              setStuck(false);
+              setShot((v) => !v);
+            }}
+            aria-pressed={shot}
+            className={cn("rounded-md p-1.5 transition", shot ? "bg-blue-soft text-blue" : "text-ink-3 hover:bg-surface-2 hover:text-ink")}
+            title={shot ? "Screenshot mode is on: showing a captured image. Click for the live page." : "Screenshot mode: show a captured image instead of the live page (for sites that won't load here)"}
+            aria-label="Screenshot mode"
+          >
+            <Camera size={13} />
           </button>
         </form>
 
@@ -917,7 +989,7 @@ export function ReviewCanvas({
           <select
             value={zoom}
             onChange={(e) => setZoom(e.target.value as Zoom)}
-            className="ml-1 h-8 rounded-lg border border-line bg-surface pl-2.5 pr-1 text-[13px] text-ink outline-none"
+            className="ml-1 hidden h-8 rounded-lg border border-line bg-surface pl-2.5 pr-1 text-[13px] text-ink outline-none lg:block"
             aria-label="Zoom"
           >
             <option value="fit">Fit to pane</option>
@@ -961,7 +1033,7 @@ export function ReviewCanvas({
         <button
           onClick={toggleFreeze}
           title={pro ? "Freeze hover states (F)" : "Freeze hover states · Pro"}
-          className={cn("relative hidden rounded-lg border p-2 md:block", frozen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
+          className={cn("relative hidden rounded-lg border p-2 lg:block", frozen ? "border-blue bg-blue-soft text-blue" : "border-line bg-paper text-ink-3 hover:text-ink")}
         >
           <Snowflake size={15} />
           {!pro && <LockDot />}
@@ -1100,6 +1172,50 @@ export function ReviewCanvas({
       <div className="relative flex min-h-0 flex-1">
         {/* ───────── stage ───────── */}
         <div ref={stageRef} className="relative flex min-w-0 flex-1">
+          {designChoice && (
+            <div role="dialog" aria-label="Add a design" className="animate-pop absolute left-1/2 top-4 z-30 w-[min(460px,calc(100%-32px))] -translate-x-1/2 rounded-xl border border-line bg-surface p-4 text-[13px] shadow-2">
+              <div className="flex items-start gap-3">
+                <ImagePlus size={16} className="mt-0.5 shrink-0 text-blue" />
+                <p className="min-w-0 flex-1 text-ink-2">
+                  <span className="font-medium text-ink">Add the {LABEL[primary].toLowerCase()} design for this page.</span> Use a PNG exported at the page&apos;s width.
+                </p>
+              </div>
+              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                <Button size="sm" onClick={() => (setDesignChoice(false), designFileRef.current?.click())}>
+                  Upload image
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => (setDesignChoice(false), designFromDrive())}>
+                  <IntegrationIcon name="Google Drive" size={14} /> From Google Drive
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => ((pendingTool.current = null), setDesignChoice(false))}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+          {stuck && !shot && (
+            <div role="alert" className="animate-pop absolute left-1/2 top-4 z-30 flex w-[min(560px,calc(100%-32px))] -translate-x-1/2 flex-wrap items-center gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-[13px] shadow-2">
+              <Camera size={16} className="shrink-0 text-blue" />
+              <p className="min-w-0 flex-1 text-ink-2">
+                <span className="font-medium text-ink">This page didn&apos;t load in the live preview.</span> Some sites refuse to be shown inside other apps.
+              </p>
+              <div className="flex shrink-0 gap-2">
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    resetFrames();
+                    setStuck(false);
+                    setShot(true);
+                  }}
+                >
+                  View as a screenshot
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setStuck(false)}>
+                  Keep waiting
+                </Button>
+              </div>
+            </div>
+          )}
           {tool === "compare" && (
             <div className="flex w-1/2 min-w-0 flex-col border-r border-line-strong bg-surface-2">
               <div className="flex h-9 shrink-0 items-center gap-2 border-b border-line bg-surface px-3 text-[12px]">
@@ -1122,7 +1238,7 @@ export function ReviewCanvas({
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={primaryDesign.url} alt={`${LABEL[primary]} design`} className="block w-full" />
                 ) : (
-                  <DesignDrop onPick={() => designFileRef.current?.click()} guest={!!guest} device={LABEL[primary]} />
+                  <DesignDrop onPick={() => designFileRef.current?.click()} onDrive={googlePickerReady() ? designFromDrive : undefined} guest={!!guest} device={LABEL[primary]} />
                 )}
               </div>
             </div>
@@ -1139,7 +1255,7 @@ export function ReviewCanvas({
                 title="Page under review"
                 sandbox="allow-scripts allow-forms allow-popups"
                 className="absolute inset-0 h-full w-full border-0 bg-white"
-                onLoad={() => sendTo("desktop", { type: "hello" })}
+                onLoad={() => onFrameLoad("desktop")}
               />
             ) : (
               <div className="mx-auto flex w-max items-start gap-6 p-5">
@@ -1158,7 +1274,7 @@ export function ReviewCanvas({
                         sandbox="allow-scripts allow-forms allow-popups"
                         className="absolute left-0 top-0 origin-top-left border-0 bg-white"
                         style={{ width: f.cssW, height: f.cssH, transform: `scale(${f.scale})` }}
-                        onLoad={() => sendTo(f.key, { type: "hello" })}
+                        onLoad={() => onFrameLoad(f.key)}
                       />
                     </div>
                     </div>
@@ -1350,7 +1466,7 @@ function DevBtn({ active, locked, onClick, title, children }: { active: boolean;
       title={locked ? `${title} · Pro` : title}
       aria-pressed={active}
       className={cn(
-        "relative flex h-8 w-9 items-center justify-center rounded-lg transition",
+        "relative flex h-8 w-9 items-center justify-center rounded-lg transition max-md:h-11 max-md:w-11",
         active ? "bg-blue text-white shadow-1" : locked ? "text-ink-3/60 hover:bg-surface-2 hover:text-ink-2" : "text-ink-3 hover:bg-surface-2 hover:text-ink",
       )}
     >
@@ -1368,7 +1484,7 @@ function ModeBtn({ active, locked, onClick, icon, label, k }: { active: boolean;
       aria-label={label}
       aria-pressed={active}
       className={cn(
-        "relative flex h-8 w-9 items-center justify-center rounded-lg transition",
+        "relative flex h-8 w-9 items-center justify-center rounded-lg transition max-md:h-11 max-md:w-11",
         active ? "bg-ink text-paper shadow-1" : locked ? "text-ink-3/60 hover:bg-surface-2 hover:text-ink-2" : "text-ink-3 hover:bg-surface-2 hover:text-ink",
       )}
     >
@@ -1434,7 +1550,10 @@ function Upsell({ what, guest, limit, onClose }: { what: Feature | "comments"; g
   );
 }
 
-function DesignDrop({ onPick, guest, device }: { onPick: () => void; guest: boolean; device: string }) {
+function DesignDrop({ onPick, onDrive, guest, device }: { onPick: () => void; onDrive?: () => void; guest: boolean; device: string }) {
+  useEffect(() => {
+    if (onDrive) preloadGoogle(true);
+  }, [onDrive]);
   return (
     <div className="flex h-full min-h-[300px] items-center justify-center p-8 text-center">
       <div>
@@ -1444,9 +1563,16 @@ function DesignDrop({ onPick, guest, device }: { onPick: () => void; guest: bool
         <p className="mt-3 font-medium">No {device.toLowerCase()} design for this page</p>
         <p className="mt-1 max-w-xs text-sm text-ink-3">Export the frame from Figma as a PNG at the same width as the page, then upload it here.</p>
         {!guest && (
-          <Button className="mt-4" size="sm" onClick={onPick}>
-            Upload design image
-          </Button>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            <Button size="sm" onClick={onPick}>
+              Upload design image
+            </Button>
+            {onDrive && (
+              <Button size="sm" variant="secondary" onClick={onDrive}>
+                <IntegrationIcon name="Google Drive" size={14} /> From Google Drive
+              </Button>
+            )}
+          </div>
         )}
       </div>
     </div>
@@ -1488,7 +1614,8 @@ function SizeMenu({
 
   const summary = keys.map((k) => (sizes[k].w ? sizes[k].label : LABEL[k])).join(" + ");
   return (
-    <div ref={ref} className="relative">
+    // Only on wide screens: below xl the toolbar has no room for it, and the device buttons cover the common sizes.
+    <div ref={ref} className="relative hidden xl:block">
       <button
         onClick={() => setOpen(!open)}
         aria-expanded={open}

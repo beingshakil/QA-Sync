@@ -2,6 +2,7 @@ import { checkLimit, createIssue, notifyUsage, requireFeature, getShare, getUplo
 import { actorFrom, fail, isMember, member, ok, projectFor, readJson } from "@/server/http";
 import { autoTitle, stripMentions, suggestPriority } from "@/server/ai";
 import { q } from "@/server/db";
+import { autoPush, maybeSync } from "@/server/notion";
 import { PRIORITIES, type Attachment, type ElementInfo, type EnvInfo, type Priority } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +26,8 @@ export async function GET(req: Request) {
     if (ctx instanceof Response) return ctx;
     filter.workspaceId = ctx.workspaceId;
   }
+  // Someone is looking at this project's issues: pull status changes made in Notion (every 2 min at most).
+  if (filter.projectId) maybeSync(filter.projectId);
   return ok(await listIssues(filter));
 }
 
@@ -95,6 +98,7 @@ export async function POST(req: Request) {
   await upsertPage(issue.projectId, issue.pageUrl);
   await resetPageQa(issue.projectId, issue.pageUrl);
   await notifyUsage(project.workspaceId!);
+  autoPush(issue);
   return ok(issue, 201);
 }
 

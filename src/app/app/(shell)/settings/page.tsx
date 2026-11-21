@@ -5,6 +5,7 @@ import { IntegrationIcon } from "@/components/integration-icon";
 import { listApiTokens } from "@/server/tokens";
 import { getCurrentWorkspace, requireCtx } from "@/server/session";
 import { McpSettings } from "@/components/app/mcp-settings";
+import { GoogleDriveCard } from "@/components/app/google-drive-card";
 import { PlanCard } from "@/components/app/plan-card";
 import { getWorkspacePlan, workspaceUsage } from "@/server/repo";
 
@@ -23,12 +24,14 @@ export default async function SettingsPage() {
 
         <McpSettings initial={await listApiTokens(ctx.workspaceId)} />
 
+        <GoogleDriveCard email={ctx.email} />
+
         <section className="rounded-2xl border border-line bg-surface shadow-1">
           <div className="border-b border-line px-6 py-4">
             <h2 className="font-semibold">Integrations</h2>
             <p className="text-[13px] text-ink-3">AI agents connect through MCP today. Two-way sync with your tracker arrives in Phase 2.</p>
           </div>
-          <div className="grid gap-px bg-line sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-px bg-line sm:grid-cols-2">
             {INTEGRATIONS.flatMap((g) => g.items)
               .slice(0, 10)
               .map((i) => (

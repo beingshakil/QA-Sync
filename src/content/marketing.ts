@@ -262,7 +262,7 @@ export const INTEGRATIONS: { group: string; items: { name: string; desc: string;
       { name: "Asana", desc: "Tasks with screenshots and specs", status: "Soon" },
       { name: "Trello", desc: "Cards per pin", status: "Soon" },
       { name: "Monday.com", desc: "Items with status mapping", status: "Soon" },
-      { name: "Notion", desc: "Database rows per issue", status: "Soon" },
+      { name: "Notion", desc: "Database rows per issue, status synced both ways", status: "Beta" },
       { name: "Basecamp", desc: "To-dos per pin", status: "Soon" },
     ],
   },
@@ -277,6 +277,7 @@ export const INTEGRATIONS: { group: string; items: { name: string; desc: string;
   {
     group: "Design & build",
     items: [
+      { name: "Google Drive", desc: "Designs from Drive, issues to Sheets, reports to Docs", status: "Beta" },
       { name: "Figma", desc: "Frame overlay and drift detection", status: "Soon" },
       { name: "Vercel", desc: "A review for every preview deploy", status: "Soon" },
       { name: "Netlify", desc: "Deploy previews, reviewed", status: "Soon" },

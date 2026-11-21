@@ -4,6 +4,7 @@ import { getProject, getShare } from "@/server/repo";
 import { getCtx } from "@/server/session";
 import { FRAME_MARKER, escapeAttr, rewriteForReview } from "@/server/proxy-rewrite";
 import { mintAssetToken, verifyAssetToken } from "@/server/proxy-token";
+import { reportError } from "@/server/monitor";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,9 @@ export async function GET(req: Request) {
     if (!projectHost || host(projectHost) !== host(target.hostname)) return errorPage("Sign in to load site previews.", 403);
   }
 
+  // Screenshot mode: a page holding a captured image of the site (see shotPage), not the live HTML.
+  if (params.get("shot") === "1") return shotPage(target, self);
+
   const isSelf = target.host === new URL(self).host;
   // Our own Next.js pages are server-rendered; their client router would fight the proxy URL.
   // thumb=1: a static, script-free snapshot for project-card previews (no reviewer agent).
@@ -79,8 +83,12 @@ async function loadPage(target: URL, { keepScripts, thumb, self }: { keepScripts
   try {
     res = await fetch(target, { headers: FETCH_HEADERS, redirect: "follow", signal: AbortSignal.timeout(15000) });
   } catch (e) {
-    return errorPage(`Couldn't reach ${target.host}: ${(e as Error).message}`);
+    const why = (e as Error).name === "TimeoutError" ? "timed out after 15 s" : (e as Error).message;
+    reportError({ kind: "proxy", message: `Couldn't reach the site: ${why}`, url: target.toString() });
+    return errorPage(`Couldn't reach ${target.host}: ${why}`);
   }
+  // Still served (the canvas shows what the site sent), but worth knowing: often bot protection (403/429/503).
+  if (res.status >= 400) reportError({ kind: "proxy", message: `The site answered HTTP ${res.status}`, url: res.url || target.toString() });
 
   const type = res.headers.get("content-type") ?? "";
   if (!type.includes("text/html")) {
@@ -141,6 +149,33 @@ function htmlResponse(html: string, status: number, cache: "hit" | "miss") {
       "x-qasync-cache": cache,
     },
   });
+}
+
+/**
+ * Screenshot mode: a minimal page with the reviewer agent and one full-width image, captured on the
+ * server at the frame's own width (it asks for innerWidth). Pins anchor to the image, so the canvas
+ * works as usual on sites that refuse to be framed.
+ */
+function shotPage(target: URL, self: string) {
+  const token = mintAssetToken(target.origin);
+  const src = `${self}/api/proxy/shot?url=${encodeURIComponent(target.toString())}&t=${encodeURIComponent(token)}`;
+  const info = JSON.stringify({ url: target.toString(), status: 200, shot: true }).replace(/</g, "\\u003c");
+  const host = escapeAttr(target.host);
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${host} · screenshot</title>
+<script>window.__QASYNC__=${info};</script>
+<script src="${escapeAttr(self)}/reviewer.js" data-qasync></script>
+<style>html,body{margin:0;background:#fff}#qasync-shot{display:block;width:100%;height:auto}
+#qasync-wait{position:fixed;inset:0;display:grid;place-content:center;gap:6px;padding:24px;text-align:center;background:#f6f7fb;color:#3a4563;font:500 14px/1.5 system-ui,sans-serif}
+#qasync-wait small{color:#5f6a84;font-weight:400}</style></head>
+<body><div id="qasync-wait" role="status">Capturing a screenshot of ${host}…<small>This takes a few seconds.</small></div>
+<img id="qasync-shot" alt="Screenshot of ${escapeAttr(target.toString())}">
+<script>(function(){var img=document.getElementById("qasync-shot"),wait=document.getElementById("qasync-wait");
+img.onload=function(){wait.remove()};
+img.onerror=function(){wait.innerHTML="The screenshot couldn't be captured.<small>Use Reload to try again, or switch back to the live page.</small>"};
+img.src=${JSON.stringify(src)}+"&w="+Math.round(window.innerWidth);})();</script>
+</body></html>`;
+  return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }
 
 function errorPage(msg: string, status = 200) {

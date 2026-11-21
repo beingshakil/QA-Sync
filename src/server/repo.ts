@@ -671,7 +671,7 @@ export async function deleteComment(id: string) {
 const LOCAL_PRO = !process.env.VERCEL && process.env.QASYNC_DB !== "remote";
 
 export async function getWorkspacePlan(workspaceId: string): Promise<WorkspacePlan> {
-  if (LOCAL_PRO) return ADMIN_PLAN;
+  if (LOCAL_PRO) return { ...ADMIN_PLAN, admin: false, local: true };
   const r = await q1(
     `SELECT w.plan, w.plan_expires_at, u.email AS owner_email,
             EXISTS (SELECT 1 FROM site_admins sa WHERE sa.email = lower(u.email)) AS owner_admin

@@ -4,6 +4,8 @@ import { Activity, AlertTriangle, Building2, FolderKanban, Gauge, MessageSquare,
 import { PageHeader } from "@/components/app/page-header";
 import { AdminUsers } from "@/components/app/admin-users";
 import { AdminAdmins } from "@/components/app/admin-admins";
+import { AdminErrors } from "@/components/app/admin-errors";
+import { listErrors } from "@/server/monitor";
 import { mailConfigured } from "@/server/mail";
 import { adminStats, adminUsers, isAdmin, isMainAdmin, listAdmins } from "@/server/admin";
 import { requireCtx } from "@/server/session";
@@ -15,7 +17,7 @@ export const metadata: Metadata = { title: "Admin" };
 export default async function AdminPage() {
   const ctx = await requireCtx();
   if (!(await isAdmin(ctx.email))) notFound();
-  const [stats, users, admins] = await Promise.all([adminStats(), adminUsers(), listAdmins()]);
+  const [stats, users, admins, errors] = await Promise.all([adminStats(), adminUsers(), listAdmins(), listErrors()]);
   const mailReady = mailConfigured();
   const proUsers = users.filter((u) => u.plan?.plan === "pro").length;
 
@@ -34,7 +36,7 @@ export default async function AdminPage() {
 
   return (
     <>
-      <PageHeader title="Admin" sub="Your users, their plans, and who else can manage them. Only admins can see this page." />
+      <PageHeader title="Admin" sub="Your users, their plans, who else can manage them, and errors across the site. Only admins can see this page." />
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6">
         {!mailReady && (
           <div className="flex items-start gap-3 rounded-xl border border-[var(--st-progress)]/35 bg-[color-mix(in_srgb,var(--st-progress)_9%,transparent)] px-4 py-3 text-[13px] text-ink-2">
@@ -68,6 +70,8 @@ export default async function AdminPage() {
             </div>
           ))}
         </div>
+
+        <AdminErrors initial={errors} />
 
         <AdminUsers users={users} canManageAdmins={isMainAdmin(ctx.email)} mailReady={mailReady} me={ctx.email} />
         <AdminAdmins admins={admins} canManage={isMainAdmin(ctx.email)} me={ctx.email} />

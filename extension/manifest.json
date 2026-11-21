@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "QASync",
+  "short_name": "QASync",
+  "version": "0.1.0",
+  "description": "Pin visual feedback on any page, including staging behind a login, local builds and sites that refuse to be framed.",
+  "minimum_chrome_version": "116",
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "action": {
+    "default_title": "QASync: review this page",
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png" }
+  },
+  "background": { "service_worker": "background.js", "type": "module" },
+  "side_panel": { "default_path": "sidepanel.html" },
+  "permissions": ["activeTab", "scripting", "storage", "sidePanel"],
+  "host_permissions": ["http://localhost/*", "http://127.0.0.1/*"],
+  "optional_host_permissions": ["https://*/*", "http://*/*"],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": { "default": "Alt+Shift+Q" },
+      "description": "Review this page with QASync"
+    }
+  }
+}

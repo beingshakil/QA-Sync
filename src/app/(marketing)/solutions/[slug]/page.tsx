@@ -78,8 +78,8 @@ export default async function SolutionPage({ params }: Props) {
       <Section>
         <div className="flex flex-wrap gap-2">
           {SOLUTIONS.filter((x) => x.slug !== slug).map((o) => (
-            <Link key={o.slug} href={`/solutions/${o.slug}`} className="rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink-2 hover:border-line-strong hover:text-ink">
-              For {o.name.toLowerCase()} →
+            <Link key={o.slug} href={`/solutions/${o.slug}`} className="inline-flex items-center rounded-full border border-line bg-surface px-4 py-2 text-sm text-ink-2 hover:border-line-strong hover:text-ink max-sm:min-h-11">
+              {forLabel(o.name)} →
             </Link>
           ))}
         </div>

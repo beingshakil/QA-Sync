@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ThemeToggle } from "./app-theme";
 import { useEffect, useState } from "react";
-import { FolderKanban, Gauge, ListChecks, PanelLeftClose, PanelLeftOpen, Plus, Settings } from "lucide-react";
+import { FolderKanban, Gauge, ListChecks, PanelLeftClose, PanelLeftOpen, Plus, Settings, Puzzle } from "lucide-react";
 import { LogoMark, Wordmark } from "@/components/ui";
 import { cn } from "@/lib/utils";
 
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/app/projects", label: "Projects", icon: FolderKanban },
   { href: "/app/issues", label: "Issues", icon: ListChecks },
   { href: "/app/audits", label: "Audits", icon: Gauge },
+  { href: "/app/extension", label: "Extension", icon: Puzzle },
   { href: "/app/settings", label: "Settings", icon: Settings },
 ];
 
@@ -111,7 +112,7 @@ export function CanvasRail({ projects, currentId }: { projects: RailProject[]; c
 
       <div className={cn("mt-1 flex items-center border-t border-line pt-3", open ? "justify-between px-4" : "justify-center")}>
         {open && <span className="font-mono text-[10.5px] uppercase tracking-widest text-ink-3">Projects</span>}
-        <Link href="/app/projects" title="All projects / new project" className="rounded p-1 text-ink-3 hover:bg-surface-2 hover:text-ink">
+        <Link href="/app/projects" title="All projects / new project" aria-label="All projects / new project" className="rounded-md p-1.5 text-ink-3 hover:bg-surface-2 hover:text-ink">
           <Plus size={14} />
         </Link>
       </div>

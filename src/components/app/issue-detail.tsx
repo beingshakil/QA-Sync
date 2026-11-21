@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { NotionIssueButton } from "./notion-issue-button";
 import { BadgeCheck, Check, ChevronDown, Copy, Crosshair, FileText, Link2, MoreHorizontal, Pencil, RotateCcw, Send, Trash2, X } from "lucide-react";
 import { useConfirm } from "@/components/confirm";
 import { api, type GuestCtx } from "@/lib/api";
@@ -316,6 +317,7 @@ export function IssueDetail({ issueId, guest, onChange, onDeleted, onClose, onLo
         {/* workflow actions */}
         <div className="mt-3 flex flex-wrap gap-2">
           <WorkflowActions issue={issue} guest={!!guest} onSet={(s) => patch({ status: s })} />
+          {isMember && <NotionIssueButton issueId={issue.id} />}
         </div>
       </div>
 

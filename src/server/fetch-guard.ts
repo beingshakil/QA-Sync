@@ -8,6 +8,11 @@ import "server-only";
 const PRIVATE_HOST =
   /^(localhost|127\.|0\.0\.0\.0|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|\[?::1\]?|\[?fc|\[?fd|metadata\.google\.internal)/i;
 
+/** True for localhost, private, link-local and cloud-metadata hostnames (by name only). */
+export function isPrivateHost(hostname: string): boolean {
+  return PRIVATE_HOST.test(hostname);
+}
+
 export function resolveTarget(raw: string, selfOrigin: string): URL {
   const url = new URL(raw, selfOrigin);
   if (!/^https?:$/.test(url.protocol)) throw new Error("Only http(s) URLs are supported");

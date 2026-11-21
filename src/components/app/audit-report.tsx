@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AuditDocsButton } from "./audit-docs-button";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -160,6 +161,7 @@ function Header({ audit, project, embedded }: { audit: Audit; project: Project; 
         </div>
       </div>
       <div className="flex items-start gap-2">
+        {audit.seo && <AuditDocsButton audit={audit} />}
         {audit.seo && <RerunButton audit={audit} embedded={embedded} />}
         {!embedded && <DeleteAuditButton id={audit.id} url={audit.url} redirectTo="/app/audits" withLabel />}
         {embedded && (

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ExportIssues } from "./export-issues";
 import { useEffect, useMemo, useState } from "react";
 import { Crosshair, LayoutGrid, List, Search } from "lucide-react";
 import { api } from "@/lib/api";
@@ -119,6 +120,7 @@ export function IssuesView({ initial, projectId, projects, members = [], me }: {
             <LayoutGrid size={15} />
           </button>
         </div>
+        <ExportIssues issues={filtered} name={projects?.find((p) => p.id === project)?.name ?? (projectId ? (filtered[0]?.projectName ?? "project") : "all projects")} />
       </div>
 
       {view === "list" && (

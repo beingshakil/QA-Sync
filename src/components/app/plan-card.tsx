@@ -28,7 +28,7 @@ export function PlanCard({ plan, usage }: { plan: WorkspacePlan; usage: Usage })
           </span>
         </div>
         <span className="text-[13px] text-ink-3">
-          {plan.admin ? "Site admin · always Pro" : pro ? (plan.expiresAt ? `Pro until ${fmt(plan.expiresAt)}` : "Pro, no end date") : plan.expired ? `Pro ended ${fmt(plan.expiresAt!)}` : "Free forever"}
+          {plan.local ? "Local testing · always Pro" : plan.admin ? "Site admin · always Pro" : pro ? (plan.expiresAt ? `Pro until ${fmt(plan.expiresAt)}` : "Pro, no end date") : plan.expired ? `Pro ended ${fmt(plan.expiresAt!)}` : "Free forever"}
         </span>
       </div>
 

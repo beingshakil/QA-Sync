@@ -175,10 +175,49 @@ ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_expires_at TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_updated_at TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_granted_by TEXT;
 ALTER TABLE workspaces ADD COLUMN IF NOT EXISTS plan_notices TEXT NOT NULL DEFAULT '';
+ALTER TABLE api_tokens ADD COLUMN IF NOT EXISTS kind TEXT NOT NULL DEFAULT 'mcp';
 CREATE TABLE IF NOT EXISTS site_admins (
   email TEXT PRIMARY KEY,
   added_by TEXT,
   created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS error_events (
+  key TEXT PRIMARY KEY,
+  kind TEXT NOT NULL,
+  host TEXT,
+  message TEXT NOT NULL,
+  url TEXT,
+  detail TEXT,
+  count INTEGER NOT NULL DEFAULT 1,
+  first_at TEXT NOT NULL,
+  last_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_error_events_last ON error_events(last_at);
+CREATE TABLE IF NOT EXISTS integrations (
+  id TEXT PRIMARY KEY,
+  workspace_id TEXT NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL,
+  account_name TEXT,
+  secret TEXT NOT NULL,
+  created_by TEXT,
+  created_at TEXT NOT NULL,
+  UNIQUE (workspace_id, provider)
+);
+CREATE TABLE IF NOT EXISTS notion_links (
+  project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+  database_id TEXT NOT NULL,
+  database_url TEXT,
+  mode TEXT NOT NULL DEFAULT 'all',
+  last_sync_at TEXT,
+  props TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS notion_pages (
+  issue_id TEXT PRIMARY KEY REFERENCES issues(id) ON DELETE CASCADE,
+  page_id TEXT NOT NULL,
+  page_url TEXT,
+  status TEXT,
+  synced_at TEXT NOT NULL
 );
 `;
 

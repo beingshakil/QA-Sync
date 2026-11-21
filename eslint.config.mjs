@@ -20,6 +20,12 @@ const eslintConfig = [
       "next-env.d.ts",
     ],
   },
+  {
+    rules: {
+      // `_name` marks an intentionally unused value, and swallowed errors (`catch (e) {}`) are deliberate.
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", ignoreRestSiblings: true, caughtErrors: "none" }],
+    },
+  },
 ];
 
 export default eslintConfig;

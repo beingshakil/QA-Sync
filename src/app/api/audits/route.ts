@@ -1,6 +1,7 @@
 import { checkLimit, latestAuditForPage, listAudits, saveAudit } from "@/server/repo";
 import { fail, member, ok, projectFor, readJson } from "@/server/http";
 import { runAudit } from "@/server/audit";
+import { reportError } from "@/server/monitor";
 import { resolveTarget, selfOriginOf } from "@/server/fetch-guard";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,7 @@ export async function POST(req: Request) {
     const result = await runAudit(target.toString());
     return ok(await saveAudit({ projectId: project.id, url: raw, ...result }), 201);
   } catch (e) {
+    reportError({ kind: "audit", message: `Audit failed: ${(e as Error).message}`, url: raw });
     return fail(`Audit failed: ${(e as Error).message}`, 422);
   }
 }

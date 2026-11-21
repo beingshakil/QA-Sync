@@ -22,6 +22,7 @@ export function WorkspaceSettings({ initial, workspaces, activeId }: { initial: 
   const [saved, setSaved] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [switching, setSwitching] = useState<string | null>(null);
   const admin = ws.role === "owner" || ws.role === "admin";
 
   async function update(patch: Parameters<typeof api.updateWorkspace>[0], after?: () => void) {
@@ -64,6 +65,7 @@ export function WorkspaceSettings({ initial, workspaces, activeId }: { initial: 
 
   async function switchTo(id: string) {
     setBusy(true);
+    setSwitching(id);
     try {
       await api.updateWorkspace({ switchTo: id });
       router.push("/app/projects");
@@ -71,6 +73,7 @@ export function WorkspaceSettings({ initial, workspaces, activeId }: { initial: 
     } catch (e) {
       setErr((e as Error).message);
       setBusy(false);
+      setSwitching(null);
     }
   }
 
@@ -95,7 +98,7 @@ export function WorkspaceSettings({ initial, workspaces, activeId }: { initial: 
           </label>
         </div>
         <div className="flex items-center gap-3">
-          <Button disabled={busy}>{saved ? <><Check size={14} /> Saved</> : "Save changes"}</Button>
+          <Button loading={busy && !switching} disabled={busy} className="shrink-0">{saved ? <><Check size={14} /> Saved</> : busy && !switching ? "Saving…" : "Save changes"}</Button>
           <span className="text-[12.5px] text-ink-3">Renaming yourself also updates the comments you&apos;ve posted here.</span>
         </div>
       </form>
@@ -166,7 +169,7 @@ export function WorkspaceSettings({ initial, workspaces, activeId }: { initial: 
                 {w.id === activeId ? (
                   <span className="text-[12.5px] text-pass">Active</span>
                 ) : (
-                  <Button variant="secondary" size="sm" disabled={busy} onClick={() => switchTo(w.id)}>
+                  <Button variant="secondary" size="sm" disabled={busy} loading={switching === w.id} onClick={() => switchTo(w.id)}>
                     Switch
                   </Button>
                 )}
