@@ -42,7 +42,7 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
  * Notion for a project: one-time keys (admins), connect, pick a database (or create one), choose
  * what's sent, sync. Lives in project settings, and (bare) in the review canvas's setup popup.
  */
-export function NotionCard({ projectId, back, bare = false, onLinked }: { projectId: string; back?: string; bare?: boolean; onLinked?: () => void }) {
+export function NotionCard({ projectId, back, bare = false, onLinked, change = false }: { projectId: string; back?: string; bare?: boolean; onLinked?: () => void; change?: boolean }) {
   const params = useSearchParams();
   const ret = params.get("notion");
   const [s, setS] = useState<Status | null>(null);
@@ -53,6 +53,11 @@ export function NotionCard({ projectId, back, bare = false, onLinked }: { projec
   const [mode, setMode] = useState<Mode>("all");
   const [synced, setSynced] = useState<string | null>(null);
   const [editKeys, setEditKeys] = useState(false);
+  const [changing, setChanging] = useState(change); // opened from "Change": straight to the picker
+  const linkMode = s?.link?.mode;
+  useEffect(() => {
+    if (changing && linkMode) setMode(linkMode); // keep the project's current choice of what's sent
+  }, [changing, linkMode]);
   const info = useSetupInfo(!!s && !s.connected);
   const startUrl = `/api/integrations/notion/start?projectId=${encodeURIComponent(projectId)}${back ? `&back=${encodeURIComponent(back)}` : ""}`;
 
@@ -79,8 +84,8 @@ export function NotionCard({ projectId, back, bare = false, onLinked }: { projec
     }
   }, []);
   useEffect(() => {
-    if (s?.connected && !s.link && targets === null) search("");
-  }, [s, targets, search]);
+    if (s?.connected && (!s.link || changing) && targets === null) search("");
+  }, [s, changing, targets, search]);
 
   async function run(key: string, fn: () => Promise<void>) {
     setBusy(key);
@@ -97,6 +102,7 @@ export function NotionCard({ projectId, back, bare = false, onLinked }: { projec
   const link = (t: Target) =>
     run(`link-${t.id}`, async () => {
       await call("/api/integrations/notion/link", { method: "POST", body: JSON.stringify({ projectId, mode, ...(t.type === "database" ? { databaseId: t.id } : { parentPageId: t.id }) }) });
+      setChanging(false);
       await load();
       onLinked?.();
     });
@@ -147,11 +153,23 @@ export function NotionCard({ projectId, back, bare = false, onLinked }: { projec
               )}
             </div>
           </div>
-        ) : !s.link ? (
+        ) : !s.link || changing ? (
           <div className="space-y-4">
-            <p className="text-[13.5px] text-ink-2">
-              Connected to <b className="text-ink">{s.accountName}</b>. Pick a page to create a ready-made “QASync Issues” database in, or an existing database.
-            </p>
+            {changing ? (
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <p className="min-w-0 flex-1 basis-64 text-[13.5px] text-ink-2">
+                  Pick another page or database. Rows already sent stay in the old database; from now on issues go to the new one, and <b className="text-ink">Send</b> copies a
+                  page&apos;s comments over.
+                </p>
+                <Button variant="ghost" size="sm" onClick={() => setChanging(false)}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <p className="text-[13.5px] text-ink-2">
+                Connected to <b className="text-ink">{s.accountName}</b>. Pick a page to create a ready-made “QASync Issues” database in, or an existing database.
+              </p>
+            )}
             <label className="block">
               <span className="text-[12.5px] text-ink-3">Send</span>
               <select value={mode} onChange={(e) => setMode(e.target.value as Mode)} className="input mt-1">
@@ -240,6 +258,17 @@ export function NotionCard({ projectId, back, bare = false, onLinked }: { projec
               </Button>
               <span className="text-[12.5px] text-ink-3">{synced ?? (s.link.lastSyncAt ? `Last synced ${timeAgo(s.link.lastSyncAt)}` : "Not synced yet")}</span>
               <span className="flex-1" />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => {
+                  setMode(s.link!.mode);
+                  setTargets(null);
+                  setChanging(true);
+                }}
+              >
+                <Database size={14} /> Change database
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"

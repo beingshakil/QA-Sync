@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ExternalLink, FileText } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui";
-import { googleExportReady, preloadGoogle, saveAsGoogleDoc } from "@/lib/google-drive";
+import { DriveError, googleExportReady, saveAsGoogleDoc } from "@/lib/google-drive";
+import { ConnectDriveButton } from "@/components/app/google-connect";
 import { seoChecks } from "@/lib/seo-checks";
 import type { Audit } from "@/lib/types";
 
@@ -41,8 +42,7 @@ ${findings ? `<h2>Other checks</h2><ul>${findings}</ul>` : ""}
 export function AuditDocsButton({ audit }: { audit: Audit }) {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
-  useEffect(() => preloadGoogle(), []);
+  const [err, setErr] = useState<DriveError | null>(null);
   if (!googleExportReady()) return null;
   if (url)
     return (
@@ -61,7 +61,7 @@ export function AuditDocsButton({ audit }: { audit: Audit }) {
           try {
             setUrl(await saveAsGoogleDoc(`SEO audit · ${audit.seo?.title || audit.url}`, reportHtml(audit)));
           } catch (e) {
-            setErr((e as Error).message);
+            setErr(e instanceof DriveError ? e : new DriveError((e as Error).message));
           } finally {
             setBusy(false);
           }
@@ -69,7 +69,20 @@ export function AuditDocsButton({ audit }: { audit: Audit }) {
       >
         {!busy && <FileText size={15} />} Save to Google Docs
       </Button>
-      {err && <span className="text-[12px] text-danger">{err}</span>}
+      {err && (
+        <span role="alert" className="max-w-xs text-right text-[12px] text-danger">
+          {err.message}
+          {err.href && (
+            <>
+              {" "}
+              <a href={err.href} target="_blank" rel="noreferrer" className="font-medium underline">
+                Turn it on
+              </a>
+            </>
+          )}
+        </span>
+      )}
+      {err?.code === "connect" && <ConnectDriveButton variant="secondary" />}
     </div>
   );
 }

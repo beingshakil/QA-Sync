@@ -2,43 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Download, ExternalLink, FileSpreadsheet, Loader2 } from "lucide-react";
-import { STATUS_LABEL, PRIORITY_LABEL, type Issue } from "@/lib/types";
-import { downloadCsv, exportToSheets, googleExportReady, preloadGoogle } from "@/lib/google-drive";
+import type { Issue } from "@/lib/types";
+import { DriveError, downloadCsv, exportToSheets, googleExportReady } from "@/lib/google-drive";
+import { ISSUE_HEADER as HEADER, issueRows } from "@/lib/issue-rows";
+import { ConnectDriveButton } from "@/components/app/google-connect";
 import { cn } from "@/lib/utils";
 
-/** Spreadsheet columns for issues: shared by the issue list's Export menu and the review canvas. */
-export const ISSUE_HEADER = ["#", "Title", "Status", "Priority", "Assignee", "Reporter", "Page", "Device", "Created", "Comment", "Link"];
-const HEADER = ISSUE_HEADER;
-
-export function issueRows(issues: Issue[]) {
-  const origin = typeof window === "undefined" ? "" : window.location.origin;
-  return issues.map((i) => [
-    i.number,
-    i.title,
-    STATUS_LABEL[i.status],
-    PRIORITY_LABEL[i.priority],
-    i.assignee ?? "",
-    i.reporterName,
-    i.pageUrl,
-    i.device,
-    i.createdAt.slice(0, 16).replace("T", " "),
-    i.body,
-    `${origin}/app/projects/${i.projectId}/review?issue=${i.id}`,
-  ]);
-}
+const rows = (issues: Issue[]) => issueRows(issues, window.location.origin);
 
 /** Issue lists: Export → CSV (always) or a new Google Sheet (when Google Drive is set up). */
 export function ExportIssues({ issues, name }: { issues: Issue[]; name: string }) {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [sheet, setSheet] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [err, setErr] = useState<DriveError | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const google = googleExportReady();
 
   useEffect(() => {
     if (!open) return;
-    preloadGoogle();
     const close = (e: MouseEvent) => !box.current?.contains(e.target as Node) && setOpen(false);
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
@@ -59,22 +41,22 @@ export function ExportIssues({ issues, name }: { issues: Issue[]; name: string }
       </button>
       {open && (
         <div role="menu" className="animate-pop absolute right-0 top-11 z-30 w-72 rounded-xl border border-line bg-surface p-1.5 shadow-2">
-          <button role="menuitem" className={item} onClick={() => (downloadCsv(`qasync-issues-${day}.csv`, HEADER, issueRows(issues)), setOpen(false))}>
+          <button role="menuitem" className={item} onClick={() => (downloadCsv(`qasync-issues-${day}.csv`, HEADER, rows(issues)), setOpen(false))}>
             <Download size={15} className="shrink-0" /> Download CSV <span className="ml-auto text-[12px] text-ink-3">{issues.length}</span>
           </button>
           <button
             role="menuitem"
             className={item}
             disabled={!google || busy}
-            title={google ? undefined : "Google Drive isn't set up on this server yet"}
+            title={google ? undefined : "Google Drive needs Google sign-in, which isn't set up here"}
             onClick={async () => {
               setBusy(true);
               setErr(null);
               setSheet(null);
               try {
-                setSheet(await exportToSheets(`QASync issues · ${name} · ${day}`, HEADER, issueRows(issues)));
+                setSheet(await exportToSheets(`QASync issues · ${name} · ${day}`, HEADER, rows(issues)));
               } catch (e) {
-                setErr((e as Error).message);
+                setErr(e instanceof DriveError ? e : new DriveError((e as Error).message));
               } finally {
                 setBusy(false);
               }
@@ -89,9 +71,20 @@ export function ExportIssues({ issues, name }: { issues: Issue[]; name: string }
             </a>
           )}
           {err && (
-            <p role="alert" className="px-3 py-2 text-[12.5px] text-danger">
-              {err}
-            </p>
+            <div role="alert" className="space-y-2 px-3 py-2 text-[12.5px] text-danger">
+              <p>
+                {err.message}
+                {err.href && (
+                  <>
+                    {" "}
+                    <a href={err.href} target="_blank" rel="noreferrer" className="font-medium underline">
+                      Turn it on
+                    </a>
+                  </>
+                )}
+              </p>
+              {err.code === "connect" && <ConnectDriveButton />}
+            </div>
           )}
           <p className="px-3 pb-1.5 pt-1 text-[11.5px] leading-snug text-ink-3">Exports the issues shown with the current filters. Sheets are saved to the QASync folder in your Google Drive.</p>
         </div>

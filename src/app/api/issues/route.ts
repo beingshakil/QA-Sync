@@ -2,7 +2,9 @@ import { checkLimit, createIssue, notifyUsage, requireFeature, getShare, getUplo
 import { actorFrom, fail, isMember, member, ok, projectFor, readJson } from "@/server/http";
 import { autoTitle, stripMentions, suggestPriority } from "@/server/ai";
 import { q } from "@/server/db";
+import { after } from "next/server";
 import { autoPush, maybeSync } from "@/server/notion";
+import { autoSyncDrive } from "@/server/google";
 import { PRIORITIES, type Attachment, type ElementInfo, type EnvInfo, type Priority } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -99,6 +101,7 @@ export async function POST(req: Request) {
   await resetPageQa(issue.projectId, issue.pageUrl);
   await notifyUsage(project.workspaceId!);
   autoPush(issue);
+  after(() => autoSyncDrive(issue.projectId, issue.pageUrl)); // the page's Google Sheet, if it was sent to Drive
   return ok(issue, 201);
 }
 

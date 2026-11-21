@@ -1553,7 +1553,7 @@ function Upsell({ what, guest, limit, onClose }: { what: Feature | "comments"; g
 
 function DesignDrop({ onPick, onDrive, guest, device }: { onPick: () => void; onDrive?: () => void; guest: boolean; device: string }) {
   useEffect(() => {
-    if (onDrive) preloadGoogle(true);
+    if (onDrive) preloadGoogle();
   }, [onDrive]);
   return (
     <div className="flex h-full min-h-[300px] items-center justify-center p-8 text-center">

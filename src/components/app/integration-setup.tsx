@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { useRouter } from "next/navigation";
 import { Check, Copy, ExternalLink, FolderOpen, X } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui";
 import { IntegrationIcon } from "@/components/integration-icon";
-import { connectGoogleDrive, googleExportReady, savedDriveLink, setGoogleConfig, type GoogleConfig } from "@/lib/google-drive";
+import { DRIVE_FOLDER_NAME, driveStatus, type DriveStatus } from "@/lib/google-drive";
+import { ConnectDriveButton } from "@/components/app/google-connect";
 
 /** GET /api/integrations/setup */
 export type SetupInfo = {
   canSetup: boolean;
   origin: string;
   notion: { configured: boolean; source: "env" | "app" | null; redirectUri: string };
-  google: { configured: boolean; source: "env" | "app" | null; clientId: string | null; hasApiKey: boolean; signInClientId: string | null };
+  google: { available: boolean; picker: boolean; pickerSource: "env" | "app" | null; project: string | null };
 };
 
 export function useSetupInfo(enabled = true) {
@@ -167,135 +167,125 @@ export function NotionKeysForm({ info, onSaved }: { info: SetupInfo; onSaved: ()
   );
 }
 
-/** One-time Google Drive setup: two console switches, one origin, one client ID (pre-filled). */
-export function GoogleKeysForm({ info, onSaved }: { info: SetupInfo; onSaved: (cfg: GoogleConfig) => void }) {
-  const [clientId, setClientId] = useState(info.google.clientId ?? info.google.signInClientId ?? "");
+/** Admins, once: the sign-in client's Cloud project needs the Drive and Sheets APIs (and, to pick designs, the Picker API and a key). */
+function GoogleApisSetup({ info }: { info: SetupInfo }) {
   const [apiKey, setApiKey] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
-  if (!info.canSetup) return <AskAdmin what="Google Drive" />;
-  const prefilled = !!info.google.signInClientId && clientId === info.google.signInClientId;
+  const [saved, setSaved] = useState(info.google.picker);
+  const n = info.google.project;
+  const api = (id: string) => (n ? `https://console.developers.google.com/apis/api/${id}/overview?project=${n}` : `https://console.cloud.google.com/apis/library/${id}`);
   return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        setBusy(true);
-        setErr(null);
-        try {
-          const r = await post<{ google: GoogleConfig }>({ google: { clientId, apiKey } });
-          onSaved(r.google);
-        } catch (e) {
-          setErr((e as Error).message);
-          setBusy(false);
-        }
-      }}
-    >
-      <p className="mb-4 text-[13.5px] text-ink-2">Turn on Google Drive for QASync. You do this once in Google Cloud, in the project you use for Google sign-in.</p>
+    <div className="rounded-xl border border-line p-4">
+      <div className="mb-3 text-[12.5px] font-medium uppercase tracking-wide text-ink-3">For admins · once in Google Cloud</div>
       <ol className="space-y-5">
-        <Step n={1} title="Turn on two Google APIs">
+        <Step n={1} title="Allow this site's sign-in address">
+          <p className="text-[13px] text-ink-3">
+            On your OAuth client, under <b className="text-ink-2">Authorized redirect URIs</b>, add (one per site address you use, such as localhost and the live site):
+          </p>
+          <CopyField value={`${info.origin}/api/auth/callback/google`} label="Redirect URI" />
+          <Ext href={n ? `https://console.cloud.google.com/apis/credentials?project=${n}` : "https://console.cloud.google.com/apis/credentials"}>Open Credentials</Ext>
+        </Step>
+        <Step n={2} title="Turn on two Google APIs">
+          <p className="text-[13px] text-ink-3">In the project you use for “Sign in with Google”.</p>
           <div className="flex flex-wrap gap-2">
-            <Ext href="https://console.cloud.google.com/apis/library/drive.googleapis.com">Google Drive API</Ext>
-            <Ext href="https://console.cloud.google.com/apis/library/sheets.googleapis.com">Google Sheets API</Ext>
+            <Ext href={api("drive.googleapis.com")}>Google Drive API</Ext>
+            <Ext href={api("sheets.googleapis.com")}>Google Sheets API</Ext>
           </div>
         </Step>
-        <Step n={2} title="Allow this site on your OAuth client">
-          <p className="text-[13px] text-ink-3">
-            Under <b className="text-ink-2">Authorized JavaScript origins</b>, add:
-          </p>
-          <CopyField value={info.origin} label="JavaScript origin" />
-          <Ext href="https://console.cloud.google.com/apis/credentials">Open Credentials</Ext>
-        </Step>
-        <Step n={3} title="OAuth client ID">
-          <input value={clientId} onChange={(e) => setClientId(e.target.value)} placeholder="…apps.googleusercontent.com" aria-label="Google OAuth client ID" className="input font-mono text-[12.5px]" autoComplete="off" required />
-          {prefilled && <p className="text-[12.5px] text-ink-3">Filled in with the client you already use for Google sign-in.</p>}
-          <details className="group text-[13px]">
-            <summary className="cursor-pointer select-none text-ink-3 hover:text-ink">Also pick designs from Drive (optional)</summary>
-            <div className="mt-2 space-y-2">
-              <p className="text-[12.5px] text-ink-3">Turn on the Google Picker API and paste a browser API key.</p>
+        <Step n={3} title="Pick designs from Drive (optional)">
+          {saved ? (
+            <p className="flex items-center gap-1.5 text-[13px] text-ink-2">
+              <Check size={14} className="text-[var(--st-verified)]" /> Picking designs from Drive is on.
+            </p>
+          ) : (
+            <form
+              className="space-y-2"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setBusy(true);
+                setErr(null);
+                try {
+                  await post({ google: { apiKey } });
+                  setSaved(true);
+                } catch (e) {
+                  setErr((e as Error).message);
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
+              <p className="text-[13px] text-ink-3">Turn on the Google Picker API, then paste a browser API key.</p>
               <div className="flex flex-wrap gap-2">
-                <Ext href="https://console.cloud.google.com/apis/library/picker.googleapis.com">Google Picker API</Ext>
+                <Ext href={api("picker.googleapis.com")}>Google Picker API</Ext>
+                <Ext href={n ? `https://console.cloud.google.com/apis/credentials?project=${n}` : "https://console.cloud.google.com/apis/credentials"}>Create an API key</Ext>
               </div>
-              <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API key (optional)" aria-label="Google API key" className="input font-mono text-[12.5px]" autoComplete="off" />
-            </div>
-          </details>
+              <div className="flex gap-2">
+                <input value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="API key" aria-label="Google API key" className="input min-w-0 flex-1 font-mono text-[12.5px]" autoComplete="off" required />
+                <Button type="submit" variant="secondary" size="sm" className="h-10 shrink-0" loading={busy}>
+                  Save
+                </Button>
+              </div>
+              {err && (
+                <p role="alert" className="text-[12.5px] text-danger">
+                  {err}
+                </p>
+              )}
+            </form>
+          )}
         </Step>
       </ol>
-      {err && (
-        <p role="alert" className="mt-4 text-[13px] text-danger">
-          {err}
-        </p>
-      )}
-      <div className="mt-5 flex justify-end">
-        <Button type="submit" loading={busy}>
-          Save and connect
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }
 
-/** Google Drive in a popup: set up the app's keys if needed, then connect (creates the QASync folder). */
-export function DriveSetup({ onDone }: { onDone: () => void }) {
-  const router = useRouter();
-  const [ready, setReady] = useState(googleExportReady());
-  const info = useSetupInfo(!ready);
-  const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
-  const [link, setLink] = useState(savedDriveLink());
-
-  async function connect() {
-    setBusy(true);
-    setErr(null);
-    try {
-      setLink(await connectGoogleDrive());
-    } catch (e) {
-      setErr((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!ready) {
-    if (!info) return <p className="text-[13px] text-ink-3">Loading…</p>;
-    return (
-      <GoogleKeysForm
-        info={info}
-        onSaved={(cfg) => {
-          setGoogleConfig(cfg);
-          setReady(true);
-          router.refresh(); // other screens pick up the new keys too
-          void connect(); // straight on to Google's consent popup
-        }}
-      />
-    );
-  }
-
-  if (link)
-    return (
-      <div className="space-y-4">
-        <p role="status" className="rounded-lg bg-pass-soft px-3 py-2.5 text-[13.5px] text-ink">
-          Google Drive is connected{link.email ? ` as ${link.email}` : ""}. Sheets go to the <b>QASync</b> folder.
-        </p>
-        <div className="flex flex-wrap justify-end gap-2">
-          <a href={link.folderUrl} target="_blank" rel="noreferrer" className={buttonClass("secondary", "md")}>
-            <FolderOpen size={15} /> Open the QASync folder
-          </a>
-          <Button onClick={onDone}>Done</Button>
-        </div>
-      </div>
-    );
+/** Google Drive in a popup: connect (Google sign-in with Drive permission) and, for admins, the one-time Cloud switches. */
+export function DriveSetup({ email, onDone }: { email?: string; onDone: () => void }) {
+  const info = useSetupInfo();
+  const [st, setSt] = useState<DriveStatus | null>(null);
+  useEffect(() => {
+    driveStatus()
+      .then(setSt)
+      .catch(() => {});
+  }, []);
+  if (!info || !st) return <p className="text-[13px] text-ink-3">Loading…</p>;
 
   return (
-    <div className="space-y-4">
-      <p className="text-[13.5px] text-ink-2">Connect your Google account. QASync makes a QASync folder in your Drive and can only see that folder and the files it creates.</p>
-      {err && (
-        <p role="alert" className="text-[13px] text-danger">
-          {err}
-        </p>
+    <div className="space-y-5">
+      {!info.google.available ? (
+        info.canSetup ? (
+          <p className="rounded-lg bg-surface-2 px-3 py-2.5 text-[13.5px] text-ink-2">
+            Google Drive works through “Sign in with Google”, which isn&apos;t set up here yet: add <code className="font-mono text-[12px]">AUTH_GOOGLE_ID</code> and{" "}
+            <code className="font-mono text-[12px]">AUTH_GOOGLE_SECRET</code> to the server.
+          </p>
+        ) : (
+          <AskAdmin what="Google Drive" />
+        )
+      ) : st.connected ? (
+        <div className="space-y-3">
+          <p role="status" className="rounded-lg bg-pass-soft px-3 py-2.5 text-[13.5px] text-ink">
+            Google Drive is connected{st.email ? ` as ${st.email}` : ""}. Sheets and docs go to the <b>{DRIVE_FOLDER_NAME}</b> folder.
+          </p>
+          {st.folderUrl && (
+            <a href={st.folderUrl} target="_blank" rel="noreferrer" className={buttonClass("secondary", "sm")}>
+              <FolderOpen size={14} /> Open the {DRIVE_FOLDER_NAME} folder
+            </a>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-[13.5px] text-ink-2">
+            Connect with your Google account. QASync makes a {DRIVE_FOLDER_NAME} folder in your Drive and can only see that folder and the files it creates or you pick.
+          </p>
+          <ConnectDriveButton email={email} />
+        </div>
       )}
+
+      {info.canSetup && info.google.available && <GoogleApisSetup info={info} />}
+
       <div className="flex justify-end">
-        <Button loading={busy} onClick={connect}>
-          Connect Google Drive
+        <Button variant="secondary" onClick={onDone}>
+          Done
         </Button>
       </div>
     </div>

@@ -108,6 +108,7 @@ export function CanvasPanel({
       window.history.replaceState(window.history.state, "", u.pathname + u.search);
     }
     sender.reloadNotion();
+    sender.reloadDrive();
   };
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
@@ -347,10 +348,10 @@ export function CanvasPanel({
         )}
       </div>
       {setup && send && (
-        <SetupDialog title={setup === "notion" ? "Set up Notion" : "Set up Google Drive"} icon={setup === "notion" ? "Notion" : "Google Drive"} onClose={closeSetup}>
+        <SetupDialog title={setup === "notion" ? (sender.notionOn ? "Notion database" : "Set up Notion") : "Google Drive"} icon={setup === "notion" ? "Notion" : "Google Drive"} onClose={closeSetup}>
           {setup === "notion" ? (
             <Suspense fallback={<p className="text-[13px] text-ink-3">Loading…</p>}>
-              <NotionCard projectId={send.projectId} back={notionBack()} bare onLinked={closeSetup} />
+              <NotionCard projectId={send.projectId} back={notionBack()} bare onLinked={closeSetup} change={sender.notionOn} />
             </Suspense>
           ) : (
             <DriveSetup onDone={closeSetup} />

@@ -1,4 +1,7 @@
 import "server-only";
+import { after } from "next/server";
+import { pushChange } from "./notion";
+import { autoSyncDrive } from "./google";
 import { addComment, getIssue, getProject, isMemberName, listActivity, listComments, listIssues, listProjects, resetPageQa, updateIssue } from "./repo";
 import { q } from "./db";
 import { OPEN_STATUSES, PRIORITIES, STATUS_LABEL, PRIORITY_LABEL, type Issue, type Priority, type Status } from "@/lib/types";
@@ -217,6 +220,8 @@ const TOOLS: ToolDef[] = [
       if (!Object.keys(patch).length) throw new ToolError("Nothing to change: pass status, priority or assignee.");
       const next = (await updateIssue(i.id, patch, ctx.actor))!;
       if (patch.status && OPEN_STATUSES.includes(patch.status)) await resetPageQa(next.projectId, next.pageUrl);
+      pushChange(next.id); // its Notion row, if it has one
+      after(() => autoSyncDrive(next.projectId, next.pageUrl)); // its page's Google Sheet, if sent to Drive
       return summary(next, ctx);
     },
   },

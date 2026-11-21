@@ -1,55 +1,35 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FolderOpen } from "lucide-react";
 import { Button, buttonClass } from "@/components/ui";
 import { IntegrationIcon } from "@/components/integration-icon";
-import {
-  DRIVE_FOLDER_NAME,
-  connectGoogleDrive,
-  disconnectGoogleDrive,
-  googleExportReady,
-  preloadGoogle,
-  savedDriveLink,
-  setGoogleAccountHint,
-  setGoogleConfig,
-  type DriveLink,
-  type GoogleConfig,
-} from "@/lib/google-drive";
-import { DriveSetup, SetupDialog } from "@/components/app/integration-setup";
+import { DRIVE_FOLDER_NAME, disconnectGoogleDrive, driveStatus, setGoogleConfig, type DriveStatus, type GoogleConfig } from "@/lib/google-drive";
+import { ConnectDriveButton } from "@/components/app/google-connect";
+import { DriveSetup, SetupDialog, useSetupInfo } from "@/components/app/integration-setup";
 
-/**
- * App layout: gives the Google code the app's Drive keys (the same for everyone, so also set while
- * rendering on the server) and the account the person signed in with, so Google offers it first.
- */
-export function GoogleAccountHint({ email, config }: { email: string; config: GoogleConfig | null }) {
-  if (config?.clientId) setGoogleConfig(config); // never cleared by a stale answer right after an admin saved keys
-  if (typeof window !== "undefined") setGoogleAccountHint(email); // per person: browser only
+/** App layout: tells every screen whether Google Drive (and its file picker) is available. The same for everyone. */
+export function GoogleConfigSync({ config }: { config: GoogleConfig }) {
+  setGoogleConfig(config);
   return null;
 }
 
-/** Settings → Google Drive: connect once, and a QASync folder is created in that Drive for every export. */
+/** Settings → Google Drive: connected with Google sign-in; exports and page sheets go to a QASync folder. */
 export function GoogleDriveCard({ email }: { email: string }) {
-  const [link, setLink] = useState<DriveLink | null>(null);
+  const [st, setSt] = useState<DriveStatus | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [setup, setSetup] = useState(false);
-  const ready = googleExportReady();
+  const info = useSetupInfo();
 
-  useEffect(() => {
-    setGoogleAccountHint(email);
-    preloadGoogle();
-    const read = () => setLink(savedDriveLink());
-    read();
-    window.addEventListener("qasync-drive", read);
-    window.addEventListener("storage", read);
-    return () => {
-      window.removeEventListener("qasync-drive", read);
-      window.removeEventListener("storage", read);
-    };
-  }, [email]);
+  const load = useCallback(() => {
+    driveStatus()
+      .then(setSt)
+      .catch((e) => setErr((e as Error).message));
+  }, []);
+  useEffect(load, [load]);
 
-  const otherAccount = !!link?.email && link.email.toLowerCase() !== email.toLowerCase();
+  const otherAccount = !!st?.email && st.email.toLowerCase() !== email.toLowerCase();
 
   return (
     <section className="rounded-2xl border border-line bg-surface shadow-1">
@@ -61,13 +41,13 @@ export function GoogleDriveCard({ email }: { email: string }) {
           <div className="min-w-0 flex-1">
             <h2 className="font-semibold">Google Drive</h2>
             <p className="mt-0.5 text-[13px] text-ink-3">
-              Issue exports and audit reports are saved to a <span className="font-medium text-ink-2">{DRIVE_FOLDER_NAME}</span> folder in your Drive, created
-              automatically. QASync can open only that folder and the files it makes.
+              Issue exports, audit reports and page sheets go to a <span className="font-medium text-ink-2">{DRIVE_FOLDER_NAME}</span> folder in your Drive. QASync can
+              open only that folder and the files it makes or you pick.
             </p>
-            {!ready && <p className="mt-2 text-[13px] text-ink-3">Not set up yet.</p>}
-            {ready && link && (
+            {st && !st.available && <p className="mt-2 text-[13px] text-ink-3">Needs Google sign-in, which isn&apos;t set up here yet.</p>}
+            {st?.connected && (
               <p className="mt-2 text-[13px] text-ink-2">
-                Connected as <span className="font-medium text-ink">{link.email || "your Google account"}</span>
+                Connected as <span className="font-medium text-ink">{st.email || "your Google account"}</span>
                 {otherAccount && <span className="text-ink-3"> · not the account you sign in to QASync with</span>}
               </p>
             )}
@@ -78,38 +58,24 @@ export function GoogleDriveCard({ email }: { email: string }) {
             )}
           </div>
         </div>
-        {!ready && (
-          <div className="flex shrink-0 items-center">
-            <Button size="sm" onClick={() => setSetup(true)}>
-              Set up
-            </Button>
-          </div>
-        )}
-        {setup && (
-          <SetupDialog title="Set up Google Drive" icon="Google Drive" onClose={() => setSetup(false)}>
-            <DriveSetup onDone={() => setSetup(false)} />
-          </SetupDialog>
-        )}
-        {ready && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
-            {link ? (
-              <>
-                <a href={link.folderUrl} target="_blank" rel="noreferrer" className={buttonClass("secondary", "sm")}>
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          {st?.connected ? (
+            <>
+              {st.folderUrl && (
+                <a href={st.folderUrl} target="_blank" rel="noreferrer" className={buttonClass("secondary", "sm")}>
                   <FolderOpen size={14} /> Open the {DRIVE_FOLDER_NAME} folder
                 </a>
-                <Button size="sm" variant="ghost" onClick={() => (disconnectGoogleDrive(), setErr(null))}>
-                  Disconnect
-                </Button>
-              </>
-            ) : (
+              )}
               <Button
                 size="sm"
+                variant="ghost"
                 loading={busy}
                 onClick={async () => {
                   setBusy(true);
                   setErr(null);
                   try {
-                    setLink(await connectGoogleDrive());
+                    await disconnectGoogleDrive();
+                    load();
                   } catch (e) {
                     setErr((e as Error).message);
                   } finally {
@@ -117,10 +83,22 @@ export function GoogleDriveCard({ email }: { email: string }) {
                   }
                 }}
               >
-                Connect Google Drive
+                Disconnect
               </Button>
-            )}
-          </div>
+            </>
+          ) : st?.available ? (
+            <ConnectDriveButton email={email} />
+          ) : null}
+          {st && (info?.canSetup || !st.available) && (
+            <Button size="sm" variant={st.available ? "ghost" : "primary"} onClick={() => setSetup(true)}>
+              {st.available ? "Google Cloud setup" : "Set up"}
+            </Button>
+          )}
+        </div>
+        {setup && (
+          <SetupDialog title="Set up Google Drive" icon="Google Drive" onClose={() => (setSetup(false), load())}>
+            <DriveSetup email={email} onDone={() => (setSetup(false), load())} />
+          </SetupDialog>
         )}
       </div>
     </section>

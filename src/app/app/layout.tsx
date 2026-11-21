@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { requireCtx } from "@/server/session";
 import { AppThemeSync } from "@/components/app/app-theme";
 import { ErrorReporter } from "@/components/app/error-reporter";
-import { GoogleAccountHint } from "@/components/app/google-drive-card";
+import { GoogleConfigSync } from "@/components/app/google-drive-card";
 import { publicGoogleConfig } from "@/server/integration-keys";
 
 /** The app is private to each workspace: keep it out of search results. */
@@ -13,12 +13,12 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
-  const ctx = await requireCtx(); // signed out → /login
+  await requireCtx(); // signed out → /login
   return (
     <>
       <AppThemeSync />
       <ErrorReporter />
-      <GoogleAccountHint email={ctx.email} config={await publicGoogleConfig()} />
+      <GoogleConfigSync config={await publicGoogleConfig()} />
       {children}
     </>
   );

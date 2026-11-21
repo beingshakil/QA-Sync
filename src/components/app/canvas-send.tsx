@@ -4,10 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, ExternalLink, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui";
 import { IntegrationIcon } from "@/components/integration-icon";
-import { ISSUE_HEADER, issueRows } from "@/components/app/export-issues";
-import { connectGoogleDrive, googleExportReady, preloadGoogle, savedDriveLink, syncPageSheet, type DriveLink } from "@/lib/google-drive";
+import { ConnectDriveButton } from "@/components/app/google-connect";
+import { DriveError, driveStatus, sendPageToDrive, type DriveStatus } from "@/lib/google-drive";
 import type { Issue } from "@/lib/types";
-import { cn, pageKey } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 /** What the review canvas sends: the current page of a project (members only). */
 export type SendTarget = { projectId: string; projectName: string; pageUrl: string; pageName: string; pageIssues: Issue[] };
@@ -19,16 +19,15 @@ const NOTION_BATCH = 5; // per request, so a long page shows progress and never 
 
 /**
  * "Send" in the review canvas goes to every destination that's turned on: the project's Notion
- * database (when linked) and the QASync folder in Google Drive (when connected in this browser).
+ * database (when linked) and Google Drive (connected with Google sign-in): one sheet per page in
+ * QASync / <project>, which then keeps itself in sync as comments change.
  */
 export function useSender(target?: SendTarget) {
   const projectId = target?.projectId;
   const [notion, setNotion] = useState<NotionState | null>(null);
-  const [drive, setDrive] = useState<DriveLink | null>(null);
+  const [drive, setDrive] = useState<DriveStatus | null>(null);
   const [progress, setProgress] = useState<{ notion?: string; drive?: string } | null>(null);
   const [outcome, setOutcome] = useState<{ notion?: Outcome; drive?: Outcome } | null>(null);
-  const [connecting, setConnecting] = useState(false);
-  const driveReady = googleExportReady();
 
   const loadNotion = useCallback(() => {
     if (!projectId) return;
@@ -39,24 +38,22 @@ export function useSender(target?: SendTarget) {
   }, [projectId]);
   useEffect(loadNotion, [loadNotion]);
 
-  useEffect(() => {
+  const loadDrive = useCallback(() => {
     if (!projectId) return;
-    const read = () => setDrive(savedDriveLink());
-    read();
-    window.addEventListener("qasync-drive", read);
-    window.addEventListener("storage", read);
-    return () => {
-      window.removeEventListener("qasync-drive", read);
-      window.removeEventListener("storage", read);
-    };
+    driveStatus(projectId)
+      .then(setDrive)
+      .catch(() => {});
   }, [projectId]);
+  useEffect(loadDrive, [loadDrive]);
 
   // Results belong to the page they were sent from.
   const pageUrl = target?.pageUrl;
   useEffect(() => setOutcome(null), [pageUrl]);
 
   const notionOn = !!notion?.linked;
-  const driveOn = driveReady && !!drive;
+  // On when this person's Drive is connected, or the project already syncs to a teammate's Drive.
+  const driveLinked = drive?.project?.linked ? drive.project : null;
+  const driveOn = !!drive?.available && (drive.connected || !!driveLinked);
 
   async function toNotion(ids: string[]): Promise<Outcome> {
     const pages: Record<string, string> = {};
@@ -85,15 +82,20 @@ export function useSender(target?: SendTarget) {
 
   async function toDrive(t: SendTarget): Promise<Outcome> {
     setProgress((p) => ({ ...p, drive: "Updating the page's sheet…" }));
-    const rows = issueRows([...t.pageIssues].sort((a, b) => a.number - b.number));
-    const r = await syncPageSheet({ projectId: t.projectId, projectName: t.projectName, pageKey: pageKey(t.pageUrl), pageName: t.pageName, header: ISSUE_HEADER, rows });
-    return { ok: true, text: `${r.updated ? "Sheet updated" : "Sheet created"} · ${rows.length} ${rows.length === 1 ? "comment" : "comments"}`, href: r.url, hrefLabel: "Open the sheet" };
+    try {
+      const r = await sendPageToDrive(t.projectId, t.pageUrl);
+      loadDrive(); // the project now syncs by itself
+      return { ok: true, text: `${r.updated ? "Sheet updated" : "Sheet created"} · ${r.rows} ${r.rows === 1 ? "comment" : "comments"}`, href: r.url, hrefLabel: "Open the sheet" };
+    } catch (e) {
+      if (e instanceof DriveError && e.code === "connect") loadDrive();
+      if (e instanceof DriveError && e.href) return { ok: false, text: e.message, href: e.href, hrefLabel: "Turn it on" };
+      throw e;
+    }
   }
 
   /**
    * Sends the given comments to Notion, and refreshes the page's sheet in Drive (which always holds
-   * every comment on the page). Drive starts first: Google may need its sign-in popup, and browsers
-   * only allow that straight after the click.
+   * every comment on the page).
    */
   async function send(ids: string[]) {
     if (!target || progress) return;
@@ -119,18 +121,7 @@ export function useSender(target?: SendTarget) {
     return d.url ?? null;
   }
 
-  async function connectDrive() {
-    setConnecting(true);
-    try {
-      setDrive(await connectGoogleDrive());
-    } catch (e) {
-      setOutcome((o) => ({ ...o, drive: { ok: false, text: (e as Error).message } }));
-    } finally {
-      setConnecting(false);
-    }
-  }
-
-  return { notion, drive, driveReady, notionOn, driveOn, anyOn: notionOn || driveOn, busy: !!progress, progress, outcome, connecting, send, sendOne, connectDrive, reloadNotion: loadNotion };
+  return { notion, drive, driveLinked, notionOn, driveOn, anyOn: notionOn || driveOn, busy: !!progress, progress, outcome, send, sendOne, reloadNotion: loadNotion, reloadDrive: loadDrive };
 }
 
 export type Sender = ReturnType<typeof useSender>;
@@ -138,7 +129,6 @@ export type Sender = ReturnType<typeof useSender>;
 /** "Send this page" popover in the comment panel. Anything not set up yet opens its setup popup. */
 export function SendPanel({ sender: s, target, onSetup }: { sender: Sender; target: SendTarget; onSetup: (kind: "notion" | "drive") => void }) {
   const count = target.pageIssues.length;
-  useEffect(() => preloadGoogle(), []);
   const setUp = (kind: "notion" | "drive", label = "Set up") => (
     <button onClick={() => onSetup(kind)} className="inline-flex h-7 items-center rounded-md px-2 text-[12px] font-medium text-brand-ink hover:bg-surface-2">
       {label}
@@ -172,28 +162,26 @@ export function SendPanel({ sender: s, target, onSetup }: { sender: Sender; targ
           }
           progress={s.progress?.notion}
           outcome={s.outcome?.notion}
-          action={s.notion && !s.notionOn ? setUp("notion", s.notion.configured && !s.notion.connected ? "Connect" : "Set up") : null}
+          action={s.notion ? setUp("notion", s.notionOn ? "Change" : s.notion.configured && !s.notion.connected ? "Connect" : "Set up") : null}
         />
         <Destination
           icon="Google Drive"
           name="Google Drive"
           on={s.driveOn}
-          sub={s.driveOn ? `QASync / ${target.projectName} · one sheet per page` : !s.driveReady ? "Not set up yet" : "Not connected"}
+          sub={
+            s.drive === null
+              ? "Checking…"
+              : !s.drive.available
+                ? "Needs Google sign-in"
+                : s.driveLinked
+                  ? `Syncs by itself · QASync / ${target.projectName}${!s.driveLinked.mine && s.driveLinked.ownerEmail ? ` in ${s.driveLinked.ownerEmail}'s Drive` : ""}`
+                  : s.drive.connected
+                    ? `A sheet per page in QASync / ${target.projectName}`
+                    : "Not connected"
+          }
           progress={s.progress?.drive}
           outcome={s.outcome?.drive}
-          action={
-            !s.driveReady ? (
-              setUp("drive")
-            ) : !s.driveOn ? (
-              <button
-                onClick={s.connectDrive}
-                disabled={s.connecting}
-                className="inline-flex h-7 items-center gap-1 rounded-md px-2 text-[12px] font-medium text-brand-ink hover:bg-surface-2 disabled:opacity-60"
-              >
-                {s.connecting && <Loader2 size={12} className="animate-spin" />} Connect
-              </button>
-            ) : null
-          }
+          action={!s.drive ? null : !s.drive.available ? setUp("drive") : !s.driveOn ? <ConnectDriveButton compact label="Connect" /> : null}
         />
       </div>
 

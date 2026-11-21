@@ -4,20 +4,23 @@ import { seal, unseal } from "./crypto";
 import { isAdmin } from "./admin";
 
 /**
- * The app's own keys for Notion and Google Drive. They come from the environment when set there;
- * otherwise an admin pastes them once in the setup popup and they're kept in app_settings
- * (the Notion secret encrypted). Environment values always win.
+ * The app's own keys for Notion, and the optional key for Google's file picker. They come from the
+ * environment when set there; otherwise an admin pastes them once in the setup popup and they're
+ * kept in app_settings (the Notion secret encrypted). Environment values always win.
+ *
+ * Google Drive itself needs no keys here: it uses the "Sign in with Google" client (AUTH_GOOGLE_ID).
  */
 export type IntegrationKeys = {
   notion: { clientId: string; clientSecret: string; source: "env" | "app" } | null;
-  google: { clientId: string; apiKey: string; appId: string; source: "env" | "app" } | null;
+  /** Google's file picker (choosing a design from Drive): a browser API key and the Cloud project number. */
+  picker: { apiKey: string; appId: string; source: "env" | "app" } | null;
 };
-export type PublicGoogleConfig = { clientId: string; apiKey: string; appId: string };
+/** What every page of the app knows about Google Drive (none of it secret). */
+export type PublicGoogleConfig = { available: boolean; picker: boolean };
 
 const K = {
   notionId: "integrations.notion.clientId",
   notionSecret: "integrations.notion.clientSecret",
-  googleId: "integrations.google.clientId",
   googleKey: "integrations.google.apiKey",
 } as const;
 
@@ -40,29 +43,26 @@ export async function integrationKeys(fresh = false): Promise<IntegrationKeys> {
 
   const env = process.env;
   const notionSecret = open(db[K.notionSecret]);
-  const notion =
+  const notion: IntegrationKeys["notion"] =
     env.NOTION_CLIENT_ID && env.NOTION_CLIENT_SECRET
       ? { clientId: env.NOTION_CLIENT_ID, clientSecret: env.NOTION_CLIENT_SECRET, source: "env" as const }
       : db[K.notionId] && notionSecret
         ? { clientId: db[K.notionId], clientSecret: notionSecret, source: "app" as const }
         : null;
 
-  const envGoogle = env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  const google = envGoogle
-    ? { clientId: envGoogle, apiKey: env.NEXT_PUBLIC_GOOGLE_API_KEY ?? "", appId: env.NEXT_PUBLIC_GOOGLE_APP_ID || projectNumberOf(envGoogle), source: "env" as const }
-    : db[K.googleId]
-      ? { clientId: db[K.googleId], apiKey: db[K.googleKey] ?? "", appId: projectNumberOf(db[K.googleId]), source: "app" as const }
-      : null;
+  const appId = env.NEXT_PUBLIC_GOOGLE_APP_ID || projectNumberOf(env.AUTH_GOOGLE_ID ?? "");
+  const pickerKey = env.NEXT_PUBLIC_GOOGLE_API_KEY || db[K.googleKey] || "";
+  const picker: IntegrationKeys["picker"] = pickerKey && appId ? { apiKey: pickerKey, appId, source: env.NEXT_PUBLIC_GOOGLE_API_KEY ? "env" : "app" } : null;
 
-  const keys = { notion, google };
+  const keys = { notion, picker };
   cache = { at: Date.now(), keys };
   return keys;
 }
 
-/** What the browser needs for Google Drive: all public by design (an OAuth client ID, a browser API key). */
-export async function publicGoogleConfig(): Promise<PublicGoogleConfig | null> {
-  const g = (await integrationKeys()).google;
-  return g ? { clientId: g.clientId, apiKey: g.apiKey, appId: g.appId } : null;
+/** Drive works wherever "Sign in with Google" does; the picker also needs its API key. */
+export async function publicGoogleConfig(): Promise<PublicGoogleConfig> {
+  const available = !!(process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET);
+  return { available, picker: available && !!(await integrationKeys()).picker };
 }
 
 async function put(key: string, value: string | null) {
@@ -84,8 +84,7 @@ export async function saveNotionKeys(clientId: string, clientSecret: string) {
   cache = null;
 }
 
-export async function saveGoogleKeys(clientId: string, apiKey: string) {
-  await put(K.googleId, clientId);
+export async function savePickerKey(apiKey: string) {
   await put(K.googleKey, apiKey || null);
   cache = null;
 }

@@ -234,6 +234,9 @@ export async function adoptDatabase(token: string, databaseId: string) {
 }
 
 export async function linkProject(projectId: string, d: { databaseId: string; url: string | null; props: PropNames }, mode: NotionMode) {
+  // Another database: rows in the old one stay there, and issues start fresh in the new one.
+  const prev = await getLink(projectId);
+  if (prev && prev.databaseId !== d.databaseId) await run("DELETE FROM notion_pages WHERE issue_id IN (SELECT id FROM issues WHERE project_id = ?)", projectId);
   await run(
     `INSERT INTO notion_links (project_id, database_id, database_url, mode, created_at, props) VALUES (?, ?, ?, ?, ?, ?)
      ON CONFLICT (project_id) DO UPDATE SET database_id = excluded.database_id, database_url = excluded.database_url, mode = excluded.mode, props = excluded.props, last_sync_at = NULL`,

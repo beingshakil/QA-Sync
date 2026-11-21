@@ -225,6 +225,36 @@ CREATE TABLE IF NOT EXISTS app_settings (
   value TEXT NOT NULL,
   updated_at TEXT NOT NULL
 );
+
+-- Google Drive permission from "Sign in with Google" (tokens sealed, see crypto.ts).
+CREATE TABLE IF NOT EXISTS google_grants (
+  user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  email TEXT,
+  refresh_token TEXT,
+  access_token TEXT,
+  expires_at BIGINT NOT NULL DEFAULT 0,
+  scope TEXT NOT NULL DEFAULT '',
+  folder_id TEXT,
+  folder_url TEXT,
+  updated_at TEXT NOT NULL
+);
+-- A project sent to Drive: its folder lives in this person's Drive (QASync / <project>).
+CREATE TABLE IF NOT EXISTS drive_links (
+  project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  folder_id TEXT NOT NULL,
+  folder_url TEXT,
+  created_at TEXT NOT NULL
+);
+-- One sheet per page of a project, kept in sync with its comments.
+CREATE TABLE IF NOT EXISTS drive_sheets (
+  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  page_key TEXT NOT NULL,
+  file_id TEXT NOT NULL,
+  url TEXT,
+  synced_at TEXT,
+  PRIMARY KEY (project_id, page_key)
+);
 `;
 
 /** `?` → `$1, $2…` (our SQL never has a literal `?`; user text always goes in as a parameter). */

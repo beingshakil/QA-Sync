@@ -16,7 +16,7 @@ export default function PrivacyPage() {
     <>
       <JsonLd data={graph(breadcrumbs([{ name: "Privacy Policy", path: "/privacy" }]))} />
       <PageHero title="Privacy" accent="Policy." sub="What we collect, why we need it, and the choices you have. Written to be read, not skimmed past." />
-      <LegalDoc updated="14 November 2026">
+      <LegalDoc updated="21 November 2026">
         <LegalSection n={1} title="Who we are">
           <p>
             QASync (&ldquo;we&rdquo;, &ldquo;us&rdquo;) is a visual feedback and website QA tool. This policy covers the QASync website and app. Questions or requests about your
@@ -27,12 +27,14 @@ export default function PrivacyPage() {
         <LegalSection n={2} title="What we collect">
           <p>
             <strong>When you sign in with Google</strong>, Google shares your name, email address and profile picture with us. We never see or store your Google password,
-            and signing in doesn&apos;t give us access to your Gmail, Drive or contacts.
+            and we get no access to your Gmail or contacts.
           </p>
           <p>
-            <strong>If you use the Google Drive features</strong> (exporting issues to Google Sheets, saving a report to Google Docs, or picking a design image from Drive),
-            Google asks you first and then gives QASync access only to the files you pick and the files QASync creates for you, never the rest of your Drive. QASync keeps
-            what it creates in a folder called &ldquo;QASync&rdquo; in your Drive. That access lives in your browser for about an hour and is not stored on our servers.
+            <strong>Google Drive.</strong> Signing in with Google also asks for access to Google Drive limited to the files QASync creates for you and the files you pick
+            in Google&apos;s file picker, never the rest of your Drive. QASync uses it for issue spreadsheets, audit reports and design images, and keeps what it creates in a
+            folder called &ldquo;QASync&rdquo; in your Drive. To keep a project&apos;s spreadsheets up to date, we store that Drive access on our servers, encrypted. You
+            can untick Drive on Google&apos;s sign-in screen, disconnect it in Settings, or remove it from your Google Account at any time; files already in your Drive
+            stay there.
           </p>
           <p>
             <strong>If you connect Notion</strong>, Notion gives your workspace an access token covering only the pages you choose to share with QASync. We store it encrypted
@@ -84,7 +86,7 @@ export default function PrivacyPage() {
               <strong>Neon</strong>: the database;
             </li>
             <li>
-              <strong>Google</strong>: sign-in.
+              <strong>Google</strong>: sign-in, and Google Drive when you use it.
             </li>
           </ul>
           <p>Data is stored in the United States. We may disclose data if the law requires it.</p>
