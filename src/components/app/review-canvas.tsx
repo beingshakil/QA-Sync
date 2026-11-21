@@ -1448,6 +1448,7 @@ export function ReviewCanvas({
                 onEdit={editIssueText}
                 onDelete={deleteIssueAsk}
                 bulk={guest ? undefined : { members, onUpdate: bulkUpdate, onDelete: bulkDelete }}
+                send={guest ? undefined : { projectId: project.id, projectName: project.name, pageUrl, pageName: pageLabel({ url: pageUrl }), pageIssues }}
                 showPageName={(i) => pageKey(i.pageUrl) !== pageKey(pageUrl)}
               />
             )}

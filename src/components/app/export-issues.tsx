@@ -6,9 +6,11 @@ import { STATUS_LABEL, PRIORITY_LABEL, type Issue } from "@/lib/types";
 import { downloadCsv, exportToSheets, googleExportReady, preloadGoogle } from "@/lib/google-drive";
 import { cn } from "@/lib/utils";
 
-const HEADER = ["#", "Title", "Status", "Priority", "Assignee", "Reporter", "Page", "Device", "Created", "Comment", "Link"];
+/** Spreadsheet columns for issues: shared by the issue list's Export menu and the review canvas. */
+export const ISSUE_HEADER = ["#", "Title", "Status", "Priority", "Assignee", "Reporter", "Page", "Device", "Created", "Comment", "Link"];
+const HEADER = ISSUE_HEADER;
 
-function rows(issues: Issue[]) {
+export function issueRows(issues: Issue[]) {
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   return issues.map((i) => [
     i.number,
@@ -57,7 +59,7 @@ export function ExportIssues({ issues, name }: { issues: Issue[]; name: string }
       </button>
       {open && (
         <div role="menu" className="animate-pop absolute right-0 top-11 z-30 w-72 rounded-xl border border-line bg-surface p-1.5 shadow-2">
-          <button role="menuitem" className={item} onClick={() => (downloadCsv(`qasync-issues-${day}.csv`, HEADER, rows(issues)), setOpen(false))}>
+          <button role="menuitem" className={item} onClick={() => (downloadCsv(`qasync-issues-${day}.csv`, HEADER, issueRows(issues)), setOpen(false))}>
             <Download size={15} className="shrink-0" /> Download CSV <span className="ml-auto text-[12px] text-ink-3">{issues.length}</span>
           </button>
           <button
@@ -70,7 +72,7 @@ export function ExportIssues({ issues, name }: { issues: Issue[]; name: string }
               setErr(null);
               setSheet(null);
               try {
-                setSheet(await exportToSheets(`QASync issues · ${name} · ${day}`, HEADER, rows(issues)));
+                setSheet(await exportToSheets(`QASync issues · ${name} · ${day}`, HEADER, issueRows(issues)));
               } catch (e) {
                 setErr((e as Error).message);
               } finally {

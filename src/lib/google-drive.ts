@@ -7,18 +7,28 @@
  * Everything QASync creates lands in one "QASync" folder in the user's Drive, created on first use
  * (or from Settings → Google Drive) and found again later by a private tag, never duplicated.
  *
- * Env (all public by design): NEXT_PUBLIC_GOOGLE_CLIENT_ID (OAuth web client),
- * NEXT_PUBLIC_GOOGLE_API_KEY and NEXT_PUBLIC_GOOGLE_APP_ID (project number) for the file picker.
+ * Config (all public by design): an OAuth web client ID, plus an API key and the project number
+ * (app ID) for the file picker. It comes from NEXT_PUBLIC_GOOGLE_* at build time, or from the keys
+ * an admin pasted in the setup popup: the app layout passes those in (setGoogleConfig).
  */
 
-const CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
-const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? "";
-const APP_ID = process.env.NEXT_PUBLIC_GOOGLE_APP_ID ?? "";
+export type GoogleConfig = { clientId: string; apiKey: string; appId: string };
+const fromEnv = (): GoogleConfig => ({
+  clientId: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "",
+  apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY ?? "",
+  appId: process.env.NEXT_PUBLIC_GOOGLE_APP_ID ?? "",
+});
+let cfg: GoogleConfig = fromEnv();
 const SCOPE = "https://www.googleapis.com/auth/drive.file";
 
+/** The same for every user (set by the app layout, and right after an admin saves new keys). */
+export function setGoogleConfig(c: GoogleConfig | null) {
+  cfg = c?.clientId ? c : fromEnv();
+}
+
 /** Exports (Sheets, Docs) need only the client ID; picking a file also needs the API key and app ID. */
-export const googleExportReady = () => !!CLIENT_ID;
-export const googlePickerReady = () => !!(CLIENT_ID && API_KEY && APP_ID);
+export const googleExportReady = () => !!cfg.clientId;
+export const googlePickerReady = () => !!(cfg.clientId && cfg.apiKey && cfg.appId);
 
 type TokenResponse = { access_token?: string; expires_in?: number; error?: string; error_description?: string };
 type PickerDoc = { id: string; name: string; mimeType: string };
@@ -90,12 +100,12 @@ export function setGoogleAccountHint(email: string) {
 
 /** A drive.file access token: asks once (Google's popup), then reuses it until it expires. */
 export async function googleToken(): Promise<string> {
-  if (!CLIENT_ID) throw new Error("Google Drive isn't set up on this server yet");
+  if (!cfg.clientId) throw new Error("Google Drive isn't set up yet");
   if (token && Date.now() < token.exp - 60_000) return token.value;
   await loadScript("https://accounts.google.com/gsi/client");
   return new Promise((resolve, reject) => {
     const client = w().google!.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
+      client_id: cfg.clientId,
       scope: SCOPE,
       ...(accountHint ? { login_hint: accountHint } : {}),
       callback: (r) => {
@@ -193,32 +203,111 @@ export function disconnectGoogleDrive() {
   if (t) w().google?.accounts?.oauth2?.revoke?.(t);
 }
 
-/** Creates a Google Sheet in the QASync folder, with a bold, frozen header row. Returns its URL. */
-export async function exportToSheets(title: string, header: string[], rows: (string | number)[][]): Promise<string> {
-  const dir = await qasyncFolder();
-  // Created through Drive so it can go straight into the folder (the Sheets API always files it in My Drive).
-  const file = await gjson<{ id: string; webViewLink?: string }>(`${DRIVE}/files?fields=id,webViewLink`, {
-    method: "POST",
-    json: { name: title, mimeType: "application/vnd.google-apps.spreadsheet", parents: [dir.id] },
-  });
-  const id = encodeURIComponent(file.id);
-  const meta = await gjson<{ sheets?: { properties: { sheetId: number } }[] }>(`https://sheets.googleapis.com/v4/spreadsheets/${id}?fields=sheets.properties.sheetId`);
-  const sheetId = meta.sheets?.[0]?.properties.sheetId ?? 0;
-  await gjson(`https://sheets.googleapis.com/v4/spreadsheets/${id}/values/A1?valueInputOption=RAW`, {
+const SHEETS = "https://sheets.googleapis.com/v4/spreadsheets";
+type Cell = string | number;
+
+/** Drive query strings quote values with single quotes (escaping \ and '). */
+const lit = (s: string) => `'${s.replace(/[\\']/g, (c) => `\\${c}`)}'`;
+
+/**
+ * Fills a sheet's first tab with a header and rows: bold, frozen header, sized columns. A sheet
+ * QASync just created also gets its tab named "Issues"; an existing one is cleared first, so
+ * sending again replaces the rows instead of stacking duplicates.
+ */
+async function writeSheet(fileId: string, header: string[], rows: Cell[][], fresh: boolean) {
+  const id = encodeURIComponent(fileId);
+  const meta = await gjson<{ sheets?: { properties: { sheetId: number; title?: string } }[] }>(`${SHEETS}/${id}?fields=sheets.properties(sheetId,title)`);
+  const first = meta.sheets?.[0]?.properties;
+  const sheetId = first?.sheetId ?? 0;
+  const tab = fresh ? "Issues" : first?.title || "Sheet1";
+  if (fresh) {
+    await gjson(`${SHEETS}/${id}:batchUpdate`, {
+      method: "POST",
+      json: { requests: [{ updateSheetProperties: { properties: { sheetId, title: tab, gridProperties: { frozenRowCount: 1 } }, fields: "title,gridProperties.frozenRowCount" } }] },
+    });
+  }
+  const range = `'${tab.replace(/'/g, "''")}'`;
+  if (!fresh) await gjson(`${SHEETS}/${id}/values/${encodeURIComponent(range)}:clear`, { method: "POST", json: {} });
+  await gjson(`${SHEETS}/${id}/values/${encodeURIComponent(`${range}!A1`)}?valueInputOption=RAW`, {
     method: "PUT",
-    json: { range: "A1", majorDimension: "ROWS", values: [header, ...rows] },
+    json: { range: `${range}!A1`, majorDimension: "ROWS", values: [header, ...rows] },
   });
-  await gjson(`https://sheets.googleapis.com/v4/spreadsheets/${id}:batchUpdate`, {
+  await gjson(`${SHEETS}/${id}:batchUpdate`, {
     method: "POST",
     json: {
       requests: [
-        { updateSheetProperties: { properties: { sheetId, title: "Issues", gridProperties: { frozenRowCount: 1 } }, fields: "title,gridProperties.frozenRowCount" } },
         { repeatCell: { range: { sheetId, startRowIndex: 0, endRowIndex: 1 }, cell: { userEnteredFormat: { textFormat: { bold: true } } }, fields: "userEnteredFormat.textFormat.bold" } },
         { autoResizeDimensions: { dimensions: { sheetId, dimension: "COLUMNS", startIndex: 0, endIndex: header.length } } },
       ],
     },
   });
-  return file.webViewLink ?? `https://docs.google.com/spreadsheets/d/${file.id}/edit`;
+}
+
+async function newSheet(name: string, parent: string, appProperties?: Record<string, string>) {
+  // Created through Drive so it goes straight into the folder (the Sheets API always files it in My Drive).
+  return gjson<{ id: string; webViewLink?: string }>(`${DRIVE}/files?fields=id,webViewLink`, {
+    method: "POST",
+    json: { name, mimeType: "application/vnd.google-apps.spreadsheet", parents: [parent], ...(appProperties ? { appProperties } : {}) },
+  });
+}
+const sheetUrl = (f: { id: string; webViewLink?: string }) => f.webViewLink ?? `https://docs.google.com/spreadsheets/d/${f.id}/edit`;
+
+/** Creates a Google Sheet in the QASync folder, with a bold, frozen header row. Returns its URL. */
+export async function exportToSheets(title: string, header: string[], rows: Cell[][]): Promise<string> {
+  const dir = await qasyncFolder();
+  const file = await newSheet(title, dir.id);
+  await writeSheet(file.id, header, rows, true);
+  return sheetUrl(file);
+}
+
+/** Finds a file QASync tagged earlier, or null. */
+async function findTagged(conditions: string[]): Promise<{ id: string; webViewLink?: string } | null> {
+  const q = [...conditions, "trashed=false"].join(" and ");
+  const r = await gjson<{ files?: { id: string; webViewLink?: string }[] }>(`${DRIVE}/files?q=${encodeURIComponent(q)}&spaces=drive&pageSize=1&fields=files(id,webViewLink)`);
+  return r.files?.[0] ?? null;
+}
+const tag = (key: string, value: string) => `appProperties has { key=${lit(key)} and value=${lit(value)} }`;
+
+const projectFolders = new Map<string, Promise<{ id: string; url: string }>>();
+
+/** QASync / <project name>: one folder per project inside the QASync folder. */
+function projectFolder(projectId: string, projectName: string) {
+  let p = projectFolders.get(projectId);
+  if (!p) {
+    p = (async () => {
+      const root = await qasyncFolder();
+      const found = await findTagged([`mimeType='${FOLDER_MIME}'`, tag("qasyncProject", projectId), `${lit(root.id)} in parents`]);
+      const f =
+        found ??
+        (await gjson<{ id: string; webViewLink?: string }>(`${DRIVE}/files?fields=id,webViewLink`, {
+          method: "POST",
+          json: { name: projectName.slice(0, 120) || "Project", mimeType: FOLDER_MIME, parents: [root.id], appProperties: { qasync: "project", qasyncProject: projectId } },
+        }));
+      return { id: f.id, url: f.webViewLink ?? `https://drive.google.com/drive/folders/${f.id}` };
+    })();
+    p.catch(() => projectFolders.delete(projectId));
+    projectFolders.set(projectId, p);
+  }
+  return p;
+}
+
+/** A short, stable id for a page (Drive app tags are limited to 124 bytes). */
+async function pageTag(pageKey: string) {
+  const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(pageKey));
+  return [...new Uint8Array(hash).slice(0, 12)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * The review canvas's "Send": keeps one sheet per page in QASync / <project>, holding every comment
+ * on that page. Sending again updates the same sheet. Returns the sheet's and the folder's URLs.
+ */
+export async function syncPageSheet(p: { projectId: string; projectName: string; pageKey: string; pageName: string; header: string[]; rows: Cell[][] }) {
+  const dir = await projectFolder(p.projectId, p.projectName);
+  const key = await pageTag(p.pageKey);
+  const found = await findTagged([`mimeType='application/vnd.google-apps.spreadsheet'`, tag("qasyncPage", key), `${lit(dir.id)} in parents`]);
+  const file = found ?? (await newSheet(`${p.pageName} · ${p.projectName}`.slice(0, 200), dir.id, { qasync: "page", qasyncPage: key, qasyncProject: p.projectId }));
+  await writeSheet(file.id, p.header, p.rows, !found);
+  return { url: sheetUrl(file), folderUrl: dir.url, updated: !!found };
 }
 
 /** Uploads HTML into the QASync folder and lets Drive convert it into a Google Doc. Returns the doc's URL. */
@@ -247,9 +336,9 @@ export async function pickDriveImage(): Promise<PickerDoc | null> {
     view.setMimeTypes("image/png,image/jpeg,image/webp");
     view.setIncludeFolders(true);
     new g.PickerBuilder()
-      .setAppId(APP_ID)
+      .setAppId(cfg.appId)
       .setOAuthToken(t)
-      .setDeveloperKey(API_KEY)
+      .setDeveloperKey(cfg.apiKey)
       .addView(view)
       .setTitle("Choose a design image")
       .setCallback((d) => {

@@ -219,6 +219,12 @@ CREATE TABLE IF NOT EXISTS notion_pages (
   status TEXT,
   synced_at TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS app_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
 `;
 
 /** `?` → `$1, $2…` (our SQL never has a literal `?`; user text always goes in as a parameter). */
@@ -263,21 +269,43 @@ async function openPglite(): Promise<Driver> {
   };
 }
 
+/** The schema is idempotent: one transaction with an advisory lock, so two cold starts can't create it at once. */
+async function applySchema(d: Driver) {
+  await d.exec(`BEGIN; SELECT pg_advisory_xact_lock(733101); ${SCHEMA} COMMIT;`);
+}
+
 async function open(): Promise<Driver> {
   const d = hosted() ? await openPg() : await openPglite();
-  // One transaction with an advisory lock, so two cold starts can't create the schema at once.
-  await d.exec(`BEGIN; SELECT pg_advisory_xact_lock(733101); ${SCHEMA} COMMIT;`);
+  await applySchema(d);
   if (d.kind === "pglite") await importLegacySqlite(d);
   return d;
 }
 
-const g = globalThis as unknown as { __qasyncDriver?: Promise<Driver> };
+// Kept on globalThis so dev hot reloads reuse the connection. __qasyncSchema is the schema that
+// connection has: when a reload brings a newer one (a new table or column), it's applied right away
+// instead of waiting for a restart.
+const g = globalThis as unknown as { __qasyncDriver?: Promise<Driver>; __qasyncSchema?: string };
 function driver(): Promise<Driver> {
   if (!g.__qasyncDriver) {
+    g.__qasyncSchema = SCHEMA;
     g.__qasyncDriver = open().catch((e) => {
       g.__qasyncDriver = undefined; // let the next request retry
+      g.__qasyncSchema = undefined;
       throw e;
     });
+  } else if (g.__qasyncSchema !== SCHEMA) {
+    const prev = g.__qasyncDriver;
+    g.__qasyncSchema = SCHEMA;
+    const next = prev.then(async (d) => {
+      await applySchema(d);
+      return d;
+    });
+    next.catch(() => {
+      // Keep the working connection; try the newer schema again on the next request.
+      g.__qasyncDriver = prev;
+      g.__qasyncSchema = undefined;
+    });
+    g.__qasyncDriver = next;
   }
   return g.__qasyncDriver;
 }

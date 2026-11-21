@@ -3,6 +3,7 @@ import { requireCtx } from "@/server/session";
 import { AppThemeSync } from "@/components/app/app-theme";
 import { ErrorReporter } from "@/components/app/error-reporter";
 import { GoogleAccountHint } from "@/components/app/google-drive-card";
+import { publicGoogleConfig } from "@/server/integration-keys";
 
 /** The app is private to each workspace: keep it out of search results. */
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <>
       <AppThemeSync />
       <ErrorReporter />
-      <GoogleAccountHint email={ctx.email} />
+      <GoogleAccountHint email={ctx.email} config={await publicGoogleConfig()} />
       {children}
     </>
   );

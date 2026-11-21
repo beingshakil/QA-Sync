@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   const integ = await getIntegration(ctx.workspaceId);
   const link = project ? await getLink(project.id) : null;
   return ok({
-    configured: notionConfigured(),
+    configured: await notionConfigured(),
     connected: !!integ,
     accountName: integ?.accountName ?? null,
     link: link ? { databaseId: link.databaseId, databaseUrl: link.databaseUrl, mode: link.mode, lastSyncAt: link.lastSyncAt } : null,

@@ -12,12 +12,19 @@ import {
   preloadGoogle,
   savedDriveLink,
   setGoogleAccountHint,
+  setGoogleConfig,
   type DriveLink,
+  type GoogleConfig,
 } from "@/lib/google-drive";
+import { DriveSetup, SetupDialog } from "@/components/app/integration-setup";
 
-/** App layout: tells the Google code which account the person signed in with, so Google offers it first. */
-export function GoogleAccountHint({ email }: { email: string }) {
-  if (typeof window !== "undefined") setGoogleAccountHint(email); // browser only: a plain module value, set before any click can ask for a token
+/**
+ * App layout: gives the Google code the app's Drive keys (the same for everyone, so also set while
+ * rendering on the server) and the account the person signed in with, so Google offers it first.
+ */
+export function GoogleAccountHint({ email, config }: { email: string; config: GoogleConfig | null }) {
+  if (config?.clientId) setGoogleConfig(config); // never cleared by a stale answer right after an admin saved keys
+  if (typeof window !== "undefined") setGoogleAccountHint(email); // per person: browser only
   return null;
 }
 
@@ -26,6 +33,7 @@ export function GoogleDriveCard({ email }: { email: string }) {
   const [link, setLink] = useState<DriveLink | null>(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [setup, setSetup] = useState(false);
   const ready = googleExportReady();
 
   useEffect(() => {
@@ -56,7 +64,7 @@ export function GoogleDriveCard({ email }: { email: string }) {
               Issue exports and audit reports are saved to a <span className="font-medium text-ink-2">{DRIVE_FOLDER_NAME}</span> folder in your Drive, created
               automatically. QASync can open only that folder and the files it makes.
             </p>
-            {!ready && <p className="mt-2 text-[13px] text-ink-3">Google Drive isn&apos;t set up on this server yet.</p>}
+            {!ready && <p className="mt-2 text-[13px] text-ink-3">Not set up yet.</p>}
             {ready && link && (
               <p className="mt-2 text-[13px] text-ink-2">
                 Connected as <span className="font-medium text-ink">{link.email || "your Google account"}</span>
@@ -70,6 +78,18 @@ export function GoogleDriveCard({ email }: { email: string }) {
             )}
           </div>
         </div>
+        {!ready && (
+          <div className="flex shrink-0 items-center">
+            <Button size="sm" onClick={() => setSetup(true)}>
+              Set up
+            </Button>
+          </div>
+        )}
+        {setup && (
+          <SetupDialog title="Set up Google Drive" icon="Google Drive" onClose={() => setSetup(false)}>
+            <DriveSetup onDone={() => setSetup(false)} />
+          </SetupDialog>
+        )}
         {ready && (
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             {link ? (

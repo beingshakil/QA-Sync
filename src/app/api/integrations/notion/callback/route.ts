@@ -6,13 +6,18 @@ import { reportError } from "@/server/monitor";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/integrations/notion/callback?code=…&state=…  →  back to the project's settings tab. */
+/** GET /api/integrations/notion/callback?code=…&state=…  →  back to where it was started (canvas or settings). */
 export async function GET(req: Request) {
   const params = new URL(req.url).searchParams;
   const self = selfOriginOf(req);
   const state = readState(params.get("state"));
-  const back = (projectId: string | undefined, result: string) =>
-    NextResponse.redirect(projectId ? `${self}/app/projects/${projectId}?tab=settings&notion=${result}` : `${self}/app/projects?notion=${result}`);
+  const back = (projectId: string | undefined, result: string) => {
+    // Back to where Notion was started from (the review canvas or project settings), with the result.
+    const to = state?.back && state.back.startsWith("/app/") && !state.back.startsWith("//") ? state.back : projectId ? `/app/projects/${projectId}?tab=settings` : "/app/projects";
+    const url = new URL(to, self);
+    url.searchParams.set("notion", result);
+    return NextResponse.redirect(url.toString());
+  };
   if (!state) return back(undefined, "expired");
   const ctx = await getCtx();
   // The same person, in the same workspace, must finish what they started.

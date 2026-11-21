@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowDownWideNarrow, Check, CheckSquare, ChevronDown, Link2, X, Loader2, MessageSquarePlus, Monitor, MoreHorizontal, Paperclip, Pencil, Search, Smartphone, Tablet, Trash2 } from "lucide-react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { ArrowDownWideNarrow, Check, CheckSquare, ChevronDown, Link2, X, Loader2, MessageSquarePlus, Monitor, MoreHorizontal, Paperclip, Pencil, Search, Send, Smartphone, Tablet, Trash2 } from "lucide-react";
 import { PRIORITIES, PRIORITY_COLOR, PRIORITY_LABEL, SOLVED_COLOR, STATUSES, STATUS_LABEL, issueColor, issueTextColor, type Issue, type Priority, type Status } from "@/lib/types";
 import { Avatar, Kbd, PriorityIcon } from "@/components/ui";
+import { IntegrationIcon } from "@/components/integration-icon";
+import { SendPanel, useSender, type SendTarget } from "@/components/app/canvas-send";
+import { DriveSetup, SetupDialog } from "@/components/app/integration-setup";
+import { NotionCard } from "@/components/app/notion-card";
 import { cn } from "@/lib/utils";
 
 export type SortKey = "newest" | "oldest" | "priority" | "number";
@@ -43,6 +47,7 @@ export function CanvasPanel({
   onEdit,
   onDelete,
   bulk,
+  send,
 }: {
   list: Issue[];
   scopeCount: number;
@@ -72,8 +77,38 @@ export function CanvasPanel({
     onUpdate: (ids: string[], patch: { status?: Status; priority?: Priority; assignee?: string | null }) => Promise<void>;
     onDelete: (ids: string[]) => Promise<boolean>;
   };
+  /** Send the page's comments to Notion and Google Drive (members only). */
+  send?: SendTarget;
 }) {
-  const [menu, setMenu] = useState<"sort" | "scope" | null>(null);
+  const [menu, setMenu] = useState<"sort" | "scope" | "send" | null>(null);
+  const sender = useSender(send);
+  const [setup, setSetup] = useState<"notion" | "drive" | null>(null);
+
+  // Back from Notion's sign-in (?setup=notion&notion=connected): reopen the popup to pick the database.
+  const hasSend = !!send;
+  useEffect(() => {
+    if (hasSend && new URLSearchParams(window.location.search).get("setup") === "notion") {
+      setMenu("send");
+      setSetup("notion");
+    }
+  }, [hasSend]);
+  /** Where Notion's sign-in returns to: this canvas page, with the popup reopened. */
+  const notionBack = () => {
+    const u = new URL(window.location.href);
+    u.searchParams.delete("notion");
+    u.searchParams.set("setup", "notion");
+    return u.pathname + u.search;
+  };
+  const closeSetup = () => {
+    setSetup(null);
+    const u = new URL(window.location.href);
+    if (u.searchParams.has("setup") || u.searchParams.has("notion")) {
+      u.searchParams.delete("setup");
+      u.searchParams.delete("notion");
+      window.history.replaceState(window.history.state, "", u.pathname + u.search);
+    }
+    sender.reloadNotion();
+  };
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -110,11 +145,11 @@ export function CanvasPanel({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!menu) return;
+    if (!menu || setup) return; // clicks inside the setup popup don't close the Send popover behind it
     const close = (e: MouseEvent) => !menuRef.current?.contains(e.target as Node) && setMenu(null);
     document.addEventListener("mousedown", close);
     return () => document.removeEventListener("mousedown", close);
-  }, [menu]);
+  }, [menu, setup]);
 
   const pct = totalCount ? Math.round((doneCount / totalCount) * 100) : 0;
 
@@ -132,6 +167,18 @@ export function CanvasPanel({
               className="min-w-0 flex-1 bg-transparent text-[13px] outline-none"
             />
           </label>
+          {send && (
+            <button
+              onClick={() => setMenu(menu === "send" ? null : "send")}
+              title="Send this page to Notion or Google Drive"
+              aria-label="Send this page to Notion or Google Drive"
+              aria-expanded={menu === "send"}
+              className={cn("relative flex h-9 w-9 items-center justify-center rounded-lg border", menu === "send" ? "border-ink-3 text-ink" : "border-line text-ink-2 hover:text-ink")}
+            >
+              {sender.busy ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+              {sender.anyOn && !sender.busy && <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--st-verified)]" />}
+            </button>
+          )}
           {bulk && (
             <button
               onClick={() => (selecting ? exitSelect() : setSelecting(true))}
@@ -209,7 +256,12 @@ export function CanvasPanel({
           </span>
         </div>
 
-        {menu && (
+        {menu === "send" && send && (
+          <div className="animate-pop absolute right-3 top-14 z-20 w-80 max-w-[calc(100%-24px)] overflow-hidden rounded-xl border border-line bg-surface shadow-2">
+            <SendPanel sender={sender} target={send} onSetup={setSetup} />
+          </div>
+        )}
+        {(menu === "sort" || menu === "scope") && (
           <div className={cn("animate-pop absolute right-3 z-20 w-52 overflow-hidden rounded-xl border border-line bg-surface py-1 shadow-2", menu === "sort" ? "top-14" : "top-[100px]")}>
             {menu === "sort" ? (
               <>
@@ -266,7 +318,9 @@ export function CanvasPanel({
               </li>
             )}
             {list.map((i) => (
-              <li key={i.id} className="animate-in-up">
+              // The fade-in leaves each row on its own layer, so later rows paint over earlier ones:
+              // the row whose "…" menu is open is lifted above its neighbours.
+              <li key={i.id} className="animate-in-up relative has-[[role=menu]]:z-20">
                 <CommentCard
                   selecting={selecting}
                   picked={picked.has(i.id)}
@@ -285,12 +339,24 @@ export function CanvasPanel({
                   onEdit={onEdit}
                   onDelete={onDelete}
                   pageName={showPageName(i) ? i.pageUrl : null}
+                  notion={sender.notionOn ? { url: sender.notion?.pages[i.id] ?? null, send: () => sender.sendOne(i.id) } : undefined}
                 />
               </li>
             ))}
           </ul>
         )}
       </div>
+      {setup && send && (
+        <SetupDialog title={setup === "notion" ? "Set up Notion" : "Set up Google Drive"} icon={setup === "notion" ? "Notion" : "Google Drive"} onClose={closeSetup}>
+          {setup === "notion" ? (
+            <Suspense fallback={<p className="text-[13px] text-ink-3">Loading…</p>}>
+              <NotionCard projectId={send.projectId} back={notionBack()} bare onLinked={closeSetup} />
+            </Suspense>
+          ) : (
+            <DriveSetup onDone={closeSetup} />
+          )}
+        </SetupDialog>
+      )}
       {selecting && bulk ? (
         <div className="space-y-2 border-t border-line bg-surface-2/60 px-3 py-2.5">
           <div className="flex items-center gap-2 text-[12.5px]">
@@ -321,6 +387,26 @@ export function CanvasPanel({
               onPick={(v) => applyBulk({ assignee: v === "__none" ? null : v })}
             />
           </div>
+          {send && sender.anyOn && (
+            <>
+              <button
+                disabled={!picked.size || bulkBusy || sender.busy}
+                onClick={() => sender.send([...picked])}
+                title={sender.driveOn ? "Notion gets the selected comments; the page's Google Sheet is refreshed with all of them" : undefined}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-line bg-surface py-1.5 text-[12.5px] text-ink hover:border-line-strong disabled:opacity-40"
+              >
+                {sender.busy ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                Send selected to {[sender.notionOn && "Notion", sender.driveOn && "Drive"].filter(Boolean).join(" & ")}
+              </button>
+              {(sender.progress || sender.outcome) && (
+                <p role="status" className="truncate px-1 text-[11.5px] text-ink-3">
+                  {sender.progress
+                    ? [sender.progress.notion, sender.progress.drive].filter(Boolean).join(" · ") || "Sending…"
+                    : [sender.outcome?.notion && `Notion: ${sender.outcome.notion.text}`, sender.outcome?.drive && `Drive: ${sender.outcome.drive.text}`].filter(Boolean).join(" · ")}
+                </p>
+              )}
+            </>
+          )}
           <button
             disabled={!picked.size || bulkBusy}
             onClick={async () => {
@@ -403,6 +489,7 @@ function CommentCard({
   onEdit,
   onDelete,
   pageName,
+  notion,
 }: {
   selecting?: boolean;
   picked?: boolean;
@@ -422,6 +509,8 @@ function CommentCard({
   onEdit: (i: Issue, text: string) => Promise<void>;
   onDelete: (i: Issue) => void;
   pageName: string | null;
+  /** When the project is linked to Notion: this comment's row, or a way to create it. */
+  notion?: { url: string | null; send: () => Promise<string | null> };
 }) {
   const done = DONE.includes(i.status);
   const [menu, setMenu] = useState<null | "down" | "up">(null);
@@ -431,6 +520,7 @@ function CommentCard({
   const [saving, setSaving] = useState(false);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [notionBusy, setNotionBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -723,6 +813,29 @@ function CommentCard({
           >
             {copied ? "Link copied" : "Copy link"}
           </MenuAction>
+          {notion && (
+            <MenuAction
+              icon={notionBusy ? <Loader2 size={13} className="animate-spin" /> : <IntegrationIcon name="Notion" size={13} />}
+              onClick={async () => {
+                if (notion.url) {
+                  window.open(notion.url, "_blank", "noopener");
+                  setMenu(null);
+                  return;
+                }
+                if (notionBusy) return;
+                setNotionBusy(true);
+                try {
+                  await notion.send(); // the item turns into "Open in Notion"
+                } catch (e) {
+                  alert((e as Error).message);
+                } finally {
+                  setNotionBusy(false);
+                }
+              }}
+            >
+              {notion.url ? "Open in Notion" : notionBusy ? "Sending to Notion…" : "Send to Notion"}
+            </MenuAction>
+          )}
           {canEdit && (
             <>
               <div className="my-1 border-t border-line" />

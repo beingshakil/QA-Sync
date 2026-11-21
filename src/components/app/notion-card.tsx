@@ -6,6 +6,7 @@ import { Database, ExternalLink, FileText, RefreshCw, Search } from "lucide-reac
 import { Button, buttonClass } from "@/components/ui";
 import { IntegrationIcon } from "@/components/integration-icon";
 import { cn, timeAgo } from "@/lib/utils";
+import { NotionKeysForm, useSetupInfo } from "@/components/app/integration-setup";
 
 type Status = {
   configured: boolean;
@@ -37,8 +38,11 @@ async function call<T>(url: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
-/** Project settings → Notion: connect, pick a database (or create one), choose what's sent, sync. */
-export function NotionCard({ projectId }: { projectId: string }) {
+/**
+ * Notion for a project: one-time keys (admins), connect, pick a database (or create one), choose
+ * what's sent, sync. Lives in project settings, and (bare) in the review canvas's setup popup.
+ */
+export function NotionCard({ projectId, back, bare = false, onLinked }: { projectId: string; back?: string; bare?: boolean; onLinked?: () => void }) {
   const params = useSearchParams();
   const ret = params.get("notion");
   const [s, setS] = useState<Status | null>(null);
@@ -48,6 +52,9 @@ export function NotionCard({ projectId }: { projectId: string }) {
   const [targets, setTargets] = useState<Target[] | null>(null);
   const [mode, setMode] = useState<Mode>("all");
   const [synced, setSynced] = useState<string | null>(null);
+  const [editKeys, setEditKeys] = useState(false);
+  const info = useSetupInfo(!!s && !s.connected);
+  const startUrl = `/api/integrations/notion/start?projectId=${encodeURIComponent(projectId)}${back ? `&back=${encodeURIComponent(back)}` : ""}`;
 
   const load = useCallback(async () => {
     try {
@@ -91,40 +98,55 @@ export function NotionCard({ projectId }: { projectId: string }) {
     run(`link-${t.id}`, async () => {
       await call("/api/integrations/notion/link", { method: "POST", body: JSON.stringify({ projectId, mode, ...(t.type === "database" ? { databaseId: t.id } : { parentPageId: t.id }) }) });
       await load();
+      onLinked?.();
     });
 
-  const back = ret && RETURN_MSG[ret];
+  const ret0 = ret && RETURN_MSG[ret];
 
+  const Wrap = bare ? "div" : "section";
   return (
-    <section className="rounded-2xl border border-line bg-surface p-6 shadow-1">
-      <div className="flex items-start gap-3">
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink">
-          <IntegrationIcon name="Notion" size={17} />
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="font-semibold">Notion</h2>
-          <p className="text-[13px] text-ink-3">Issues become rows in a Notion database, with the comment, screenshot, element specs and browser details. Status stays in sync both ways.</p>
+    <Wrap {...(bare ? {} : { id: "notion", className: "scroll-mt-6 rounded-2xl border border-line bg-surface p-6 shadow-1" })}>
+      {!bare && (
+        <div className="flex items-start gap-3">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 text-ink">
+            <IntegrationIcon name="Notion" size={17} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <h2 className="font-semibold">Notion</h2>
+            <p className="text-[13px] text-ink-3">Issues become rows in a Notion database, with the comment, screenshot, element specs and browser details. Status stays in sync both ways.</p>
+          </div>
         </div>
-      </div>
+      )}
 
-      {back && (
-        <p role="status" className={cn("mt-4 rounded-lg px-3 py-2 text-[13px]", back[1] ? "bg-pass-soft text-ink" : "bg-danger-soft text-danger")}>
-          {back[0]}
+      {ret0 && (
+        <p role="status" className={cn("rounded-lg px-3 py-2 text-[13px]", !bare && "mt-4", ret0[1] ? "bg-pass-soft text-ink" : "bg-danger-soft text-danger")}>
+          {ret0[0]}
         </p>
       )}
 
-      <div className="mt-5">
+      <div className={cn(bare ? (ret0 ? "mt-4" : "") : "mt-5")}>
         {!s ? (
           <p className="text-[13px] text-ink-3">Loading…</p>
-        ) : !s.configured ? (
-          <p className="rounded-lg bg-surface-2 px-3 py-2.5 text-[13px] text-ink-2">
-            Notion isn&apos;t set up on this server yet. An admin needs to create a Notion public integration and add <code className="font-mono text-[12px]">NOTION_CLIENT_ID</code> and{" "}
-            <code className="font-mono text-[12px]">NOTION_CLIENT_SECRET</code>.
-          </p>
+        ) : !s.configured || editKeys ? (
+          info ? (
+            <NotionKeysForm info={info} onSaved={() => (window.location.href = startUrl)} />
+          ) : (
+            <p className="text-[13px] text-ink-3">Loading…</p>
+          )
         ) : !s.connected ? (
-          <a href={`/api/integrations/notion/start?projectId=${encodeURIComponent(projectId)}`} className={buttonClass("primary", "md")}>
-            Connect Notion
-          </a>
+          <div className="space-y-3">
+            {bare && <p className="text-[13.5px] text-ink-2">Connect your Notion workspace, then pick where this project&apos;s issues should go.</p>}
+            <div className="flex flex-wrap items-center gap-2">
+              <a href={startUrl} className={buttonClass("primary", "md")}>
+                Connect Notion
+              </a>
+              {info?.canSetup && info.notion.source === "app" && (
+                <Button variant="ghost" size="sm" onClick={() => setEditKeys(true)}>
+                  Change keys
+                </Button>
+              )}
+            </div>
+          </div>
         ) : !s.link ? (
           <div className="space-y-4">
             <p className="text-[13.5px] text-ink-2">
@@ -255,6 +277,6 @@ export function NotionCard({ projectId }: { projectId: string }) {
           </p>
         )}
       </div>
-    </section>
+    </Wrap>
   );
 }

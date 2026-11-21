@@ -35,8 +35,16 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
+/**
+ * Some browser extensions (Bitdefender: bis_skin_checked, bis_register) tag elements while the page
+ * loads, before React hydrates, and React reports the extra attributes as a hydration mismatch. Strip
+ * those tags until the page has hydrated (a few seconds after load), then stop watching: after
+ * hydration they're harmless. Capped, in case an extension keeps re-adding them.
+ */
+const EXTENSION_ATTR_GUARD = `(function(){var a=['bis_skin_checked','bis_register'],n=0,o=new MutationObserver(function(l){for(var i=0;i<l.length;i++){l[i].target.removeAttribute(l[i].attributeName);if(++n>50000)o.disconnect()}});o.observe(document.documentElement,{subtree:true,attributes:true,attributeFilter:a});addEventListener('load',function(){setTimeout(function(){o.disconnect()},5000)})})();`;
+
 // Runs before paint: mark that JS is on (scroll reveals only hide content when it is).
-const jsScript = `document.documentElement.classList.add('js');${APP_THEME_PREPAINT}`;
+const jsScript = `${EXTENSION_ATTR_GUARD}document.documentElement.classList.add('js');${APP_THEME_PREPAINT}`;
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (

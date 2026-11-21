@@ -5,6 +5,7 @@ import { q, q1, run } from "./db";
 import { seal, unseal } from "./crypto";
 import { getIssue, updateIssue } from "./repo";
 import { reportError } from "./monitor";
+import { integrationKeys } from "./integration-keys";
 import { SITE_URL } from "@/lib/site";
 import type { Issue, Priority, Status } from "@/lib/types";
 
@@ -14,13 +15,14 @@ import type { Issue, Priority, Status } from "@/lib/types";
  * status comes back from Notion on a lazy sync (and "Sync now"). A status of Verified set in Notion
  * is not accepted: only a person in QASync verifies a fix, so QASync writes its own status back.
  *
- * Env: NOTION_CLIENT_ID, NOTION_CLIENT_SECRET (a Notion public integration). NOTION_API_BASE only
+ * Keys: NOTION_CLIENT_ID, NOTION_CLIENT_SECRET (a Notion public integration), or pasted in the setup popup. NOTION_API_BASE only
  * overrides the API address for tests.
  */
 
 const VERSION = "2022-06-28";
 const api = () => (process.env.NOTION_API_BASE || "https://api.notion.com").replace(/\/+$/, "");
-export const notionConfigured = () => !!(process.env.NOTION_CLIENT_ID && process.env.NOTION_CLIENT_SECRET);
+/** The app's Notion integration keys: from the environment, or pasted once in the setup popup. */
+export const notionConfigured = async (fresh = false) => !!(await integrationKeys(fresh)).notion;
 
 export type NotionMode = "all" | "urgent" | "manual";
 export const NOTION_MODES: NotionMode[] = ["all", "urgent", "manual"];
@@ -77,13 +79,15 @@ function stateKey() {
   return createHmac("sha256", process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "dev").update("qasync-notion-state").digest();
 }
 
-/** Signed, 15-minute OAuth state: who started the connection and which project to come back to. */
-export function makeState(d: { workspaceId: string; userId: string; projectId: string }) {
+type OAuthState = { workspaceId: string; userId: string; projectId: string; back?: string };
+
+/** Signed, 15-minute OAuth state: who started the connection, which project, and where to come back to. */
+export function makeState(d: OAuthState) {
   const body = Buffer.from(JSON.stringify({ ...d, exp: Date.now() + 15 * 60 * 1000, n: nanoid(8) })).toString("base64url");
   return `${body}.${createHmac("sha256", stateKey()).update(body).digest("base64url")}`;
 }
 
-export function readState(state: string | null): { workspaceId: string; userId: string; projectId: string } | null {
+export function readState(state: string | null): OAuthState | null {
   const [body, sig] = (state ?? "").split(".");
   if (!body || !sig) return null;
   const want = createHmac("sha256", stateKey()).update(body).digest("base64url");
@@ -92,9 +96,11 @@ export function readState(state: string | null): { workspaceId: string; userId: 
   return d.exp > Date.now() ? d : null;
 }
 
-export function authorizeUrl(state: string, redirectUri: string) {
+export async function authorizeUrl(state: string, redirectUri: string) {
+  const keys = (await integrationKeys(true)).notion; // fresh: keys may have just been saved on another server instance
+  if (!keys) throw new Error("Notion isn't set up yet");
   const u = new URL(`${api()}/v1/oauth/authorize`);
-  u.searchParams.set("client_id", process.env.NOTION_CLIENT_ID!);
+  u.searchParams.set("client_id", keys.clientId);
   u.searchParams.set("response_type", "code");
   u.searchParams.set("owner", "user");
   u.searchParams.set("redirect_uri", redirectUri);
@@ -103,7 +109,9 @@ export function authorizeUrl(state: string, redirectUri: string) {
 }
 
 export async function exchangeCode(code: string, redirectUri: string) {
-  const basic = Buffer.from(`${process.env.NOTION_CLIENT_ID}:${process.env.NOTION_CLIENT_SECRET}`).toString("base64");
+  const keys = (await integrationKeys(true)).notion; // fresh: keys may have just been saved on another server instance
+  if (!keys) throw new Error("Notion isn't set up yet");
+  const basic = Buffer.from(`${keys.clientId}:${keys.clientSecret}`).toString("base64");
   const res = await fetch(`${api()}/v1/oauth/token`, {
     method: "POST",
     headers: { authorization: `Basic ${basic}`, "content-type": "application/json", "notion-version": VERSION },
@@ -320,6 +328,12 @@ export async function pushIssue(issueId: string): Promise<string | null> {
 export async function notionPageFor(issueId: string): Promise<string | null> {
   const r = await q1("SELECT page_url FROM notion_pages WHERE issue_id = ?", issueId);
   return (r?.page_url as string) || null;
+}
+
+/** Issue id → Notion row URL, for every issue of the project that's already in Notion. */
+export async function notionPagesFor(projectId: string): Promise<Record<string, string>> {
+  const rows = await q("SELECT np.issue_id, np.page_url FROM notion_pages np JOIN issues i ON i.id = np.issue_id WHERE i.project_id = ?", projectId);
+  return Object.fromEntries(rows.filter((r) => r.page_url).map((r) => [r.issue_id as string, r.page_url as string]));
 }
 
 /** After an issue is created: send it if the project's mode says so. Never blocks the request. */
