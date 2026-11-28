@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { APP_THEME_PREPAINT } from "@/lib/app-theme";
-import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { Geist_Mono, Inter, Instrument_Serif } from "next/font/google";
 import { BRAND } from "@/lib/brand";
 import { SITE_URL } from "@/lib/site";
 import { ConfirmProvider } from "@/components/confirm";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
+// Inter as a variable font (all weights from one file); next/font adds a metric-matched fallback.
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap" });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 const instrumentSerif = Instrument_Serif({
   variable: "--font-instrument-serif",
@@ -53,7 +54,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: jsScript }} />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}>
+      <body className={`${inter.variable} ${geistMono.variable} ${instrumentSerif.variable} antialiased`}>
         <ConfirmProvider>{children}</ConfirmProvider>
       </body>
     </html>

@@ -147,10 +147,10 @@ export function PageHero({ title, accent, sub, children }: { title: string; acce
 
 export function CtaBand({ title = "Point at the problem.", accent = "Watch it get fixed." }: { title?: string; accent?: string }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 pb-24 sm:px-6 md:pb-32">
+    <section className="mx-auto max-w-7xl px-4 pb-4 sm:px-6 md:pb-5">
       <div data-reveal className="relative overflow-hidden rounded-3xl border border-line bg-surface px-6 py-14 sm:px-10 md:px-16 md:py-20">
         <SpiderWeb />
-        <div className="relative grid items-end gap-8 lg:grid-cols-[1fr_auto]">
+        <div className="relative grid grid-cols-1 items-end gap-8 lg:grid-cols-[1fr_auto]">
           <div>
             <h2 className="max-w-xl text-balance text-[34px] font-semibold leading-[1.04] tracking-[-0.034em] text-ink md:text-[52px] md:tracking-[-0.038em]">
               {title} <span className="text-gradient-scroll">{accent}</span>
@@ -164,12 +164,17 @@ export function CtaBand({ title = "Point at the problem.", accent = "Watch it ge
   );
 }
 
+/** FAQ accordion: no dividers; the open item sits on a soft card. The first question starts open. */
 export function FaqList({ items = FAQ, className = "mt-10" }: { items?: { q: string; a: string }[]; className?: string }) {
   return (
-    <div data-reveal className={cn("divide-y divide-line border-y border-line", className)}>
-      {items.map((f) => (
-        <details key={f.q} className="group py-1 [&_summary::-webkit-details-marker]:hidden">
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-4 text-[16px] font-medium text-ink transition-colors hover:text-brand-ink">
+    <div data-reveal className={cn("space-y-1.5", className)}>
+      {items.map((f, i) => (
+        <details
+          key={f.q}
+          open={i === 0}
+          className="group rounded-2xl border border-transparent px-5 transition-colors duration-300 hover:bg-surface/50 open:border-line open:bg-surface [&_summary::-webkit-details-marker]:hidden"
+        >
+          <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-6 py-3 text-[16px] font-medium text-ink transition-colors hover:text-brand-ink">
             {f.q}
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-line text-ink-3 transition duration-300 group-open:rotate-45 group-open:border-line-strong group-open:text-ink">
               <Plus size={14} />

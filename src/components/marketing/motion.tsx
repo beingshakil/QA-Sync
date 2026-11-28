@@ -2,11 +2,14 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
+import type Lenis from "lenis";
+import "lenis/dist/lenis.css";
 
 /**
  * Site-wide motion helpers for the marketing pages:
  *  - [data-reveal]: fades/rises into view once when scrolled to (optional --d delay in ms)
  *  - [data-spotlight]: a soft glow follows the cursor (sets --mx / --my)
+ *  - smooth wheel scrolling (Lenis)
  * Respects prefers-reduced-motion (CSS shows everything immediately).
  */
 export function MotionLayer() {
@@ -32,6 +35,29 @@ export function MotionLayer() {
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
   }, [path]);
+
+  // Smooth, eased wheel scrolling (Lenis keeps native scroll, so sticky sections and
+  // scroll listeners still work). Off for reduced motion; touch keeps native momentum.
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let lenis: Lenis | null = null;
+    let cancelled = false;
+    import("lenis").then(({ default: L }) => {
+      if (cancelled) return;
+      lenis = new L({
+        autoRaf: true,
+        lerp: 0.09,
+        wheelMultiplier: 0.95,
+        anchors: { offset: -72 }, // clear the sticky 64px header
+        allowNestedScroll: true, // menus and other inner scrollers scroll natively
+        stopInertiaOnNavigate: true,
+      });
+    });
+    return () => {
+      cancelled = true;
+      lenis?.destroy();
+    };
+  }, []);
 
   useEffect(() => {
     let raf = 0;

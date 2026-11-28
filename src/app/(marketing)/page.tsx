@@ -2,21 +2,16 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ArrowRight } from "lucide-react";
-import { ButtonLink } from "@/components/ui";
 import { CtaBand, FaqList, SectionHead, SpiderWeb, d } from "@/components/marketing/sections";
-import { RotatingWord, ThreeViews, UrlStart } from "@/components/marketing/interactive";
+import { RotatingWord, UrlStart } from "@/components/marketing/interactive";
+import { ThreeViews } from "@/components/marketing/three-views";
+import { HowItWorks } from "@/components/marketing/how-it-works";
+import { AgentSection } from "@/components/marketing/agent-section";
+import { CanvasSteps } from "@/components/marketing/canvas-steps";
+import { AuditSection } from "@/components/marketing/audit-section";
+import { TrustSection } from "@/components/marketing/trust-section";
 import {
-  AgentTerminal,
-  AuditPreview,
-  BentoCard,
-  DevicesVisual,
-  FreezeVisual,
-  HowItWorks,
-  PagesVisual,
   ProductShot,
-  ShareVisual,
-  SpecVisual,
-  TRUST,
 } from "@/components/marketing/home-visuals";
 import { PricingCards } from "@/components/marketing/pricing-cards";
 import { IntegrationIcon } from "@/components/integration-icon";
@@ -38,40 +33,8 @@ const PLATFORMS = ["Webflow", "WordPress", "Shopify", "Framer", "Next.js", "Wix"
 function Block({ children, className, id }: { children: ReactNode; className?: string; id?: string }) {
   return (
     <section id={id} className="mx-auto max-w-7xl px-4 sm:px-6">
-      <div className={cn("border-t border-line py-20 md:py-32", className)}>{children}</div>
+      <div className={cn("border-t border-line py-14 md:py-20", className)}>{children}</div>
     </section>
-  );
-}
-
-/** Three short points beside a visual: a title and one line each, on a thin rule. */
-function Points({ items, children }: { items: [string, string][]; children?: ReactNode }) {
-  return (
-    <div>
-      <ul className="space-y-8">
-        {items.map(([t, b], i) => (
-          <li key={t} data-reveal style={d(i * 100)} className="border-l border-line-strong pl-5">
-            <h3 className="text-[17px] font-semibold tracking-[-0.012em] text-ink">{t}</h3>
-            <p className="mt-2 text-pretty text-[14.5px] leading-[1.65] text-ink-2">{b}</p>
-          </li>
-        ))}
-      </ul>
-      {children}
-    </div>
-  );
-}
-
-/** Header across the top (same style as every section), then the visual and its points. */
-function Feature({ head, visual, points, flip, children }: { head: ReactNode; visual: ReactNode; points: [string, string][]; flip?: boolean; children?: ReactNode }) {
-  return (
-    <>
-      {head}
-      <div className="mt-16 grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-20">
-        <div className={cn("lg:col-span-7", flip && "lg:order-2")}>{visual}</div>
-        <div className={cn("lg:col-span-5", flip && "lg:order-1")}>
-          <Points items={points}>{children}</Points>
-        </div>
-      </div>
-    </>
   );
 }
 
@@ -86,16 +49,16 @@ export default function Home() {
         <div className="relative mx-auto max-w-7xl px-4 pt-16 sm:px-6 md:pt-24">
           {/* Centred hero: the original design, kept exactly */}
           <div className="text-center">
-            <h1 data-reveal style={d(40)} className="mx-auto mt-4 max-w-5xl text-[44px] font-semibold leading-[0.98] tracking-[-0.04em] text-ink sm:text-[54px] md:text-[60px] lg:text-[76px] xl:text-[84px]">
+            <h1 data-reveal style={d(40)} className="mx-auto mt-4 max-w-5xl text-[44px] font-semibold leading-[1.06] tracking-[-0.04em] text-ink sm:text-[54px] md:text-[60px] lg:text-[76px] xl:text-[84px]">
               Visual feedback that <span className="text-gradient-sweep">gets</span> <RotatingWord />
             </h1>
-            <p data-reveal style={d(180)} className="mx-auto mt-6 max-w-[38rem] text-lg leading-relaxed text-ink-2">
+            <p data-reveal style={d(180)} className="mx-auto mt-8 max-w-[38rem] text-lg leading-relaxed text-ink-2">
               Pin feedback on any live site, check the build against the design, give developers full context, and verify every fix before it&apos;s closed.
             </p>
-            <div data-reveal style={d(280)} className="mt-9 flex justify-center">
+            <div data-reveal style={d(280)} className="mt-11 flex justify-center">
               <UrlStart variant="gradient" />
             </div>
-            <p data-reveal style={d(340)} className="mt-4 text-[13px] text-ink-3">
+            <p data-reveal style={d(340)} className="mt-5 text-[13px] text-ink-3">
               Free forever plan · No install · Guests don&apos;t need an account
             </p>
           </div>
@@ -134,7 +97,7 @@ export default function Home() {
       {/* ───────── One pin, three views ───────── */}
       <Block>
         <SectionHead title="The same issue," accent="written for whoever is reading it." />
-        <div className="mt-16">
+        <div className="mt-12">
           <ThreeViews />
         </div>
       </Block>
@@ -146,81 +109,33 @@ export default function Home() {
           accent="Once."
           sub="Everything a reviewer needs sits in one canvas over the live site, so nobody has to turn “it looks off” into a ticket."
         />
-        <div className="mt-16 grid gap-4 md:grid-cols-6">
-          <BentoCard
-            className="md:col-span-4"
-            title="Inspect and measure"
-            body="Hover any element to read its font, size, padding, colour and contrast. Pin it and those specs travel with the comment."
-            visual={<SpecVisual />}
-          />
-          <BentoCard className="md:col-span-2" delay={90} title="Freeze hover states" body="Press F to hold menus and tooltips still long enough to pin them." visual={<FreezeVisual />} />
-          <BentoCard className="md:col-span-2" title="Every screen size" body="Desktop, tablet and phone presets, or two devices side by side with scrolling in sync." visual={<DevicesVisual />} />
-          <BentoCard className="md:col-span-2" delay={90} title="Page-by-page QA" body="Each page carries a status, so anyone can see what's reviewed, in progress or signed off." visual={<PagesVisual />} />
-          <BentoCard className="md:col-span-2" delay={180} title="Clients without logins" body="Share a link to the exact page. Guests comment with just their name." visual={<ShareVisual />} />
-        </div>
+        <CanvasSteps />
       </Block>
 
       {/* ───────── SEO audit ───────── */}
       <Block>
-        <Feature
-          head={
-            <SectionHead
-              title="See your page the way Google does."
-              accent="With the fix spelled out."
-              sub="Titles, headings, links, images, schema and Open Graph each get a clear pass or fail."
-            />
-          }
-          visual={<AuditPreview />}
-          points={[
-            ["12 clear checks", "On-page and technical: title, description, headings, images, links, URL, canonical, schema and more."],
-            ["A fix for every red item", "Not just “failed”: each problem says exactly what to change."],
-            ["Links you can trust", "Every link is tested, blocked and broken are told apart, and navbar and footer links can be left out."],
-          ]}
+        <SectionHead
+          title="See your page the way Google does."
+          accent="With the fix spelled out."
+          sub="Titles, headings, links, images, schema and Open Graph each get a clear pass or fail."
         />
+        <AuditSection />
       </Block>
 
       {/* ───────── AI agents ───────── */}
       <Block>
-        <Feature
-          flip
-          head={
-            <SectionHead
-              title="Let your agent take the first pass."
-              accent="You decide what's done."
-              sub="Connect Claude Code, Cursor or any MCP client, and it works through your open issues."
-            />
-          }
-          visual={<AgentTerminal />}
-          points={[
-            ["Full context", "Every issue comes with its selector, element styles, browser and console errors."],
-            ["Your tools", "Claude Code, Cursor, VS Code or any MCP client, connected with a token from Settings."],
-            ["People sign off", "Agents can mark issues Fixed. Only a person can mark them Verified."],
-          ]}
-        >
-          <div data-reveal style={d(300)} className="mt-9 pl-5">
-            <ButtonLink href="/product/ai-agents" variant="secondary">
-              How agents connect <ArrowRight size={15} />
-            </ButtonLink>
-          </div>
-        </Feature>
+        <SectionHead
+          title="Let your agent take the first pass."
+          accent="You decide what's done."
+          sub="Connect Claude Code, Cursor or any MCP client, and it works through your open issues."
+        />
+        <AgentSection />
       </Block>
 
       {/* ───────── Trust ───────── */}
-      <Block className="grid gap-12 lg:grid-cols-12">
-        <div className="lg:col-span-4">
-          <SectionHead size="sm" title="Safe to send to clients." />
-        </div>
-        <ul className="grid gap-10 sm:grid-cols-3 lg:col-span-8 lg:gap-8">
-          {TRUST.map(({ icon: Icon, t, b }, i) => (
-            <li key={t} data-reveal style={d(i * 100)}>
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-line bg-surface text-ink-2">
-                <Icon size={17} />
-              </span>
-              <h3 className="mt-5 text-[16px] font-semibold text-ink">{t}</h3>
-              <p className="mt-2 text-pretty text-[14.5px] leading-[1.65] text-ink-2">{b}</p>
-            </li>
-          ))}
-        </ul>
+      <Block>
+        <SectionHead title="Safe to send to clients." sub="Clients, guests and AI agents only ever reach what you share with them, and you can take it back at any time." />
+        <TrustSection />
       </Block>
 
       {/* ───────── Pricing ───────── */}

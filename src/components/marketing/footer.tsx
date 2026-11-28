@@ -13,46 +13,47 @@ export function Footer() {
         { href: "/pricing", label: "Pricing" },
         { href: "/integrations", label: "Integrations" },
         { href: "/changelog", label: "Changelog" },
-        { href: "/privacy", label: "Privacy" },
-        { href: "/terms", label: "Terms" },
-      ],
-    },
-    {
-      title: "Try it",
-      links: [
-        { href: "/app", label: "Open the app" },
-        { href: "/app/projects", label: "Your projects" },
       ],
     },
   ];
   return (
-    <footer className="border-t border-line bg-paper">
-      <div className="hairline-grad" />
-      <div className="ruler-x opacity-40" />
-      <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(4,1fr)]">
-        <div>
-          <Logo />
-          <p className="mt-3 max-w-xs text-sm text-ink-3">{BRAND.description}</p>
-        </div>
-        {cols.map((c) => (
-          <div key={c.title}>
-            <div className="text-[13px] font-semibold text-ink">{c.title}</div>
-            <ul className="mt-3 space-y-2">
-              {c.links.map((l) => (
-                <li key={l.href}>
-                  <Link href={l.href} className="text-sm text-ink-2 hover:text-ink">
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+    // The links in a card, the same width and inner padding as the CTA card above it.
+    <footer className="mx-auto max-w-7xl px-4 pb-10 sm:px-6 md:pb-16">
+      <div className="rounded-3xl border border-line bg-surface px-6 py-10 sm:px-10 md:px-16 md:py-14">
+        <div className="grid gap-12 md:grid-cols-[1.25fr_2fr] md:gap-16">
+          <div>
+            <Logo />
+            <p className="mt-4 max-w-[24rem] text-pretty text-[14px] leading-relaxed text-ink-3">{BRAND.description}</p>
           </div>
-        ))}
-      </div>
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line py-6 text-xs text-ink-3">
-          <span>© 2026 {BRAND.name}. Phase 1 preview.</span>
-          <span className="tabular-nums">v0.1.0</span>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3">
+            {cols.map((c) => (
+              <div key={c.title}>
+                <div className="text-[14px] font-semibold text-ink">{c.title}</div>
+                <ul className="mt-3 space-y-0.5">
+                  {c.links.map((l) => (
+                    <li key={l.href}>
+                      <Link href={l.href} className="inline-flex min-h-7 items-center text-[14px] text-ink-3 transition-colors hover:text-ink max-sm:min-h-10">
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="mt-12 flex flex-col gap-3 border-t border-line pt-6 text-[13px] text-ink-3 sm:flex-row sm:items-center sm:justify-between">
+          <span>
+            © 2026 {BRAND.name}. Phase 1 preview. <span className="tabular-nums">v0.1.0</span>
+          </span>
+          <div className="flex items-center gap-6">
+            <Link href="/privacy" className="inline-flex min-h-6 items-center underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink hover:decoration-ink-3 max-sm:min-h-10">
+              Privacy Policy
+            </Link>
+            <Link href="/terms" className="inline-flex min-h-6 items-center underline decoration-line-strong underline-offset-4 transition-colors hover:text-ink hover:decoration-ink-3 max-sm:min-h-10">
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

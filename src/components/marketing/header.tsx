@@ -114,8 +114,11 @@ export function Header() {
 
   return (
     <header className={cn("sticky top-0 z-50 transition-colors", scrolled ? "border-b border-line bg-paper/85 backdrop-blur-md" : "border-b border-transparent")}>
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-4 sm:px-6">
-        <Logo />
+      {/* Desktop: logo | links (true centre) | account, as three columns. Mobile: logo and menu button. */}
+      <div className="mx-auto flex h-16 max-w-7xl items-center gap-8 px-4 sm:px-6 md:grid md:grid-cols-[1fr_auto_1fr] md:gap-4 lg:gap-8">
+        <div className="justify-self-start">
+          <Logo />
+        </div>
         <nav className="relative hidden items-center gap-1 text-[14px] text-ink-2 md:flex" onMouseLeave={leave}>
           <MenuTrigger label="Product" k="product" open={open} enter={enter} />
           <MenuTrigger label="Solutions" k="solutions" open={open} enter={enter} />
@@ -127,7 +130,7 @@ export function Header() {
               key={open}
               role="menu"
               onMouseEnter={() => enter(open)}
-              className="animate-pop absolute left-0 top-[calc(100%+10px)] grid w-[640px] grid-cols-2 divide-x divide-line overflow-hidden rounded-2xl border border-line bg-surface/95 p-2 shadow-2 backdrop-blur-md"
+              className="animate-pop absolute left-1/2 top-[calc(100%+10px)] grid w-[640px] -translate-x-1/2 grid-cols-2 divide-x divide-line overflow-hidden rounded-2xl border border-line bg-surface/95 p-2 shadow-2 backdrop-blur-md"
             >
               {MENUS[open].map((col) => (
                 <div key={col.heading} className="px-2 py-2">
@@ -140,7 +143,7 @@ export function Header() {
             </div>
           )}
         </nav>
-        <div className="ml-auto hidden items-center gap-2 md:flex">
+        <div className="ml-auto hidden items-center gap-2 justify-self-end md:flex">
           {me === undefined ? (
             <span className="h-9 w-[86px]" aria-hidden />
           ) : me ? (

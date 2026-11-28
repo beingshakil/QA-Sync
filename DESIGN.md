@@ -28,7 +28,7 @@ colors:
   status-verified: "#22c27e"
   status-wontfix: "#8a92a6"
 typography:
-  sans: "Geist, ui-sans-serif, system-ui, sans-serif"
+  sans: "Inter (variable), ui-sans-serif, system-ui, sans-serif"
   mono: "Geist Mono, ui-monospace, monospace"
   serif: "Instrument Serif, Georgia, serif (italic accent words only)"
   display-hero: { size: "46px / 64px sm / 84px md", weight: 600, line-height: 0.98, tracking: "-0.04em" }
@@ -75,7 +75,7 @@ Three colours only: **deep blue, green, near-black.** Blue and green are the cla
 
 ## 3. Typography
 
-- **Geist** for everything; tabular numbers and `ss01` are on globally.
+- **Inter** (variable, via `next/font`) for everything; `ss01` is on globally. Tabular numbers are not global (in Inter they also widen hyphens), so add `tabular-nums` wherever digits must line up: counts, prices, tables, sizes.
 - **Geist Mono** for eyebrows (11px, uppercase, 0.14em tracking), code, and data labels.
 - **Instrument Serif italic** (`.serif-accent`) only for single accent words, never for whole lines.
 - Display type is tight: weight 600, about -0.04em tracking, line-height near 1. Body copy is relaxed (1.6+) and capped near 38rem.
@@ -88,7 +88,9 @@ Three colours only: **deep blue, green, near-black.** Blue and green are the cla
 
 ## 5. Motion
 
-- Easing: `--ease-out` cubic-bezier(0.2, 0.7, 0.2, 1) for UI, and `--ease-spring` for pins popping in.
+- Easing: `--ease-out` cubic-bezier(0.2, 0.7, 0.2, 1) for UI, `--ease-spring` for pins popping in, and `--ease-smooth` cubic-bezier(0.16, 1, 0.3, 1) for scroll reveals and view switches on the marketing site.
+- The marketing site smooths wheel scrolling with Lenis (`MotionLayer` in `src/components/marketing/motion.tsx`). It keeps native scroll, so `position: sticky` and scroll listeners still work. It's off under `prefers-reduced-motion`, and touch keeps native momentum.
+- Don't put `data-reveal` on an element whose `className` React changes after mount (for example an active/inactive tab). React rewrites the class and drops `is-visible`, so the element fades out. Put `data-reveal` on a wrapper with a fixed class instead.
 - Motion explains the product (pin, fix, verify) or guides the eye once. Nothing loops loudly.
 - **Signature motion: the orbiting ring.** A light-blue (`#8fb3ff`) → light-green (`#6ee7b7`) arc circles a 1px border once every 6s over a dim `line-strong` base. Use `.ring-flow` on small controls (account button, Sign in, hero URL box) and `.device-ring` on review-canvas device frames (a GPU-rotated layer, so it stays cheap on large frames). The hero horizon line flows the same two colours at the same pace. Reserve it for these brand moments; don't put it on ordinary cards or inputs.
 - The review canvas stage is plain black (`.stage-wash`), so the page under review and its ring are all that shows.
